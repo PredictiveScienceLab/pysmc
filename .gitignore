@@ -1,0 +1,15 @@
+*.txt
+*.pyc
+*.html
+*.pickle
+*.inv
+*.js
+*.png
+*doctree*
+*.so
+*.swp
+src/CMakeFiles/
+src/Makefile
+src/cmake_install.cmake
+build
+backup
