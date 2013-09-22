@@ -9,7 +9,8 @@ Date:
 """
 
 
-__all__ = ['SMC']
+__all__ = ['MCMCWrapper', 'SMC']
 
 
+from ._mcmc_wrapper import *
 from ._smc import *

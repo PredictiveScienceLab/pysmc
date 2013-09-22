@@ -1,11 +1,12 @@
+__all__ = ['SMC']
+
+
+from . import MCMCWrapper
 import pymc
 import numpy as np
 from scipy.optimize import brentq
 import math
 import itertools
-
-
-__all__ = ['SMC']
 
 
 class SMC(object):
@@ -51,27 +52,8 @@ class SMC(object):
     # Do you want to adaptively select the MCMC proposal step?
     _adapt_proposal_step = None
 
-    # The lowest allowed acceptance rate
-    _lowest_allowed_acceptance_rate = None
-
-    # The highest allowed acceptance rate
-    _highest_allowed_acceptance_rate = None
-
-    # The decrease factor of the proposal step
-    _proposal_step_decrease_factor = None
-
-    # The increase factor of the proposal step
-    _proposal_step_increase_factor = None
-
-    # Be verbose or not
+    # The amount of verbosity
     _verbose = None
-
-    # Store the intermediate samples or not?
-    _store_intermediate_samples = None
-
-    # The intermediate samples (a list of dictionaries with keys:
-    # 'gamma', 'r' and 'w').
-    _intermediate_samples = None
 
     # The MPI class
     _mpi = None
@@ -88,8 +70,17 @@ class SMC(object):
     # The monte carlo sampler
     _mcmc_sampler = None
 
-    # The maximum allowed proposal step
-    _max_proposal_dt = None
+    # The particles
+    _particles = None
+
+    # The underlying MCMC sampler
+    _mcmc_sampler = None
+
+    # The observed random variable
+    _gamma_rv = None
+
+    # The true name of the gamma parameter
+    _gamma_name = None
 
     @property
     def my_num_particles(self):
@@ -171,8 +162,7 @@ class SMC(object):
         The next gamma will be selected adaptively so that the prescribed
         reduction is achieved.
         """
-        if not isinstance(value, float):
-            raise TypeError('The ESS reduction must be a float.')
+        value = float(value)
         if value <= 0. or value >= 1.:
             raise ValueError('The ESS reduction must be in (0, 1).')
         self._ess_reduction = value
@@ -191,58 +181,21 @@ class SMC(object):
         between self.lowest_allowed_acceptance_rate and
         self.highest_allowed_acceptance_rate.
         """
-        if not isinstance(value, bool):
-            raise TypeError('The adpat proposal flag must be a boolean.')
+        value = bool(value)
         self._adapt_proposal_step = value
-
-    @property
-    def lowest_allowed_acceptance_rate(self):
-        """Get the lowest allowed acceptance rate."""
-        return self._lowest_allowed_acceptance_rate
-
-    @property
-    def highest_allowed_acceptance_rate(self):
-        """Get the highest allowed acceptnace rate."""
-        return self._highest_allowed_acceptance_rate
-
-    @property
-    def proposal_step_decrease_factor(self):
-        """Get the proposal step decrease factor."""
-        return self._proposal_step_decrease_factor
-
-    @proposal_step_decrease_factor.setter
-    def proposal_step_decrease_factor(self, value):
-        """Set the proposal step decrease factor."""
-        if not isinstance(value, float):
-            raise TypeError('The proposal step decrease factor must be a float.')
-        if value <= 0. or value >= 1.:
-            raise ValueError('The proposal step decrease factor must be in (0, 1).')
-        self._proposal_step_decrease_factor = value
-
-    @property
-    def proposal_step_increase_factor(self):
-        """Get the proposal step increase factor."""
-        return self._proposal_step_increase_factor
-
-    @proposal_step_increase_factor.setter
-    def proposal_step_increase_factor(self, value):
-        """Set the proposal step increase factor."""
-        if not isinstance(value, float):
-            raise TypeError('The proposal step increase factor must be a float.')
-        if value <= 1.:
-            raise ValueError('The proposal step increaes factor must be greater than one.')
-        self._proposal_step_increase_factor = value
 
     @property
     def verbose(self):
         """Get the verbosity flag."""
-        return self._verbose and self.rank == 0
+        if self.rank == 0:
+            return self._verbose
+        else:
+            return 0
 
     @verbose.setter
     def verbose(self, value):
         """Set the verbosity flag."""
-        if not isinstance(value, bool):
-            raise TypeError('The verbosity flag must be a boolean.')
+        value = int(value)
         self._verbose = value
 
     @property
@@ -283,31 +236,45 @@ class SMC(object):
 
     @property
     def mcmc_sampler(self):
-        """Get the mcmc sampler."""
+        """Get the MCMC sampler."""
         return self._mcmc_sampler
 
-    @property
-    def my_acceptance_rate(self):
-        """Get the acceptance rate I observed on my particles."""
-        return self._acceptance_rate
+    @mcmc_sampler.setter
+    def mcmc_sampler(self, value):
+        """Set the MCMC sampler."""
+        assert isinstance(value, pymc.MCMC)
+        self._mcmc_sampler = value
+        self._update_gamma_rv()
+
+    def _update_gamma_rv(self):
+        """Update the variable that points to the observed rv."""
+        for rv in self.mcmc_sampler.nodes:
+            if rv.parents.has_key(self.gamma_name):
+                self._gamma_rv = rv
+                break
 
     @property
-    def acceptance_rate(self):
-        """Get the global acceptance rate."""
-        if self.use_mpi:
-            global_acceptance_rate = self.comm.allreduce(
-                    self.my_acceptance_rate)
-            return global_acceptance_rate / self.size
-        else:
-            return self.my_acceptance_rate
+    def gamma_rv(self):
+        """Get the observed random variable."""
+        return self._gamma_rv
 
     @property
     def gamma(self):
-        return self._observed_rv.parents['gamma']
+        return self._gamma_rv.parents[self.gamma_name]
 
     @gamma.setter
     def gamma(self, value):
-        self._observed_rv.parents['gamma'] = value
+        self._gamma_rv.parents[self.gamma_name] = value
+
+    @property
+    def gamma_name(self):
+        """Get the true name of the gamma parameter."""
+        return self._gamma_name
+
+    @property
+    def particles(self):
+        """Get the particles."""
+        return self._particles
 
     def _logsumexp(self, log_x):
         """Perform the log-sum-exp of the weights."""
@@ -405,28 +372,20 @@ class SMC(object):
             old_particles = self._particles
             old_evaluated_state = self._evaluated_state
             self._particles = []
-            self._evaluated_state = []
             for i in xrange(self.num_particles):
                 to_whom = i / self.my_num_particles
                 from_whom = idx[i] / self.my_num_particles
                 if from_whom == to_whom and to_whom == self.rank:
                     my_idx = idx[i] % self.my_num_particles
                     self._particles.append(old_particles[my_idx].copy())
-                    self._evaluated_state.append(old_evaluated_state[my_idx].copy())
                 elif to_whom == self.rank:
                     self._particles.append(self.comm.recv(source=from_whom, tag=i))
-                    self._evaluated_state.append(self.comm.recv(source=from_whom,
-                        tag=i))
                 elif from_whom == self.rank:
                     my_idx = idx[i] % self.my_num_particles
                     self.comm.send(old_particles[my_idx], dest=to_whom, tag=i)
-                    self.comm.send(old_evaluated_state[my_idx], dest=to_whom,
-                        tag=i)
                 self.comm.barrier()
         else:
             self._particles = [self._particles[i].copy() for i in idx]
-            self._evaluated_state = [self._evaluated_state[i].copy() for i in
-                idx]
         self.log_w.fill(-math.log(self.num_particles))
         self._ess = self.num_particles
         if self.verbose:
@@ -442,39 +401,13 @@ class SMC(object):
             print 'Allocating memory...'
         # Allocate and initialize the weights
         self._log_w = np.ones(self.my_num_particles) * (-math.log(self.num_particles))
+        self._particles = [None for i in range(self.my_num_particles)]
         if self.verbose:
             print 'Done!'
 
-    def _do_adapt_proposal_step(self):
-        """Adjust the proposal step."""
-        if self.verbose:
-            s = 'Adapting proposal step: ' + str(self.mcmc_sampler.proposal.dt)
-        a_rate = self.acceptance_rate
-        adapted = False
-        if a_rate.shape[0] == 1:
-            if a_rate < self.lowest_allowed_acceptance_rate:
-                adapted = True
-                self.mcmc_sampler.proposal.dt *= (
-                        self.proposal_step_decrease_factor)
-            if a_rate > self.highest_allowed_acceptance_rate:
-                adapted = True
-                if (self.mcmc_sampler.proposal.dt < self._max_proposal_dt):
-                        self.mcmc_sampler.proposal.dt *= (
-                                self.proposal_step_increase_factor)
-        else:
-            decrease_idx = a_rate < self.lowest_allowed_acceptance_rate
-            increase_idx = a_rate > self.highest_allowed_acceptance_rate
-            adapted = bool(np.sum(decrease_idx) + np.sum(increase_idx))
-            self.mcmc_sampler.proposal.dt[decrease_idx] *= (
-                    self.proposal_step_decrease_factor)
-            idx = np.array(range(self.mcmc_sampler.proposal.dt.shape[0]))
-            idx = idx[increase_idx]
-            for i in idx:
-                if (self.mcmc_sampler.proposal.dt[i] < self._max_proposal_dt):
-                    self.mcmc_sampler.proposal.dt[i] *= (
-                            self.proposal_step_increase_factor)
-        if self.verbose and adapted:
-            print s + ' ---> ' + str(self.mcmc_sampler.proposal.dt)
+    def _tune(self):
+        """Tune the parameters of the proposals.."""
+        pass
 
     def _find_next_gamma(self):
         """Find the next gamma."""
@@ -495,84 +428,40 @@ class SMC(object):
                 print 'Done.'
             return gamma
 
-    def _do_store_intermediate_samples(self):
-        """Stores the current state in a dictionary."""
-        current_state = {}
-        current_state['gamma'] = self.mcmc_sampler.target.gamma
-        r = [p.copy() for p in self.particles]
-        current_state['r'] = np.array(r)
-        current_state['w'] = np.exp(self.log_w)
-        current_state['dt'] = self.mcmc_sampler.proposal.dt
-        current_state['ess'] = self.ess
-        self._intermediate_samples.append(current_state)
-
-    def set_lowest_and_highest_acceptance_rates(self, lowest_acceptance_rate,
-                                                highest_acceptance_rate):
-        """Set the lowest and highest acceptance rates."""
-        if not isinstance(lowest_acceptance_rate, float):
-            raise TypeError('Acceptance rate must be a float.')
-        if not isinstance(highest_acceptance_rate, float):
-            raise TypeError('Acceptance rate must be a float.')
-        if lowest_acceptance_rate >= highest_acceptance_rate:
-            raise ValueError('Must hold: lowest ac. rate < highest acc. rate')
-        if lowest_acceptance_rate < 0.:
-            raise ValueError('Lowest acceptance rate must be non-negative.')
-        if highest_acceptance_rate > 1.:
-            raise ValueError(('Highest acceptance rate must be less than or'
-                              + ' equal to one.'))
-        self._lowest_allowed_acceptance_rate = lowest_acceptance_rate
-        self._highest_allowed_acceptance_rate = highest_acceptance_rate
-
     def __init__(self, mcmc_sampler=None,
                  num_particles=10, num_mcmc=10,
                  ess_threshold=0.67,
                  ess_reduction=0.90,
                  adapt_proposal_step=False,
-                 lowest_acceptance_rate=0.2,
-                 highest_acceptance_rate=0.5,
-                 proposal_step_decrease_factor=0.8,
-                 proposal_step_increase_factor=1.2,
                  verbose=False,
                  mpi=None,
-                 comm=None):
+                 comm=None,
+                 gamma_name='gamma'):
         """Initialize the object.
 
         Caution:
         The likelihood and the prior MUST be set!
 
         Keyword Arguments:
-        mcmc_sampler    ---     An mcmc_sampler object. If not specified, then
-                                you have to specify a "likelihood", a "prior",
-                                and a proposal.
+        mcmc_sampler    ---     An mcmc_sampler object.
         num_particles   ---     The number of particles.
         num_mcmc        ---     The number of MCMC steps per gamma.
-        proposal        ---     The MCMC proposal distribution.
         ess_threshold   ---     The ESS threshold below which resampling
                                 takes place.
         ess_reduction   ---     The ESS reduction that adaptively specifies
                                 the next gamma.
         adapt_proposal_step     ---     Adapt or not the proposal step by
                                         monitoring the acceptance rate.
-        lowest_acceptance_rate  ---     If the observed acceptance rate ever
-                                        falls below this value, then the MCMC
-                                        proposal step is decreased.
-        highest_acceptance_rate ---     If the observed acceptance rate ever
-                                        goes above this value, then the MCMC
-                                        proposal step is increased.
-        proposal_step_decrease_factor   ---     The factor multiplying the
-                                                proposal step in case the
-                                                acceptance rate needs to be
-                                                increased.
-        proposal_step_increase_factor   ---     The factor multiplying the
-                                                proposal step in case the
-                                                acceptance rate needs to be
-                                                decreased.
         verbose     ---     Be verbose or not.
         mpi         ---     set the mpi class.
         comm        ---     Set this to the MPI communicator (If you want to use mpi).
+        gamma_name  ---     The name you wish to use for gamma.
 
         Caution: The likelihood and the prior must be specified together!
         """
+        assert isinstance(gamma_name, str)
+        self._gamma_name = gamma_name
+        self.mcmc_sampler = mcmc_sampler
         self._mpi = mpi
         if self.mpi is not None and comm is None:
             self.comm = self.mpi.COMM_WORLD
@@ -580,48 +469,30 @@ class SMC(object):
             self.comm = None
         else:
             raise RunTimeError('To use MPI you have to specify the mpi variable.')
-        if mcmc_sampler is not None:
-            self._mcmc_sampler = mcmc_sampler
-        else:
-            raise ValueError('Specify either an mcmc_sampler.')
+        assert isinstance(mcmc_sampler, pymc.MCMC)
+        self._mcmc_sampler = MCMCWrapper(mcmc_sampler)
         self.num_particles = num_particles
         self.num_mcmc = num_mcmc
         self.ess_threshold = ess_threshold
         self.ess_reduction = ess_reduction
-        self.set_lowest_and_highest_acceptance_rates(lowest_acceptance_rate,
-                                                     highest_acceptance_rate)
-        self.proposal_step_decrease_factor = proposal_step_decrease_factor
-        self.proposal_step_increase_factor = proposal_step_increase_factor
         self.verbose = verbose
         self.adapt_proposal_step = adapt_proposal_step
         self._max_proposal_dt = 0.5
-        # Find the gamma parameter amongst the nodes
-        for rv in mcmc_sampler.nodes:
-            if rv.parents.has_key('gamma'):
-                self._observed_rv = rv
-                break
+
 
     def sample(self):
-        """Sample the posterior.
-
-        Return:
-        It returns a list of particles and their corresponding weights,
-        representing the posterior.
+        """
+        Sample the posterior.
         """
         # 0. Initialize gamma to zero
         self.gamma = 0.
         # 1. Initialize all states by sampling from the prior
         if self.verbose:
             print 'Sampling priors.'
-        self.particles = []
-        self.mcmc_sampler.sample(1, thin=1, burn=0,
-                                 progress_bar=False)
-        self.particles.append(self.mcmc_sampler.get_state())
+        self.particles[0] = self.mcmc_sampler.get_state()
         for i in range(1, self.my_num_particles):
             self.mcmc_sampler.draw_from_prior()
-            self.mcmc_sampler.sample(1, thin=1, burn=0,
-                                     progress_bar=False)
-            self.particles.append(self.mcmc_sampler.get_state())
+            self.particles[i] = self.mcmc_sampler.get_state()
         # 2. Initialize the weights
         self.log_w.fill(-math.log(self.num_particles))
         self._ess = float(self.num_particles)
@@ -645,13 +516,10 @@ class SMC(object):
                 print 'Performing MCMC at gamma = ', self.gamma
             for i in range(self.my_num_particles):
                 self.mcmc_sampler.set_state(self.particles[i])
-                self.mcmc_sampler.sample(self.num_mcmc,
-                                         thin=self.num_mcmc, burn=0,
-                                         progress_bar=False)
-
-            print self.idx
+                self.mcmc_sampler.sample(self.num_mcmc)
+                self.particles[i] = self.mcmc_sampler.get_state()
             if self.verbose:
                 print 'Done!'
             # 8. Check if the proposal step need to be adapted.
-            #if self.adapt_proposal_step:
-            #    self._do_adapt_proposal_step()
+            if self.adapt_proposal_step:
+                self._tune()
