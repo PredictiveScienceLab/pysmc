@@ -407,7 +407,8 @@ class SMC(object):
 
     def _tune(self):
         """Tune the parameters of the proposals.."""
-        pass
+        for sm in self.mcmc_sampler.step_methods:
+            sm.tune(verbose=1)
 
     def _find_next_gamma(self):
         """Find the next gamma."""
@@ -523,3 +524,12 @@ class SMC(object):
             # 8. Check if the proposal step need to be adapted.
             if self.adapt_proposal_step:
                 self._tune()
+
+    def get_particle_approximation(self, name):
+        """
+        Get the particle approximation of the distribution.
+        """
+        w = np.exp(self.log_w)
+        r = [self.particles[i]['stochastics'][name]
+             for i in range(self.num_particles)]
+        return w, r

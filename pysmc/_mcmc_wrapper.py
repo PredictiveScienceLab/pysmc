@@ -65,6 +65,11 @@ class MCMCWrapper(object):
         """Expose the log of the probability of the MCMC sampler."""
         return self.mcmc_sampler.logp
 
+    @property
+    def step_methods(self):
+        """Expose the step methods of the MCMC sampler."""
+        return self.mcmc_sampler.step_methods
+
     def __init__(self, mcmc_sampler=None):
         """
         Initialize the object.
@@ -104,11 +109,11 @@ class MCMCWrapper(object):
 
         # The state of each stochastic parameter
         for s in self.stochastics:
-            state['stochastics'][s.__name__] = s.value
+            state['stochastics'][s.__name__] = s.value.copy()
 
         # The state of each deterministic
         for d in self.deterministics:
-            state['deterministics'][d.__name__] = d.value
+            state['deterministics'][d.__name__] = d.value.copy()
 
         return state
 
@@ -201,4 +206,7 @@ class MCMCWrapper(object):
 
     def draw_from_prior(self):
         """Expose the corresponding function of pymc.MCMC."""
-        self.mcmc_sampler.draw_from_prior()
+        try:
+            self.mcmc_sampler.draw_from_prior()
+        except:
+            pass
