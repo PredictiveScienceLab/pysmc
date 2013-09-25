@@ -109,11 +109,11 @@ class MCMCWrapper(object):
 
         # The state of each stochastic parameter
         for s in self.stochastics:
-            state['stochastics'][s.__name__] = s.value.copy()
+            state['stochastics'][s.__name__] = s.value
 
         # The state of each deterministic
         for d in self.deterministics:
-            state['deterministics'][d.__name__] = d.value.copy()
+            state['deterministics'][d.__name__] = d.value
 
         return state
 
@@ -192,6 +192,7 @@ class MCMCWrapper(object):
                             How much verbosity you like.
         progress_bar    :   bool
                             Show the progress bar or not.
+
         """
         if thin is None:
             thin = iter
@@ -205,8 +206,11 @@ class MCMCWrapper(object):
                                  progress_bar=progress_bar)
 
     def draw_from_prior(self):
-        """Expose the corresponding function of pymc.MCMC."""
-        try:
-            self.mcmc_sampler.draw_from_prior()
-        except:
-            pass
+        """Expose the corresponding function of pymc.MCMC.
+        
+        Throws
+        ------
+        AttributeError
+        
+        """
+        self.mcmc_sampler.draw_from_prior()

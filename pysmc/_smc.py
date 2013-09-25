@@ -407,34 +407,56 @@ class SMC(object):
 
     def _tune(self):
         """Tune the parameters of the proposals.."""
+        if self.verbose > 2:
+            print 'Tuning the MCMC parameters.'
         for sm in self.mcmc_sampler.step_methods:
-            sm.tune(verbose=1)
+            if self.verbose > 2:
+                print 'Tuning step method: ', str(sm)
+            if sm.tune(verbose=self.verbose):
+                if self.verbose > 2:
+                    print 'Success!'
+            else:
+                if self.verbose > 2:
+                    print 'Failure!'
 
-    def _find_next_gamma(self):
-        """Find the next gamma."""
-        if self.verbose:
+    def _find_next_gamma(self, gamma):
+        """Find the next gamma.
+
+        Parameters
+        ----------
+        gamma       :   float
+                        The next gamma is between the current one and ``gamma``.
+
+        Returns
+        -------
+        The next gamma.
+
+        """
+        if self.verbose > 2:
             print 'Finding next gamma.'
         # Define the function whoose root we are seeking
-        def f(gamma, args):
-            ess_gamma = args._get_ess_given_gamma(gamma)
-            return ess_gamma - args.ess_reduction * args.ess
-        if f(1., self) > 0:
-            return 1.
+        def f(test_gamma, args):
+            ess_test_gamma = args._get_ess_given_gamma(test_gamma)
+            return ess_test_gamma - args.ess_reduction * args.ess
+        if f(gamma, self) > 0:
+            if self.verbose > 2:
+                print 'We can move directly to the target gamma...'
+            return gamma
         else:
             # Solve for the optimal gamma using the bisection algorithm
-            gamma = brentq(f, self.gamma, 1., self)
+            next_gamma = brentq(f, self.gamma, gamma, self)
             if self.use_mpi:
                 self.comm.barrier()
-            if self.verbose:
-                print 'Done.'
-            return gamma
+            if self.verbose > 2:
+                print 'Success!'
+            return next_gamma
 
     def __init__(self, mcmc_sampler=None,
                  num_particles=10, num_mcmc=10,
                  ess_threshold=0.67,
                  ess_reduction=0.90,
-                 adapt_proposal_step=False,
-                 verbose=False,
+                 adapt_proposal_step=True,
+                 verbose=0,
                  mpi=None,
                  comm=None,
                  gamma_name='gamma'):
@@ -455,7 +477,8 @@ class SMC(object):
                                         monitoring the acceptance rate.
         verbose     ---     Be verbose or not.
         mpi         ---     set the mpi class.
-        comm        ---     Set this to the MPI communicator (If you want to use mpi).
+        comm        ---     Set this to the MPI communicator (If you want to use
+                            mpi).
         gamma_name  ---     The name you wish to use for gamma.
 
         Caution: The likelihood and the prior must be specified together!
@@ -469,7 +492,8 @@ class SMC(object):
         elif comm is None:
             self.comm = None
         else:
-            raise RunTimeError('To use MPI you have to specify the mpi variable.')
+            raise RunTimeError('To use MPI you have to specify '
+                               + 'the mpi variable.')
         assert isinstance(mcmc_sampler, pymc.MCMC)
         self._mcmc_sampler = MCMCWrapper(mcmc_sampler)
         self.num_particles = num_particles
@@ -480,50 +504,102 @@ class SMC(object):
         self.adapt_proposal_step = adapt_proposal_step
         self._max_proposal_dt = 0.5
 
-
-    def sample(self):
+    def initialize(self, gamma=0., particles=None, num_mcmc_per_particle=1000):
         """
-        Sample the posterior.
+        Initialize SMC at a particular ``gamma``.
+        
+        The method has basically three ways of initializing the particles:
+        1) If ``particles`` is not ``None``, then it is assumed to contain the
+           particles at the corresponding value of ``gamma``.
+        2) If ``particles`` is ``None`` and the MCMC sampler class has a method
+           called ``draw_from_prior()`` that works, then it is called to
+           initialize the particles.
+        3) In any other case, MCMC sampling is used to initialize the particles.
+           We are assuming that the MCMC sampler has already been tuned for
+           that particular gamma and that a sufficient burning period has past.
+           Then we record the current state as the first particle, we sample
+           ``num_mcmc_per_particle`` times and record the second particle, and
+           so on.
+        
+        Parameters
+        ----------
+        gamma                   :   float
+                                    The initial ``gamma`` parameter. It must, of
+                                    course, be within the right range of
+                                    ``gamma``.
+        particles               :   dict of MCMC states
+                                    A dictionary of MCMC states representing
+                                    the particles.
+        num_mcmc_per_particle   :   int
+                                    This parameter is ignored if ``particles``
+                                    is not ``None``. If the only way to
+                                    initialize the particles is to use MCMC,
+                                    then this is the number of of mcmc samples
+                                    we drop before getting an MCMC particle.
+                                    
         """
-        # 0. Initialize gamma to zero
-        self.gamma = 0.
-        # 1. Initialize all states by sampling from the prior
-        if self.verbose:
-            print 'Sampling priors.'
-        self.particles[0] = self.mcmc_sampler.get_state()
-        for i in range(1, self.my_num_particles):
-            self.mcmc_sampler.draw_from_prior()
-            self.particles[i] = self.mcmc_sampler.get_state()
-        # 2. Initialize the weights
+        # Set gamma
+        self.gamma = gamma
+        # Set the weights and ESS
         self.log_w.fill(-math.log(self.num_particles))
         self._ess = float(self.num_particles)
-        # 3. Loop until gamma reaches one.
-        while self.gamma < 1.:
-            # 4. Find the next gamma sto that the ESS decreases by
-            # a specific ammount.
-            new_gamma = self._find_next_gamma()
-            # 5. Make sure you set the new weights
+        if particles is not None:
+            assert len(particles) == self.num_particles
+            self._particles = particles
+            # TODO: Fix if using mpi
+            return
+        self.particles[0] = self.mcmc_sampler.get_state()
+        try:
+            if self.verbose > 1:
+                print 'Attempting to sampler from the prior...'
+            for i in range(1, self.my_num_particles):
+                self.mcmc_sampler.draw_from_prior()
+                self.particles[i] = self.mcmc_sampler.get_state()
+            if self.verbose > 1:
+                print 'Success!'
+        except AttributeError:
+            if self.verbose > 1:
+                print 'Failure!'
+                print 'Doing MCMC to initialize the particles.'
+            for i in range(1, self.my_num_particles):
+                self.mcmc_sampler.sample(num_mcmc_per_particle)
+                self.particles[i] = self.mcmc_sampler.get_state()
+            if self.verbose > 1:
+                print 'Success!'
+    
+    def move_to(self, gamma):
+        """
+        Move the current particle approximation to ``gamma``.
+        
+        Paremeters
+        ----------
+        gamma       :   float
+                        The new ``gamma`` you wish to reach.
+        
+        Precondition
+        ------------
+        There is already a valid particle approximation. See
+        ``SMC.initialize()`` for ways of doing this.
+        
+        """
+        while self.gamma < gamma:
+            if self.adapt_proposal_step:
+                self._tune()
+            new_gamma = self._find_next_gamma(gamma)         
             log_w = self._get_unormalized_weights_at(new_gamma)
             self._log_w = self._normalize(log_w)
-            # and, of course, the new ESS
             self._ess = self._get_ess_at(self.log_w)
-            # and, finally, gamma:
             self.gamma = new_gamma
-            # 6. Check if resampling is needed
             if self.ess < self.ess_threshold * self.num_particles:
                 self._resample()
-            # 7. Perform the MCMC steps
-            if self.verbose:
+            if self.verbose > 0:
                 print 'Performing MCMC at gamma = ', self.gamma
             for i in range(self.my_num_particles):
                 self.mcmc_sampler.set_state(self.particles[i])
                 self.mcmc_sampler.sample(self.num_mcmc)
                 self.particles[i] = self.mcmc_sampler.get_state()
-            if self.verbose:
-                print 'Done!'
-            # 8. Check if the proposal step need to be adapted.
-            if self.adapt_proposal_step:
-                self._tune()
+            if self.verbose > 1:
+                print 'Success!'
 
     def get_particle_approximation(self, name):
         """

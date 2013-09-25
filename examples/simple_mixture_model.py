@@ -15,13 +15,12 @@ import math
 
 
 @pymc.stochastic(dtype=float)
-def mixture(value=0., gamma=1.):
-    def logp(value, gamma):
-
-        logp1 = math.log(0.2) + pymc.normal_like(value, -1., 10.)
-        logp2 = math.log(0.8) + pymc.normal_like(value, 2., 10.)
-        return (gamma * math.log(math.fsum([math.exp(logp1), math.exp(logp2)]))
-                + (1. - gamma) * pymc.normal_like(value, 0., 1))
-
-    def random(gamma):
-        return np.random.randn()
+def mixture(value=-10., gamma=.001, sigma=0.01):
+    def logp(value, gamma, sigma=0.1):
+        tau = math.sqrt(1. / sigma ** 2)
+        logp1 = math.log(0.2) + pymc.normal_like(value, -10., tau)
+        logp2 = math.log(0.8) + pymc.normal_like(value, 20., tau)
+        tmp = math.fsum([math.exp(logp1), math.exp(logp2)])
+        if tmp <= 0.:
+            return -np.inf
+        return gamma * math.log(tmp)
