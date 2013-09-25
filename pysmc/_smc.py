@@ -7,6 +7,7 @@ import numpy as np
 from scipy.optimize import brentq
 import math
 import itertools
+import sys
 
 
 class SMC(object):
@@ -14,9 +15,8 @@ class SMC(object):
     Use Sequential Monte Carlo (SMC) to sample from a distribution.
 
     In order to use the class you have to supply a pymc.MCMC class.
-    The class should at least one node with a parameter called gamma
-    that can range from 0 to 1. This class will start sampling from
-    gamma == 0 and gradually move to gamma == 1.
+    The class should at least one node with a parameter called ``gamma_name``
+    (see ``SMC.__init__()``).
     """
 
     # The number of particles of this CPU
@@ -101,7 +101,6 @@ class SMC(object):
             raise ValueError('The number of particles must be positive.')
         self._my_num_particles = value / self.size
         self._num_particles = self.my_num_particles * self.size
-        # Allocate memory
         self._allocate_memory()
 
     @property
@@ -276,6 +275,11 @@ class SMC(object):
         """Get the particles."""
         return self._particles
 
+    @property
+    def weights(self):
+        """Get the weight of each particle."""
+        return np.exp(self.log_w)
+
     def _logsumexp(self, log_x):
         """Perform the log-sum-exp of the weights."""
         my_max_exp = log_x.max()
@@ -298,7 +302,8 @@ class SMC(object):
     def _get_ess_at(self, log_w):
         """Calculate the ESS at given the log weights.
 
-        Precondition:
+        Precondition
+        ------------
         The weights are assumed to be normalized.
         """
         log_w_all = log_w
@@ -334,7 +339,8 @@ class SMC(object):
     def _get_ess_given_gamma(self, gamma):
         """Calculate the ESS at a given gamma.
 
-        Return:
+        Returns
+        -------
         The ess and the normalized weights corresponding to that
         gamma.
         """
@@ -345,11 +351,12 @@ class SMC(object):
     def _resample(self):
         """Resample the particles.
 
-        Precondition:
+        Precondition
+        ------------
         The weights are assumed to be normalized.
         """
-        if self.verbose:
-            print 'Resampling...'
+        if self.verbose > 1:
+            sys.stdout.write('- resampling: ')
         idx_list = []
         log_w_all = np.ndarray(self.num_particles)
         if self.use_mpi:
@@ -379,7 +386,8 @@ class SMC(object):
                     my_idx = idx[i] % self.my_num_particles
                     self._particles.append(old_particles[my_idx].copy())
                 elif to_whom == self.rank:
-                    self._particles.append(self.comm.recv(source=from_whom, tag=i))
+                    self._particles.append(self.comm.recv(
+                                                       source=from_whom, tag=i))
                 elif from_whom == self.rank:
                     my_idx = idx[i] % self.my_num_particles
                     self.comm.send(old_particles[my_idx], dest=to_whom, tag=i)
@@ -388,36 +396,35 @@ class SMC(object):
             self._particles = [self._particles[i].copy() for i in idx]
         self.log_w.fill(-math.log(self.num_particles))
         self._ess = self.num_particles
-        if self.verbose:
-            print 'Done!'
+        if self.verbose > 1:
+            sys.stdout.write('SUCCESS\n')
 
     def _allocate_memory(self):
-        """Allocates memory.
+        """Allocate memory.
 
-        Precondition:
-        num_particles have been set.
+        Precondition
+        ------------
+        ``num_particles`` have been set.
         """
-        if self.verbose:
-            print 'Allocating memory...'
         # Allocate and initialize the weights
-        self._log_w = np.ones(self.my_num_particles) * (-math.log(self.num_particles))
+        self._log_w = (np.ones(self.my_num_particles) 
+                       * (-math.log(self.num_particles)))
         self._particles = [None for i in range(self.my_num_particles)]
-        if self.verbose:
-            print 'Done!'
 
     def _tune(self):
         """Tune the parameters of the proposals.."""
-        if self.verbose > 2:
-            print 'Tuning the MCMC parameters.'
+        # TODO: Make sure this actually works!
+        if self.verbose > 1:
+            print '- tuning the MCMC parameters:'
         for sm in self.mcmc_sampler.step_methods:
-            if self.verbose > 2:
-                print 'Tuning step method: ', str(sm)
+            if self.verbose > 1:
+                sys.stdout.write('\t- tuning step method: %s' % str(sm))
             if sm.tune(verbose=self.verbose):
-                if self.verbose > 2:
-                    print 'Success!'
+                if self.verbose > 1:
+                    sys.stdout.write('\n\t\tSUCCESS\n')
             else:
-                if self.verbose > 2:
-                    print 'Failure!'
+                if self.verbose > 1:
+                    sys.stdout.write('\n\t\tFAILURE\n')
 
     def _find_next_gamma(self, gamma):
         """Find the next gamma.
@@ -432,23 +439,21 @@ class SMC(object):
         The next gamma.
 
         """
-        if self.verbose > 2:
-            print 'Finding next gamma.'
+        if self.verbose > 1:
+            print '- finding next gamma.'
         # Define the function whoose root we are seeking
         def f(test_gamma, args):
             ess_test_gamma = args._get_ess_given_gamma(test_gamma)
             return ess_test_gamma - args.ess_reduction * args.ess
         if f(gamma, self) > 0:
-            if self.verbose > 2:
-                print 'We can move directly to the target gamma...'
+            if self.verbose > 1:
+                print '- \twe can move directly to the target gamma...'
             return gamma
         else:
             # Solve for the optimal gamma using the bisection algorithm
             next_gamma = brentq(f, self.gamma, gamma, self)
             if self.use_mpi:
                 self.comm.barrier()
-            if self.verbose > 2:
-                print 'Success!'
             return next_gamma
 
     def __init__(self, mcmc_sampler=None,
@@ -502,9 +507,8 @@ class SMC(object):
         self.ess_reduction = ess_reduction
         self.verbose = verbose
         self.adapt_proposal_step = adapt_proposal_step
-        self._max_proposal_dt = 0.5
 
-    def initialize(self, gamma=0., particles=None, num_mcmc_per_particle=1000):
+    def initialize(self, gamma, particles=None, num_mcmc_per_particle=1000):
         """
         Initialize SMC at a particular ``gamma``.
         
@@ -529,7 +533,9 @@ class SMC(object):
                                     ``gamma``.
         particles               :   dict of MCMC states
                                     A dictionary of MCMC states representing
-                                    the particles.
+                                    the particles. When using MPI, we are
+                                    assuming that each one of the CPU's has each
+                                    own collection of particles.
         num_mcmc_per_particle   :   int
                                     This parameter is ignored if ``particles``
                                     is not ``None``. If the only way to
@@ -538,34 +544,54 @@ class SMC(object):
                                     we drop before getting an MCMC particle.
                                     
         """
+        if self.verbose > 0:
+            print '------------------------'
+            print 'START SMC Initialization'
+            print '------------------------'
+            print '- initializing at', self.gamma_name, ':', gamma
         # Set gamma
         self.gamma = gamma
         # Set the weights and ESS
         self.log_w.fill(-math.log(self.num_particles))
         self._ess = float(self.num_particles)
         if particles is not None:
-            assert len(particles) == self.num_particles
+            sys.stdout.write('- attempting to initialize with particles: ')
+            if not len(particle) == self.my_num_particles:
+                raise ValueError('*** you gave me ' + str(len(particle)) +
+                ' but you had requested to work with ' +
+                 str(self.my_num_particles) + ' per process.'
+                )
+            sys.stdout.write('SUCCESS\n')
             self._particles = particles
-            # TODO: Fix if using mpi
             return
         self.particles[0] = self.mcmc_sampler.get_state()
         try:
-            if self.verbose > 1:
-                print 'Attempting to sampler from the prior...'
+            if self.verbose > 0:
+                sys.stdout.write('- initializing by sampling from the prior: ')
             for i in range(1, self.my_num_particles):
                 self.mcmc_sampler.draw_from_prior()
                 self.particles[i] = self.mcmc_sampler.get_state()
-            if self.verbose > 1:
-                print 'Success!'
+            if self.verbose > 0:
+                sys.stdout.write('SUCCESS\n')
         except AttributeError:
-            if self.verbose > 1:
-                print 'Failure!'
-                print 'Doing MCMC to initialize the particles.'
+            if self.verbose > 0:
+                sys.stdout.write('FAILURE\n')
+                print '- initializing via MCMC'
+                total_samples = self.num_particles * num_mcmc_per_particle
+                print '- taking a total of', total_samples
+                print '- creating a particle every', num_mcmc_per_particle
+            if self.verbose > 0:
+                pb = pymc.progressbar.progress_bar(self.num_particles *
+                                                   num_mcmc_per_particle)
             for i in range(1, self.my_num_particles):
                 self.mcmc_sampler.sample(num_mcmc_per_particle)
                 self.particles[i] = self.mcmc_sampler.get_state()
-            if self.verbose > 1:
-                print 'Success!'
+                if self.verbose > 0:
+                    pb.update((i + 2) * self.size * num_mcmc_per_particle)
+            if self.verbose > 0:
+                print '----------------------'
+                print 'END SMC Initialization'
+                print '----------------------'
     
     def move_to(self, gamma):
         """
@@ -582,6 +608,13 @@ class SMC(object):
         ``SMC.initialize()`` for ways of doing this.
         
         """
+        if self.verbose > 0:
+            print '-----------------'
+            print 'START SMC MOVE TO'
+            print '-----------------'
+            print 'initial ', self.gamma_name, ':', self.gamma
+            print 'final', self.gamma_name, ':', gamma
+            print 'ess reduction: ', self.ess_reduction
         while self.gamma < gamma:
             if self.adapt_proposal_step:
                 self._tune()
@@ -593,19 +626,59 @@ class SMC(object):
             if self.ess < self.ess_threshold * self.num_particles:
                 self._resample()
             if self.verbose > 0:
-                print 'Performing MCMC at gamma = ', self.gamma
+                print '- moving to', self.gamma_name, ':', self.gamma
+                pb = pymc.progressbar.progress_bar(self.num_particles *
+                                                   self.num_mcmc)
+                print '- performing', self.num_mcmc, 'MCMC steps per particle'
             for i in range(self.my_num_particles):
                 self.mcmc_sampler.set_state(self.particles[i])
                 self.mcmc_sampler.sample(self.num_mcmc)
                 self.particles[i] = self.mcmc_sampler.get_state()
+                pb.update(i * self.size * self.num_mcmc)
             if self.verbose > 1:
-                print 'Success!'
+                print '- acceptance rate for each step method:'
+                for sm in self.mcmc_sampler.step_methods:
+                    acc_rate = sm.accepted / (sm.accepted + sm.rejected)
+                    print '\t-', str(sm), ':', acc_rate
+        print '---------------'
+        print 'END SMC MOVE TO'
+        print '---------------'
+    
+    def get_particles_of(self, name, type_of_var='stochastics'):
+        """Get the particles pertaining to variable ``name``.
+        
+        If the collected particles can be converted to a numpy array, then this
+        what is returned. Otherwise, we return is as a list of whatever objects
+        the particles are.
+        
+        Parameters
+        ----------
+        name        :   str
+                        The name of the variable whose particles you want to
+                        get.
+        type_of_var :   str
+                        The type of variables you want to get. This can be
+                        either 'stochastics' or 'deterministics' if you are
+                        are using pymc. The default type is 'stochastics'.
+                        However, I do not restrict its value, in case you would
+                        like to define other types by extending pymc.
+        
+        Returns
+        -------
+        The particles pertaining to variable ``name`` of type ``type_of_var``.
 
-    def get_particle_approximation(self, name):
+        Precondition
+        ------------
+        The object must represent a valid particle approximation.
+        
+        Warning
+        -------
+        When in parallel, you will get the particles owned by the cpu that calls
+        this method.
         """
-        Get the particle approximation of the distribution.
-        """
-        w = np.exp(self.log_w)
-        r = [self.particles[i]['stochastics'][name]
+        r = [self.particles[i][type_of_var][name]
              for i in range(self.num_particles)]
-        return w, r
+        try:
+            return np.array(r)
+        except:
+            return r
