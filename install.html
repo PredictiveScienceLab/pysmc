@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; pysmc 0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pysmc 0.0 documentation" href="index.html" />
+    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="prev" title="Welcome to pysmc’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to pysmc’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pysmc 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation">
+<span id="install"></span><h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>We describe the necessary steps required to succesfully install
+<a class="reference internal" href="reference.html#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a>. The most important prior step is to satisfy the dependencies
+of the code.</p>
+<div class="section" id="dependecies">
+<span id="depend"></span><h2>Dependecies<a class="headerlink" href="#dependecies" title="Permalink to this headline">¶</a></h2>
+<p>There are two different categories of packages on which we rely. The
+<a class="reference internal" href="#required"><em>Required</em></a> ones have to be there no matter what. The <a class="reference internal" href="#optional"><em>Optional</em></a>
+ones can be skipped but without them you will loose some of the
+functionality of <a class="reference internal" href="reference.html#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a> or/and you will not be able to run all the
+examples in the <tt class="xref py py-mod docutils literal"><span class="pre">tutorial</span></tt>.</p>
+<div class="section" id="required">
+<span id="id1"></span><h3>Required<a class="headerlink" href="#required" title="Permalink to this headline">¶</a></h3>
+<p>The following packages are required:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="www.numpy.org">Numpy</a> for linear algebra.</li>
+<li><a class="reference external" href="www.scipy.org">SciPy</a> for some root finding methods.</li>
+<li><a class="reference external" href="http://pymc-devs.github.io/pymc/">PyMC</a> for general probabilistic
+model definition and MCMC sampling. We suggest that you install the
+<a class="reference external" href="https://github.com/pymc-devs/pymc">latest PyMC version from GitHub</a>
+.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="optional">
+<span id="id2"></span><h3>Optional<a class="headerlink" href="#optional" title="Permalink to this headline">¶</a></h3>
+<p>The following packages are optional but highly recommended:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="mpi4py.scipy.org">MPI4PY</a> to enable the parallel capabilities of
+<a class="reference internal" href="reference.html#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a>.</li>
+<li><a class="reference external" href="matplotlib.org">matplotlib</a> for plotting.</li>
+<li><a class="reference external" href="http://www.ctcms.nist.gov/fipy/">FiPy</a> in order to run the
+<em class="xref std std-ref">diffusion_example</em>.</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="final-steps">
+<span id="id3"></span><h3>Final Steps<a class="headerlink" href="#final-steps" title="Permalink to this headline">¶</a></h3>
+<p>As soon as you are done installing the packages above, you can fetch
+<a class="reference internal" href="reference.html#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a> from <a class="reference external" href="https://github.com/ebilionis/pysmc">GitHub</a> by:</p>
+<div class="highlight-python"><pre>git clone https://github.com/ebilionis/pysmc.git</pre>
+</div>
+<p>Then, all you have to do is enter the <tt class="docutils literal"><span class="pre">pysmc</span></tt> directory that was created
+and run:</p>
+<div class="highlight-python"><pre>python setup.py install</pre>
+</div>
+<p>If you want to put the code in an non default location, simply do:</p>
+<div class="highlight-python"><pre>python setup.py install --prefix=/path/to/your/directory</pre>
+</div>
+<p>If you do the latter, make sure you update your <tt class="docutils literal"><span class="pre">PYTHONPATH</span></tt> variable:</p>
+<div class="highlight-python"><pre>export PYTHONPATH=/path/to/your/directory/lib/python2.7/site-packages:$PYTHONPATH</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#dependecies">Dependecies</a><ul>
+<li><a class="reference internal" href="#required">Required</a></li>
+<li><a class="reference internal" href="#optional">Optional</a></li>
+<li><a class="reference internal" href="#final-steps">Final Steps</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to pysmc&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="reference.html"
+                        title="next chapter">Reference</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/install.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to pysmc’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">pysmc 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Ilias Bilionis.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>
