@@ -19,14 +19,13 @@ import matplotlib.pyplot as plt
 
 
 mcmc_sampler = pymc.MCMC(simple_mixture_model, verbose=1)
-smc_sampler = SMC(mcmc_sampler=mcmc_sampler, num_particles=100,
-                  num_mcmc=1000,
+smc_sampler = SMC(mcmc_sampler=mcmc_sampler, num_particles=1000,
+                  num_mcmc=10,
                   verbose=3)
 smc_sampler.initialize(0.001)
 smc_sampler.move_to(1.)
-#w = smc_sampler.weights
-#r = smc_sampler.get_particles_of('mixture')
+w = smc_sampler.weights
+r = smc_sampler.get_particles_of('mixture')
 #print w
-#print w, r
-#plt.hist(r, bins=100, weights=w, normed=True)
-#plt.show()
+plt.hist(r, bins=100, weights=w, normed=True)
+plt.show()
