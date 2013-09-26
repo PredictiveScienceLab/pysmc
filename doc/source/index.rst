@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 3
 
-   intsall
+   install
    reference
 
 
