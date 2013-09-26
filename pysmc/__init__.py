@@ -1,11 +1,35 @@
 """
-Initialize the pysmc module.
+.. module:: pysmc
+    :synopsis: The main PySMC module.
 
-Author:
-    Ilias Bilionis
+.. moduleauthor:: Ilias Bilionis <ebilionis@mcs.anl.gov>
 
-Date:
-    9/20/2013
+
+.. _reference:
+=========
+Reference
+=========
+
+The goal of :mod:`pysmc` is to implement Sequential Monte Carlo (SMC)
+techniques on top of the Monte Carlo (MC) package
+`PyMC <http://pymc-devs.github.io/pymc/>`_. The manual assumes that the user
+is already familiar with the way PyMC works. Read their tutorial prior to
+moving forward if you are not.
+
+.. _classes:
+-------
+Classes
+-------
+Here is complete reference of all the classes included in :mod:`pysmc`.
+
+.. automodule:: pysmc._mcmc_wrapper
+.. autoclass:: pysmc.MCMCWrapper
+    :members:
+
+.. automodule:: pysmc._smc
+.. autoclass:: pysmc.SMC
+    :members:
+
 """
 
 

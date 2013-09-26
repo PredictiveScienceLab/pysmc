@@ -1,3 +1,15 @@
+"""
+
+.. _smc:
+SMC
++++
+
+:class:`pysmc.SMC` is the class that makes everything happen.
+
+Here is a complete reference of the public members:
+"""
+
+
 __all__ = ['SMC']
 
 
@@ -14,9 +26,33 @@ class SMC(object):
     """
     Use Sequential Monte Carlo (SMC) to sample from a distribution.
 
-    In order to use the class you have to supply a pymc.MCMC class.
-    The class should at least one node with a parameter called ``gamma_name``
-    (see ``SMC.__init__()``).
+    :param mcmc_sampler:        An mcmc_sampler object.
+    :type mcmc_sampler:         :class:`pymc.MCMC`
+    :param num_particles:       The number of particles.
+    :type num_particles:        int
+    :param num_mcmc:            The number of MCMC steps per gamma.
+    :type num_mcmc:             int
+    :param ess_threshold:       The ESS threshold below which resampling
+                                takes place.
+    :type ess_threshold:        float
+    :param ess_reduction:       The ESS reduction that adaptively specifies
+                                the next ``gamma``.
+    :type ess_reduction:        float
+    :param adapt_proposal_step: Adapt or not the proposal step by
+                                monitoring the acceptance rate.
+    :type adapt_proposal_step:  bool
+    :param verbose:             How much output to print (1, 2 and 3).
+    :type verbose:              int
+    :param gamma_name:          The name with which the ``gamma`` parameter is
+                                refered to in your :mod:`pymc` model. The
+                                default value is ``'gamma'``, but you can
+                                change it to whatever you want.
+    :type gamma_name:           str
+    :param mpi:                 The MPI class (see :mod:`mpi4py` and
+                                :ref:`mpi_example`). If ``None``, then no
+                                parallelism is used.
+    :param comm:                Set this to the MPI communicator. If ``None``,
+                                then ``mpi.COMM_WORLD`` is used.
     """
 
     # The number of particles of this CPU
@@ -84,19 +120,35 @@ class SMC(object):
 
     @property
     def my_num_particles(self):
-        """Get the my number of particles."""
+        """
+        :getter:    The number of particles associated with each process.
+        :type:      int
+
+        .. note::
+
+            If not using MPI, then it is the same as
+            :meth:`pysmc.SMC.num_particles`. Otherwise is it is equal to
+            ``num_particles / size``, where ``size`` is the total number of MPI
+            processes.
+
+        """
         return self._my_num_particles
 
     @property
     def num_particles(self):
-        """Get the number of particles."""
+        """
+        :getter:    Get the number of particles.
+        :setter:    Set the number of particles. All data in the instant of the
+                    class will be lost if this is called.
+        :type:      int
+        :raises:    :exc:`exceptions.ValueError`
+        """
         return self._num_particles
 
     @num_particles.setter
     def num_particles(self, value):
         """Set the number of particles."""
-        if not isinstance(value, int):
-            raise TypeError('The number of particles must be an int.')
+        value = int(value)
         if value <= 0:
             raise ValueError('The number of particles must be positive.')
         self._my_num_particles = value / self.size
@@ -105,62 +157,82 @@ class SMC(object):
 
     @property
     def log_w(self):
-        """Get the log of the weights."""
+        """
+        :getter:    The logarithm of the weights of the particles.
+        :type:      1D :class:`numpy.ndarray`
+        """
         return self._log_w
 
     @property
     def ess(self):
-        """Get the current effective sample size."""
+        """
+        :getter:    The current Effective Sample Size.
+        :type:      float
+        """
         return self._ess
 
     @property
     def num_mcmc(self):
-        """Get the number of MCMC steps per gamma."""
+        """
+        :getter:    Get the number of MCMC steps per SMC step.
+        :setter:    Set the number of MCMC steps per SMC step.
+        :type:      int
+        :raises:    :exc:`exceptions.ValueError`
+        """
         return self._num_mcmc
 
     @num_mcmc.setter
     def num_mcmc(self, value):
         """Set the number of MCMC steps per gamma."""
-        if not isinstance(value, int):
-            raise TypeError('The number of MCMC steps must be an integer.')
+        value = int(value)
         if value <= 0:
             raise ValueError('The number of MCMC steps must be positive.')
         self._num_mcmc = value
 
     @property
     def ess_threshold(self):
-        """Get the threshold of the effective sample size."""
+        """
+        The threshold of the Effective Sample Size is a number between 0 and 1
+        representing the percentage of the total number of particles. If the
+        Effective Sample Size falls bellow ``ess_threshold * num_particles``,
+        then the particles are automatically resampled.
+
+        :getter:    Get the threshold of the Effective Sample Size.
+        :setter:    Set the threshold of the Effective Sample Size.
+        :type:      float
+        :raises:    :exc:`exceptions.ValueError`
+        """
         return self._ess_threshold
 
     @ess_threshold.setter
     def ess_threshold(self, value):
-        """Set the threshold of the effective sample size.
-
-        It must be a number in (0, 1) representing a percentage of the
-        total number of particles. If the effective sample size falls
-        below this value, then the particles are automatically
-        resampled.
-        """
-        if not isinstance(value, float):
-            raise TypeError('The ESS threshold must be a float.')
+        """Set the threshold of the effective sample size."""
+        value = float(value)
         if value <= 0. or value >= 1.:
             raise ValueError('The ESS threshold must be in (0, 1).')
         self._ess_threshold = value
 
     @property
     def ess_reduction(self):
-        """Get the reduction of the effective sample size per gamma step."""
+        """
+        It is a number between 0 and 1 representing the desired
+        percent reduction
+        of the effective sample size when we perform a SMC step.
+        The next ``gamma`` will be selected adaptively so that the prescribed
+        reduction is achieved.
+
+        :getter:    Get the reduction of the Effective Sample Size per SMC
+                    step.
+        :setter:    Set the reduction of the Effective Sample Size per SMC
+                    step.
+        :type:      float
+        :raises:    :exc:`exceptions.ValueError`
+        """
         return self._ess_reduction
 
     @ess_reduction.setter
     def ess_reduction(self, value):
-        """Set the reduction of the effective sample size per gamma step.
-
-        It must be a number in (0, 1) representing the desired reduction
-        of the effective sample size when we perform a step in gamma.
-        The next gamma will be selected adaptively so that the prescribed
-        reduction is achieved.
-        """
+        """Set the reduction of the effective sample size per SMC step."""
         value = float(value)
         if value <= 0. or value >= 1.:
             raise ValueError('The ESS reduction must be in (0, 1).')
@@ -168,24 +240,38 @@ class SMC(object):
 
     @property
     def adapt_proposal_step(self):
-        """Get the adapt proposal step flag."""
+        """
+        If the ``adapt proposal step`` is set to ``True``, each of the step
+        methods of the underlying :class:`pymc.MCMC` class are adaptively
+        tuned by monitoring the acceptance rate.
+
+        :getter:    Get the adapt flag.
+        :setter:    Set the adapt flag.
+        :type:      bool
+        """
         return self._adapt_proposal_step
 
     @adapt_proposal_step.setter
     def adapt_proposal_step(self, value):
-        """Set the adapt proposal step flag.
-
-        If the adapt proposal step is set to True, the step
-        of the MCMC proposal is adaptively set so that it remains
-        between self.lowest_allowed_acceptance_rate and
-        self.highest_allowed_acceptance_rate.
-        """
+        """Set the adapt flag."""
         value = bool(value)
         self._adapt_proposal_step = value
 
     @property
     def verbose(self):
-        """Get the verbosity flag."""
+        """
+
+        Specify the amount of output printed by the class. There are three
+        levels:
+            + 0:    Print nothing.
+            + 1:    Print info from methods you call.
+            + 2:    Print info from methods the methods you call call...
+            + 3:    Guess what...
+
+        :getter:    Get the verbosity flag.
+        :setter:    Set the verbosity flag.
+        :type:      int
+        """
         if self.rank == 0:
             return self._verbose
         else:
@@ -199,12 +285,24 @@ class SMC(object):
 
     @property
     def comm(self):
-        """Get the MPI communicator."""
+        """
+        The MPI communicator.
+
+        :getter:    Get the MPI communicator.
+        :setter:    Set the MPI communicator.
+        :type:      We do not check it.
+        """
         return self._comm
 
     @property
     def mpi(self):
-        """Get access to the MPI class."""
+        """
+        The MPI class.
+
+        :getter:    Get the MPI class.
+        :setter:    Set the MPI class.
+        :type:      We do not check it.
+        """
         return self._mpi
 
     @comm.setter
@@ -220,28 +318,51 @@ class SMC(object):
 
     @property
     def use_mpi(self):
-        """Are we using MPI or not?"""
+        """
+        Check if MPI is being used.
+
+        :returns:   ``True`` if MPI is used and ``False`` otherwise.
+        :rtype:     bool
+        """
         return self.comm is not None
 
     @property
     def rank(self):
-        """Get the rank of this CPU."""
+        """
+        The rank of the process that calls this method.
+
+        :getter:    Get the rank of the process that calls this method.
+        :type:      int
+        """
         return self._rank
 
     @property
     def size(self):
-        """Get the size of the CPU pool."""
+        """
+        The total number of MPI processes.
+
+        :getter:    Get the total number of MPI processes.
+        :type:      int
+        """
         return self._size
 
     @property
     def mcmc_sampler(self):
-        """Get the MCMC sampler."""
+        """
+        The underlying :class:`pymc.MCMC` object.
+
+        :getter: Get the underlying MCMC object.
+        :setter: Set the underlying MCMC object.
+        :raises: :exc:`exceptions.TypeError`
+        :type: :class:`pymc.MCMC`
+        """
         return self._mcmc_sampler
 
     @mcmc_sampler.setter
     def mcmc_sampler(self, value):
         """Set the MCMC sampler."""
-        assert isinstance(value, pymc.MCMC)
+        if not isinstance(value, pymc.MCMC):
+            raise TypeError('mcmc_sampler must be a pymc.MCMC object!')
         self._mcmc_sampler = value
         self._update_gamma_rv()
 
@@ -254,11 +375,24 @@ class SMC(object):
 
     @property
     def gamma_rv(self):
-        """Get the observed random variable."""
+        """
+        The random variable of the :mod:`pymc` model that has a parameter named
+        ``gamma_name``.
+
+        :getter:    Get the value of the ``gamma_name`` parameter.
+        :type:      :class:`pymc.Stochastic`
+        """
         return self._gamma_rv
 
     @property
     def gamma(self):
+        """
+        The value of the ``gamma_name`` parameter.
+
+        :getter:    Get the value of the ``gamma_name`` parameter.
+        :setter:    Set the value of the ``gamma_name`` parameter.
+        :type:      float
+        """
         return self._gamma_rv.parents[self.gamma_name]
 
     @gamma.setter
@@ -267,18 +401,72 @@ class SMC(object):
 
     @property
     def gamma_name(self):
-        """Get the true name of the gamma parameter."""
+        """
+        The true name of the gamma parameter in the :mod:`pymc` model.
+
+        :getter:    Get the name of the gamma parameter.
+        :setter:    Set the name of the gamma parameter.
+        :type:      str
+        """
         return self._gamma_name
+
+    @gamma_name.setter
+    def gamma_name(self, value):
+        """Set the true name of the gamma parameter."""
+        self._gamma_name = gamma_name
+        if self._mcmc_sampler is not None:
+            self._update_gamma_rv()
 
     @property
     def particles(self):
-        """Get the particles."""
+        """
+        The SMC particles.
+
+        :getter:    Get the SMC particles.
+        :setter:    Set the SMC particles.
+        :type:      list of whatever objects your method supports.
+        :raises:    :exc:`exceptions.ValueError`
+
+        .. note::
+
+            When using MPI and you must assign to the setter only the particles
+            that pertain to the process that calls it. That is, you are
+            responsible for scattering the particles from the root to everybody
+            else. Hopefully, you will get an :exc:`exceptions.ValueError` if
+            you get this wrong.
+
+        """
         return self._particles
+
+    @particles.setter
+    def particles(self, value):
+        """Set the SMC particles."""
+        if not len(value) == self.my_num_particles:
+            raise ValueError('The number of particles you specified is wrong.')
+        self._particles = particles
 
     @property
     def weights(self):
-        """Get the weight of each particle."""
+        """
+        The weights of the SMC particles.
+
+        :getter:    Get the SMC weights.
+        :setter:    Set the SMC weights.
+        :type:      1D :class:`numpy.ndarray`
+
+        .. note::
+
+            When using MPI, the same concerns as in :attr:`pysmc.SMC.particles`
+            hold here.
+
+        """
         return np.exp(self.log_w)
+
+    @weights.setter
+    def weights(self, value):
+        """Set the SMC weights."""
+        value = np.array(value)
+        self._log_w = self._normalize(np.log(value))
 
     def _logsumexp(self, log_x):
         """Perform the log-sum-exp of the weights."""
@@ -407,7 +595,7 @@ class SMC(object):
         ``num_particles`` have been set.
         """
         # Allocate and initialize the weights
-        self._log_w = (np.ones(self.my_num_particles) 
+        self._log_w = (np.ones(self.my_num_particles)
                        * (-math.log(self.num_particles)))
         self._particles = [None for i in range(self.my_num_particles)]
 
@@ -465,28 +653,10 @@ class SMC(object):
                  mpi=None,
                  comm=None,
                  gamma_name='gamma'):
-        """Initialize the object.
+        """
+        Initialize the object.
 
-        Caution:
-        The likelihood and the prior MUST be set!
-
-        Keyword Arguments:
-        mcmc_sampler    ---     An mcmc_sampler object.
-        num_particles   ---     The number of particles.
-        num_mcmc        ---     The number of MCMC steps per gamma.
-        ess_threshold   ---     The ESS threshold below which resampling
-                                takes place.
-        ess_reduction   ---     The ESS reduction that adaptively specifies
-                                the next gamma.
-        adapt_proposal_step     ---     Adapt or not the proposal step by
-                                        monitoring the acceptance rate.
-        verbose     ---     Be verbose or not.
-        mpi         ---     set the mpi class.
-        comm        ---     Set this to the MPI communicator (If you want to use
-                            mpi).
-        gamma_name  ---     The name you wish to use for gamma.
-
-        Caution: The likelihood and the prior must be specified together!
+        See the doc of the class for the description.
         """
         assert isinstance(gamma_name, str)
         self._gamma_name = gamma_name
@@ -511,38 +681,36 @@ class SMC(object):
     def initialize(self, gamma, particles=None, num_mcmc_per_particle=1000):
         """
         Initialize SMC at a particular ``gamma``.
-        
+
         The method has basically three ways of initializing the particles:
-        1) If ``particles`` is not ``None``, then it is assumed to contain the
+
+        + If ``particles`` is not ``None``, then it is assumed to contain the
            particles at the corresponding value of ``gamma``.
-        2) If ``particles`` is ``None`` and the MCMC sampler class has a method
+        + If ``particles`` is ``None`` and the MCMC sampler class has a method
            called ``draw_from_prior()`` that works, then it is called to
            initialize the particles.
-        3) In any other case, MCMC sampling is used to initialize the particles.
+        + In any other case, MCMC sampling is used to initialize the particles.
            We are assuming that the MCMC sampler has already been tuned for
            that particular gamma and that a sufficient burning period has past.
            Then we record the current state as the first particle, we sample
            ``num_mcmc_per_particle`` times and record the second particle, and
            so on.
-        
-        Parameters
-        ----------
-        gamma                   :   float
-                                    The initial ``gamma`` parameter. It must, of
+
+        :param gamma:               The initial ``gamma`` parameter. It must, of
                                     course, be within the right range of
                                     ``gamma``.
-        particles               :   dict of MCMC states
-                                    A dictionary of MCMC states representing
+        :type gamma:                float
+        :param particles:           A dictionary of MCMC states representing
                                     the particles. When using MPI, we are
                                     assuming that each one of the CPU's has each
                                     own collection of particles.
-        num_mcmc_per_particle   :   int
-                                    This parameter is ignored if ``particles``
-                                    is not ``None``. If the only way to
-                                    initialize the particles is to use MCMC,
-                                    then this is the number of of mcmc samples
-                                    we drop before getting an MCMC particle.
-                                    
+        :type particles:            (see :attr:`pymc.SMC.particles for type)
+        :param num_mcmc_per_particle:   This parameter is ignored if
+                                        ``particles`` is not ``None``. If the
+                                        only way to initialize the particles is
+                                        to use MCMC, then this is the number of
+                                        of mcmc samples we drop before getting
+                                        a SMC particle.
         """
         if self.verbose > 0:
             print '------------------------'
@@ -556,13 +724,8 @@ class SMC(object):
         self._ess = float(self.num_particles)
         if particles is not None:
             sys.stdout.write('- attempting to initialize with particles: ')
-            if not len(particle) == self.my_num_particles:
-                raise ValueError('*** you gave me ' + str(len(particle)) +
-                ' but you had requested to work with ' +
-                 str(self.my_num_particles) + ' per process.'
-                )
+            self.particles = particles
             sys.stdout.write('SUCCESS\n')
-            self._particles = particles
             return
         self.particles[0] = self.mcmc_sampler.get_state()
         try:
@@ -592,21 +755,19 @@ class SMC(object):
                 print '----------------------'
                 print 'END SMC Initialization'
                 print '----------------------'
-    
+
     def move_to(self, gamma):
         """
         Move the current particle approximation to ``gamma``.
-        
-        Paremeters
-        ----------
-        gamma       :   float
-                        The new ``gamma`` you wish to reach.
-        
-        Precondition
-        ------------
-        There is already a valid particle approximation. See
-        ``SMC.initialize()`` for ways of doing this.
-        
+
+        :param gamma:   The new ``gamma`` you wish to reach.
+        :type gamma:    float
+
+        .. note::
+
+            There must already be a valid particle approximation. See
+            :meth:`pysmc.SMC.initialize()` for ways of doing this.
+
         """
         if self.verbose > 0:
             print '-----------------'
@@ -618,7 +779,7 @@ class SMC(object):
         while self.gamma < gamma:
             if self.adapt_proposal_step:
                 self._tune()
-            new_gamma = self._find_next_gamma(gamma)         
+            new_gamma = self._find_next_gamma(gamma)
             log_w = self._get_unormalized_weights_at(new_gamma)
             self._log_w = self._normalize(log_w)
             self._ess = self._get_ess_at(self.log_w)
@@ -643,38 +804,39 @@ class SMC(object):
         print '---------------'
         print 'END SMC MOVE TO'
         print '---------------'
-    
+
     def get_particles_of(self, name, type_of_var='stochastics'):
-        """Get the particles pertaining to variable ``name``.
-        
+        """
+        Get the particles pertaining to variable ``name``.
+
         If the collected particles can be converted to a numpy array, then this
         what is returned. Otherwise, we return is as a list of whatever objects
         the particles are.
-        
-        Parameters
-        ----------
-        name        :   str
-                        The name of the variable whose particles you want to
-                        get.
-        type_of_var :   str
-                        The type of variables you want to get. This can be
-                        either 'stochastics' or 'deterministics' if you are
-                        are using pymc. The default type is 'stochastics'.
-                        However, I do not restrict its value, in case you would
-                        like to define other types by extending pymc.
-        
-        Returns
-        -------
-        The particles pertaining to variable ``name`` of type ``type_of_var``.
 
-        Precondition
-        ------------
-        The object must represent a valid particle approximation.
-        
-        Warning
-        -------
-        When in parallel, you will get the particles owned by the cpu that calls
-        this method.
+        :param name:        The name of the variable whose particles you want to
+                            get.
+        :type name:         str
+        :param type_of_var: The type of variables you want to get. This can be
+                            either 'stochastics' or 'deterministics' if you are
+                            are using :mod:`pymc`. The default type is 'stochastics'.
+                            However, I do not restrict its value, in case you
+                            would like to define other types by extending
+                            :mod:`pymc`.
+        :type type_of_var:  str
+        :returns:           The particles pertaining to variable ``name`` of
+                            type ``type_of_var``.
+        :rtype:             :class:`numpy.ndarray` if possible, otherwise a
+                            list of whatever types your model has.
+
+        .. note::
+
+            The object must represent a valid particle approximation.
+
+        .. warning::
+
+            When in parallel, you will get the particles owned by the cpu that
+            calls this method.
+
         """
         r = [self.particles[i][type_of_var][name]
              for i in range(self.num_particles)]
