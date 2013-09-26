@@ -1,0 +1,882 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>User Manual &mdash; pysmc 0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pysmc 0.0 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to pysmc’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to pysmc’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pysmc 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-pysmc">
+<span id="user-manual"></span><h1>User Manual<a class="headerlink" href="#module-pysmc" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-pysmc"></span><div class="section" id="id1">
+<h2>PySMC<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>The goal of <a class="reference internal" href="#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a> is to implement Sequential Monte Carlo (SMC)
+techniques on top of the Monte Carlo (MC) package
+<a class="reference external" href="http://pymc-devs.github.io/pymc/">PyMC</a>. The manual assumes that the user
+is already familiar with the way PyMC works. Read their tutorial prior to
+moving forward if you are not.</p>
+<div class="section" id="id2">
+<h3>Classes<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<p>Here is complete reference of all the classes included in <a class="reference internal" href="#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a>.</p>
+<span class="target" id="module-pysmc._mcmc_wrapper"></span><div class="section" id="mcmcwrapper">
+<h4>MCMCWrapper<a class="headerlink" href="#mcmcwrapper" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="#pysmc.MCMCWrapper" title="pysmc.MCMCWrapper"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.MCMCWrapper</span></tt></a>
+provides exactly the same functionality as <tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt>.
+The only new thing is that it has the ability to get and set the current
+state of MCMC from a dictionary describing the state. Basically, you should
+not construct this class your self, <tt class="xref py py-class docutils literal"><span class="pre">pymc.SMC</span></tt> will do it
+automatically.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">It does not inherit from <tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt>. It simply stores
+a reference to a <tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt> object internally.</p>
+</div>
+<p>Here is a complete reference of the public members:</p>
+</div>
+<dl class="class">
+<dt id="pysmc.MCMCWrapper">
+<em class="property">class </em><tt class="descclassname">pysmc.</tt><tt class="descname">MCMCWrapper</tt><big>(</big><em>mcmc_sampler=None</em><big>)</big><a class="headerlink" href="#pysmc.MCMCWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a wrapper class for <tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mcmc_sampler</strong> (<tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt>) &#8211; The underlying MCMC sampler. If <tt class="docutils literal"><span class="pre">None</span></tt>,
+then it <strong>must</strong> be specified before using
+an object of this class.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="pysmc.MCMCWrapper.db">
+<tt class="descname">db</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.MCMCWrapper.db" title="Permalink to this definition">¶</a></dt>
+<dd><p>The database of the MCMC sampler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.MCMCWrapper.deterministics">
+<tt class="descname">deterministics</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.MCMCWrapper.deterministics" title="Permalink to this definition">¶</a></dt>
+<dd><p>The deterministic variables of the model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.MCMCWrapper.draw_from_prior">
+<tt class="descname">draw_from_prior</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.MCMCWrapper.draw_from_prior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw from the prior of the model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.AttributeError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.AttributeError</span></tt></a> if the action is not
+possible.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.MCMCWrapper.get_state">
+<tt class="descname">get_state</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.MCMCWrapper.get_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a dictionary describing the state of the sampler.</p>
+<p>Keep in mind that we do not copy the internal parameters of the
+sampler (i.e., the step methods, their parameters, etc.). We
+only copy the values of all the Stochastics and all the
+Deterministics. On contrast pymc.MCMC.get_state() copies the
+internal parameters and the Stochastics. It does not copy the
+Deterministics. The deterministics are needed because in most
+of our examples they are going to be very expensive to
+revaluate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A dictionary <tt class="docutils literal"><span class="pre">state</span></tt> containing the current state of
+MCMC. The keys of the dictionary are as follows:<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">state['stochastics']</span></tt>: A dictionary keeping the values of
+all stochastic variables.</li>
+<li><tt class="docutils literal"><span class="pre">state['deterministics']</span></tt>: A dictionary keeping the values
+of all deterministic variables.</li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.MCMCWrapper.logp">
+<tt class="descname">logp</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.MCMCWrapper.logp" title="Permalink to this definition">¶</a></dt>
+<dd><p>The log of the probability of the current state of the MCMC sampler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.MCMCWrapper.mcmc_sampler">
+<tt class="descname">mcmc_sampler</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.MCMCWrapper.mcmc_sampler" title="Permalink to this definition">¶</a></dt>
+<dd><p>The underlying <tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the underlying MCMC object.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the underlying MCMC object.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.TypeError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.TypeError</span></tt></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.MCMCWrapper.nodes">
+<tt class="descname">nodes</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.MCMCWrapper.nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>The nodes of the model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.MCMCWrapper.sample">
+<tt class="descname">sample</tt><big>(</big><em>iter</em>, <em>burn=0</em>, <em>thin=None</em>, <em>tune_interval=1</em>, <em>tune_throughout=False</em>, <em>save_interval=None</em>, <em>burn_till_tuned=False</em>, <em>stop_tuning_after=0</em>, <em>verbose=0</em>, <em>progress_bar=False</em><big>)</big><a class="headerlink" href="#pysmc.MCMCWrapper.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample <tt class="docutils literal"><span class="pre">iter</span></tt> times from the model.</p>
+<p>This is basically exactly the same call as
+<tt class="xref py py-meth docutils literal"><span class="pre">pymc.MCMC.sample()</span></tt> but with defaults that are more suitable
+for <a class="reference internal" href="#pysmc.SMC" title="pysmc.SMC"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt></a>. For example, you typically do not want to allow
+<tt class="xref py py-meth docutils literal"><span class="pre">pymc.MCMC.sample()</span></tt>
+to tune the parameters of the step methods.
+It is <tt class="xref py py-class docutils literal"><span class="pre">SMC</span></tt> that should do this.
+This is because the transition kernels need to retain their
+invariance properties. They can&#8217;t have parameters that change
+on the fly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>iter</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of iterations to be run.</li>
+<li><strong>burn</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of samples to be burned before we
+start storing things to the database. There
+is no point in <a class="reference internal" href="#pysmc.SMC" title="pysmc.SMC"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt></a> to have this
+equal to anything else than 0.</li>
+<li><strong>thin</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Store to the database every <tt class="docutils literal"><span class="pre">thin</span></tt>
+samples. If <tt class="docutils literal"><span class="pre">None</span></tt> then we just store the
+last sample. That is the method will set
+<tt class="docutils literal"><span class="pre">thin</span> <span class="pre">=</span> <span class="pre">iter</span></tt>.</li>
+<li><strong>tune_interval</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The tuning interval. The default is not to
+tune anything. Do not change it.</li>
+<li><strong>tune_throughout</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Tune during all the samples we take. The
+default is <tt class="docutils literal"><span class="pre">False</span></tt>. Do not change it.</li>
+<li><strong>burn_till_tuned</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Burn samples until the parameters get tuned.
+The default is no. Do not change it.</li>
+<li><strong>stop_tuning_after</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Stop tuning after a certain number of
+iterations. No point in setting this.</li>
+<li><strong>verbose</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; How much verbosity you like.</li>
+<li><strong>progress_bar</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Show the progress bar or not.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.MCMCWrapper.set_state">
+<tt class="descname">set_state</tt><big>(</big><em>state</em><big>)</big><a class="headerlink" href="#pysmc.MCMCWrapper.set_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the state of the sampler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> (<a class="reference external" href="http://docs.python.org/library/stdtypes.html#dict" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></a>) &#8211; A dictionary describing the state of the
+sampler. Look at
+<a class="reference internal" href="#pysmc.MCMCWrapper.get_state" title="pysmc.MCMCWrapper.get_state"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.MCMCWrapper.get_state()</span></tt></a> for the
+appropriate format.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.MCMCWrapper.step_methods">
+<tt class="descname">step_methods</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.MCMCWrapper.step_methods" title="Permalink to this definition">¶</a></dt>
+<dd><p>The step methods of the MCMC sampler.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.MCMCWrapper.stochastics">
+<tt class="descname">stochastics</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.MCMCWrapper.stochastics" title="Permalink to this definition">¶</a></dt>
+<dd><p>The stochastic variables of the model.</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-pysmc._smc"></span><div class="section" id="id3">
+<h4>SMC<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="#pysmc.SMC" title="pysmc.SMC"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt></a> is the class that makes everything happen.</p>
+<p>Here is a complete reference of the public members:</p>
+</div>
+<dl class="class">
+<dt id="pysmc.SMC">
+<em class="property">class </em><tt class="descclassname">pysmc.</tt><tt class="descname">SMC</tt><big>(</big><em>mcmc_sampler=None</em>, <em>num_particles=10</em>, <em>num_mcmc=10</em>, <em>ess_threshold=0.67</em>, <em>ess_reduction=0.9</em>, <em>adapt_proposal_step=True</em>, <em>verbose=0</em>, <em>mpi=None</em>, <em>comm=None</em>, <em>gamma_name='gamma'</em><big>)</big><a class="headerlink" href="#pysmc.SMC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use Sequential Monte Carlo (SMC) to sample from a distribution.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mcmc_sampler</strong> (<tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt>) &#8211; An mcmc_sampler object.</li>
+<li><strong>num_particles</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of particles.</li>
+<li><strong>num_mcmc</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of MCMC steps per gamma.</li>
+<li><strong>ess_threshold</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The ESS threshold below which resampling
+takes place.</li>
+<li><strong>ess_reduction</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The ESS reduction that adaptively specifies
+the next <tt class="docutils literal"><span class="pre">gamma</span></tt>.</li>
+<li><strong>adapt_proposal_step</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Adapt or not the proposal step by
+monitoring the acceptance rate.</li>
+<li><strong>verbose</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; How much output to print (1, 2 and 3).</li>
+<li><strong>gamma_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name with which the <tt class="docutils literal"><span class="pre">gamma</span></tt> parameter is
+refered to in your <tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt> model. The
+default value is <tt class="docutils literal"><span class="pre">'gamma'</span></tt>, but you can
+change it to whatever you want.</li>
+<li><strong>mpi</strong> &#8211; The MPI class (see <tt class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></tt> and
+<em class="xref std std-ref">mpi_example</em>). If <tt class="docutils literal"><span class="pre">None</span></tt>, then no
+parallelism is used.</li>
+<li><strong>comm</strong> &#8211; Set this to the MPI communicator. If <tt class="docutils literal"><span class="pre">None</span></tt>,
+then <tt class="docutils literal"><span class="pre">mpi.COMM_WORLD</span></tt> is used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="pysmc.SMC.adapt_proposal_step">
+<tt class="descname">adapt_proposal_step</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.adapt_proposal_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the <tt class="docutils literal"><span class="pre">adapt</span> <span class="pre">proposal</span> <span class="pre">step</span></tt> is set to <tt class="docutils literal"><span class="pre">True</span></tt>, each of the step
+methods of the underlying <tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt> class are adaptively
+tuned by monitoring the acceptance rate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the adapt flag.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the adapt flag.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.comm">
+<tt class="descname">comm</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.comm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The MPI communicator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the MPI communicator.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the MPI communicator.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">We do not check it.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.ess">
+<tt class="descname">ess</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.ess" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">The current Effective Sample Size.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.ess_reduction">
+<tt class="descname">ess_reduction</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.ess_reduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>It is a number between 0 and 1 representing the desired
+percent reduction
+of the effective sample size when we perform a SMC step.
+The next <tt class="docutils literal"><span class="pre">gamma</span></tt> will be selected adaptively so that the prescribed
+reduction is achieved.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the reduction of the Effective Sample Size per SMC
+step.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the reduction of the Effective Sample Size per SMC
+step.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.ValueError</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.ess_threshold">
+<tt class="descname">ess_threshold</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.ess_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>The threshold of the Effective Sample Size is a number between 0 and 1
+representing the percentage of the total number of particles. If the
+Effective Sample Size falls bellow <tt class="docutils literal"><span class="pre">ess_threshold</span> <span class="pre">*</span> <span class="pre">num_particles</span></tt>,
+then the particles are automatically resampled.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the threshold of the Effective Sample Size.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the threshold of the Effective Sample Size.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.ValueError</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.gamma">
+<tt class="descname">gamma</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>The value of the <tt class="docutils literal"><span class="pre">gamma_name</span></tt> parameter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the value of the <tt class="docutils literal"><span class="pre">gamma_name</span></tt> parameter.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the value of the <tt class="docutils literal"><span class="pre">gamma_name</span></tt> parameter.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.gamma_name">
+<tt class="descname">gamma_name</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.gamma_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The true name of the gamma parameter in the <tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt> model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the name of the gamma parameter.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the name of the gamma parameter.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.gamma_rv">
+<tt class="descname">gamma_rv</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.gamma_rv" title="Permalink to this definition">¶</a></dt>
+<dd><p>The random variable of the <tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt> model that has a parameter named
+<tt class="docutils literal"><span class="pre">gamma_name</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the value of the <tt class="docutils literal"><span class="pre">gamma_name</span></tt> parameter.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">pymc.Stochastic</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.SMC.get_particles_of">
+<tt class="descname">get_particles_of</tt><big>(</big><em>name</em>, <em>type_of_var='stochastics'</em><big>)</big><a class="headerlink" href="#pysmc.SMC.get_particles_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the particles pertaining to variable <tt class="docutils literal"><span class="pre">name</span></tt>.</p>
+<p>If the collected particles can be converted to a numpy array, then this
+what is returned. Otherwise, we return is as a list of whatever objects
+the particles are.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable whose particles you want to
+get.</li>
+<li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of variables you want to get. This can be
+either &#8216;stochastics&#8217; or &#8216;deterministics&#8217; if you are
+are using <tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt>. The default type is &#8216;stochastics&#8217;.
+However, I do not restrict its value, in case you
+would like to define other types by extending
+<tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The particles pertaining to variable <tt class="docutils literal"><span class="pre">name</span></tt> of
+type <tt class="docutils literal"><span class="pre">type_of_var</span></tt>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt> if possible, otherwise a
+list of whatever types your model has.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The object must represent a valid particle approximation.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">When in parallel, you will get the particles owned by the cpu that
+calls this method.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.SMC.initialize">
+<tt class="descname">initialize</tt><big>(</big><em>gamma</em>, <em>particles=None</em>, <em>num_mcmc_per_particle=1000</em><big>)</big><a class="headerlink" href="#pysmc.SMC.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize SMC at a particular <tt class="docutils literal"><span class="pre">gamma</span></tt>.</p>
+<p>The method has basically three ways of initializing the particles:</p>
+<ul>
+<li><dl class="first docutils">
+<dt>If <tt class="docutils literal"><span class="pre">particles</span></tt> is not <tt class="docutils literal"><span class="pre">None</span></tt>, then it is assumed to contain the</dt>
+<dd><p class="first last">particles at the corresponding value of <tt class="docutils literal"><span class="pre">gamma</span></tt>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>If <tt class="docutils literal"><span class="pre">particles</span></tt> is <tt class="docutils literal"><span class="pre">None</span></tt> and the MCMC sampler class has a method</dt>
+<dd><p class="first last">called <tt class="docutils literal"><span class="pre">draw_from_prior()</span></tt> that works, then it is called to
+initialize the particles.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>In any other case, MCMC sampling is used to initialize the particles.</dt>
+<dd><p class="first last">We are assuming that the MCMC sampler has already been tuned for
+that particular gamma and that a sufficient burning period has past.
+Then we record the current state as the first particle, we sample
+<tt class="docutils literal"><span class="pre">num_mcmc_per_particle</span></tt> times and record the second particle, and
+so on.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>gamma</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The initial <tt class="docutils literal"><span class="pre">gamma</span></tt> parameter. It must, of
+course, be within the right range of
+<tt class="docutils literal"><span class="pre">gamma</span></tt>.</li>
+<li><strong>particles</strong> ((see :attr:<a href="#id4"><span class="problematic" id="id5">`</span></a>pymc.SMC.particles for type)) &#8211; A dictionary of MCMC states representing
+the particles. When using MPI, we are
+assuming that each one of the CPU&#8217;s has each
+own collection of particles.</li>
+<li><strong>num_mcmc_per_particle</strong> &#8211; This parameter is ignored if
+<tt class="docutils literal"><span class="pre">particles</span></tt> is not <tt class="docutils literal"><span class="pre">None</span></tt>. If the
+only way to initialize the particles is
+to use MCMC, then this is the number of
+of mcmc samples we drop before getting
+a SMC particle.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.log_w">
+<tt class="descname">log_w</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.log_w" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">The logarithm of the weights of the particles.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">1D <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.mcmc_sampler">
+<tt class="descname">mcmc_sampler</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.mcmc_sampler" title="Permalink to this definition">¶</a></dt>
+<dd><p>The underlying <tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt> object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the underlying MCMC object.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the underlying MCMC object.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.TypeError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.TypeError</span></tt></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.SMC.move_to">
+<tt class="descname">move_to</tt><big>(</big><em>gamma</em><big>)</big><a class="headerlink" href="#pysmc.SMC.move_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move the current particle approximation to <tt class="docutils literal"><span class="pre">gamma</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gamma</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The new <tt class="docutils literal"><span class="pre">gamma</span></tt> you wish to reach.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">There must already be a valid particle approximation. See
+<a class="reference internal" href="#pysmc.SMC.initialize" title="pysmc.SMC.initialize"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.initialize()</span></tt></a> for ways of doing this.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.mpi">
+<tt class="descname">mpi</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.mpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>The MPI class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the MPI class.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the MPI class.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">We do not check it.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.my_num_particles">
+<tt class="descname">my_num_particles</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.my_num_particles" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">The number of particles associated with each process.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If not using MPI, then it is the same as
+<a class="reference internal" href="#pysmc.SMC.num_particles" title="pysmc.SMC.num_particles"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.num_particles()</span></tt></a>. Otherwise is it is equal to
+<tt class="docutils literal"><span class="pre">num_particles</span> <span class="pre">/</span> <span class="pre">size</span></tt>, where <tt class="docutils literal"><span class="pre">size</span></tt> is the total number of MPI
+processes.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.num_mcmc">
+<tt class="descname">num_mcmc</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.num_mcmc" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the number of MCMC steps per SMC step.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the number of MCMC steps per SMC step.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.ValueError</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.num_particles">
+<tt class="descname">num_particles</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.num_particles" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the number of particles.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the number of particles. All data in the instant of the
+class will be lost if this is called.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.ValueError</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.particles">
+<tt class="descname">particles</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.particles" title="Permalink to this definition">¶</a></dt>
+<dd><p>The SMC particles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the SMC particles.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the SMC particles.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">list of whatever objects your method supports.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.ValueError</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When using MPI and you must assign to the setter only the particles
+that pertain to the process that calls it. That is, you are
+responsible for scattering the particles from the root to everybody
+else. Hopefully, you will get an <a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.ValueError</span></tt></a> if
+you get this wrong.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.rank">
+<tt class="descname">rank</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>The rank of the process that calls this method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the rank of the process that calls this method.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.size">
+<tt class="descname">size</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total number of MPI processes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the total number of MPI processes.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.use_mpi">
+<tt class="descname">use_mpi</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.use_mpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if MPI is being used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><tt class="docutils literal"><span class="pre">True</span></tt> if MPI is used and <tt class="docutils literal"><span class="pre">False</span></tt> otherwise.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.verbose">
+<tt class="descname">verbose</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the amount of output printed by the class. There are three
+levels:</p>
+<blockquote>
+<div><ul class="simple">
+<li>0:    Print nothing.</li>
+<li>1:    Print info from methods you call.</li>
+<li>2:    Print info from methods the methods you call call...</li>
+<li>3:    Guess what...</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the verbosity flag.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the verbosity flag.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.weights">
+<tt class="descname">weights</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>The weights of the SMC particles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the SMC weights.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the SMC weights.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">1D <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">When using MPI, the same concerns as in <a class="reference internal" href="#pysmc.SMC.particles" title="pysmc.SMC.particles"><tt class="xref py py-attr docutils literal"><span class="pre">pysmc.SMC.particles</span></tt></a>
+hold here.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">User Manual</a><ul>
+<li><a class="reference internal" href="#id1">PySMC</a><ul>
+<li><a class="reference internal" href="#id2">Classes</a><ul>
+<li><a class="reference internal" href="#mcmcwrapper">MCMCWrapper</a></li>
+<li><a class="reference internal" href="#id3">SMC</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to pysmc&#8217;s documentation!</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/user_manual.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to pysmc’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">pysmc 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Ilias Bilionis.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>
