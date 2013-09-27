@@ -49,8 +49,9 @@ The following packages are optional but highly recommended:
 
 .. _final_steps:
 
+-----------
 Final Steps
-+++++++++++
+-----------
 As soon as you are done installing the packages above, you can fetch
 :mod:`pysmc` from `GitHub <https://github.com/ebilionis/pysmc>`_ by::
 
@@ -68,3 +69,4 @@ If you want to put the code in an non default location, simply do::
 If you do the latter, make sure you update your ``PYTHONPATH`` variable::
 
     export PYTHONPATH=/path/to/your/directory/lib/python2.7/site-packages:$PYTHONPATH
+

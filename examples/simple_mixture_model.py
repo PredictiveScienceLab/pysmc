@@ -11,16 +11,22 @@ Date:
 
 import pymc
 import numpy as np
-import math
 
 
 @pymc.stochastic(dtype=float)
-def mixture(value=-0., gamma=.001, sigma=0.01):
-    def logp(value, gamma, sigma):
-        tau = math.sqrt(1. / sigma ** 2)
-        logp1 = math.log(0.2) + pymc.normal_like(value, -1., tau)
-        logp2 = math.log(0.8) + pymc.normal_like(value, 2., tau)
-        tmp = math.fsum([math.exp(logp1), math.exp(logp2)])
-        if tmp <= 0.:
-            return -np.inf
-        return gamma * math.log(tmp)
+def mixture(value=-0., gamma=.001, pi=[0.2, 0.8], mu=[-1., 2.],
+            sigma=[0.01, 0.01]):
+    # The number of components in the mixture
+    n = len(pi)
+    # pymc.normal_like requires the precision not the variance:
+    tau = np.sqrt(1. / sigma ** 2)
+    # The following looks a little bit awkward because of the need for
+    # numerical stability:
+    logp = np.log(pi)
+    logp += np.array([pymc.normal_like(value, mu[i], tau[i])
+                      for i in range(n)]
+    logp = math.fsum(np.exp(logp))
+    # logp should never be negative, but it can be zero...
+    if logp <= 0.:
+        return -np.inf
+    return gamma * math.log(logp)
