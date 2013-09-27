@@ -12,7 +12,9 @@ Contents:
    :maxdepth: 3
 
    install
+   tutorial
    reference
+   math
 
 
 Indices and tables

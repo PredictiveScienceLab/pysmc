@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tutorial &mdash; pysmc 0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pysmc 0.0 documentation" href="index.html" />
+    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Reference"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pysmc 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tutorial">
+<span id="id1"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<p>Before moving forward, make sure you understand:</p>
+<blockquote>
+<div><ul class="simple">
+<li>What is probability? That&#8217;s a big question... If you feel like it,
+I suggest you skim through <a class="reference external" href="http://en.wikipedia.org/wiki/Edwin_Thompson_Jaynes">E. T. Jaynes&#8217; </a> book
+<a class="reference external" href="http://omega.albany.edu:8008/JaynesBook.html">Probability Theory: The Logic of Science </a>.</li>
+<li>What is <a class="reference external" href="http://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo">MCMC </a>?
+You need to be familiar with the limitations of MCMC sampling.</li>
+<li>Read the tutorial of <a class="reference external" href="http://pymc-devs.github.io/pymc/">PyMC</a>.
+To the very least, you need to be able to construct probabilistic
+models using this package. For advanced applications, you need to be
+able to construct your own <a class="reference external" href="http://pymc-devs.github.io/pymc/extending.html#user-defined-step-methods">step methods</a>
+.</li>
+<li>Of course, I have to assume some familiarity with the so called
+Sequential Monte Carlo (SMC) or Particle Methods. Many resources can
+be found online at <a class="reference external" href="http://www.stats.ox.ac.uk/~doucet/smc_resources.html">Arnaud Doucet&#8217;s collection</a>
+or at his book
+<a class="reference external" href="http://books.google.com/books/about/Sequential_Monte_Carlo_Methods_in_Practi.html?id=BnWAcgAACAAJ">Sequential Monte Carlo Methods in Practice</a>.
+What exactly <a class="reference internal" href="reference.html#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a> does is documented in <a class="reference internal" href="math.html#math"><em>Mathematical Details</em></a>.</li>
+</ul>
+</div></blockquote>
+<div class="section" id="what-is-sequential-monte-carlo">
+<h2>What is Sequential Monte Carlo?<a class="headerlink" href="#what-is-sequential-monte-carlo" title="Permalink to this headline">¶</a></h2>
+<p>SMC is a very efficient and effective way to sample from complicated
+probability distributions known up to a normalizing constant. The most
+important complicating factor is multimodality. That is, probability
+distributions that do not look at all like Gaussians.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Tutorial</a><ul>
+<li><a class="reference internal" href="#what-is-sequential-monte-carlo">What is Sequential Monte Carlo?</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Installation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="reference.html"
+                        title="next chapter">Reference</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tutorial.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="reference.html" title="Reference"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             >previous</a> |</li>
+        <li><a href="index.html">pysmc 0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Ilias Bilionis.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b2.
+    </div>
+  </body>
+</html>
