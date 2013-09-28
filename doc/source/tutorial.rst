@@ -4,7 +4,7 @@
 Tutorial
 ========
 
- 
+
 Before moving forward, make sure you understand:
 
     + What is probability? That's a big question... If you feel like it,
@@ -15,7 +15,7 @@ Before moving forward, make sure you understand:
       To the very least, you need to be able to construct probabilistic
       models using this package. For advanced applications, you need to be
       able to construct your own `MCMC step methods`_.
-    + Of course, I have to assume some familiarity with the so called 
+    + Of course, I have to assume some familiarity with the so called
       Sequential Monte Carlo (SMC) or Particle Methods. Many resources can
       be found online at `Arnaud Doucet's collection`_ or in his book
       `Sequential Monte Carlo Methods in Practice`_. What exactly :mod:`pysmc`
@@ -76,7 +76,7 @@ choice is:
     :label: smc_sequence_power
 
 where :math:`\gamma_0` is a non-negative number that makes :math:`p_i(x)` look
-flat (e.g., if :math:`p(x)` has a compact support, you may choose 
+flat (e.g., if :math:`p(x)` has a compact support, you may choose
 :math:`\gamma_0=0` which makes :math:`p_0(x)` the uniform density. For
 the general case a choice like :math:`\gamma_0=10^{-3}` would still do a good
 job) and :math:`\gamma_n=1`. If :math:`n` is chosen sufficiently large and
@@ -342,7 +342,7 @@ functionality::
 You should see a progress bar measuring the number of samples taken. It should
 take about a minute to finish. We are actually doing :math:`10^6` `MCMC`_ steps,
 we burn the first ``burn = 1000`` samples and we are looking at the chain
-every ``thin = 1000`` samples (i.e., we are dropping everything in between). 
+every ``thin = 1000`` samples (i.e., we are dropping everything in between).
 `PyMC`_ automatically picks a proposal (see `MCMC step methods`_) for you. For
 this particular example it should have picked
 :class:`pymc.step_methods.Metropolis` which corresponds to a simple random walk
@@ -361,7 +361,7 @@ You may look at the samples we've got by doing::
     ...
 
 Now, let us plot the results::
-    
+
     >>> import matplotlib.pyplot as plt
     >>> pymc.plot(mcmc_sampler)
     >>> plt.show()
@@ -373,9 +373,209 @@ extremely lucky, you should have missed one of the modes...
 .. figure:: images/simple_model_mcmc.png
     :align: center
 
+    MCMC fails to capture one of the modes of :eq:`simple_model_pdf`.
+
+Now, let's see what it takes to make it work. Basically, what we need to
+do is find the right step for the random walk proposal. Looking at
+`Simple Example Family of PDF's Figure`_, it is easy to guess that the
+right step is :math:`3`. So, let's try this::
+
+    >>> import simple_model as model
+    >>> import pymc
+    >>> mcmc_sampler = pymc.MCMC(simple_model)
+    >>> proposal = pymc.Metropolis(model.mixture, proposal_sd=3.)
+    >>> mcmc_sampler.step_method_dict[model.mixture][0] = proposal
+    >>> mcmc_sampler.sample(1000000, thin=1000, burn=0,
+                           tune_throughout=False)
+
+For more details on selecting/tuning step methods see
+`MCMC step methods`_. In the last line we have asked `PyMC`_ not to tune
+the parameters of the step method. If we didn't do that, it would be
+fooled again. The results are shown in
+`Simple Example MCMC Picked Proposal Figure`_.
+
+.. _Simple Example MCMC Picked Proposal Figure:
+.. figure:: images/simple_model_mcmc_right.png
+    :align: center
+
+    Multi-modal distributions can be captured by simple `MCMC`_ only if
+    you have significant prior knowledge about them.
+
+You see that the two modes can be captured by plain `MCMC`_ if we
+actually know how far appart they are. Of course, this is completely
+useless in a real problem. Most of the times, we are not be able to
+draw the probability density function and see where the modes are.
+SMC is here to save the day!
+
+.. _smc_attempt:
+
++++++++++
+Doing SMC
++++++++++
+
+To finish this example, let's just see how SMC behaves. As we mentioned
+earlier, SMC requires:
+
++ a one-parameter family of probability densities connecting a simple
+  probability density to our target (we created this in
+  :ref:`simple_example_model`), and
++ an `MCMC` sampler (we saw how to create one in :ref:`mcmc_attempt`).
+
+Now, let's put everything together using the functionality of
+:class:`pysmc.SMC`:
+
+.. code-block:: python
+    :linenos:
+
+    import simple_model as model
+    import pymc
+    import pysmc
+    import matplotlib.pyplot as plt
+
+    # Construct the MCMC sampler
+    mcmc_sampler = pymc.MCMC(model)
+    # Construct the SMC sampler
+    smc_sampler = pysmc.SMC(mcmc_sampler, num_particles=1000,
+                            num_mcmc=10, verbose=1)
+    # Initialize SMC at gamma = 0.01
+    smc_sampler.initialize(0.01)
+    # Move the particles to gamma = 1.0
+    smc_sampler.move_to(1.0)
+    # Get the weights of each particle
+    w = smc_sampler.weights
+    # Get the particles pertaining to the mixture
+    x = smc_sampler.get_particles_of('mixture')
+    # Plot a histogram
+    plt.xlabel('$x$', fontsize=16)
+    plt.ylabel('$p(x)$', fontsize=16)
+    plt.show()
+
+This code can be found in
+:download:`examples/simple_model_run.py <../../examples/simple_model_run.py>`.
+
+In lines 9-10, we initialize the SMC class. Of course, it requires a
+``mcmc_sampler`` which is a :class:`pymc.MCMC` object.
+``num_particles`` specifies the number of particles we wish to use and
+``num_mcmc`` the number of `MCMC`_ steps we are going to perform at each
+different value of :math:`\gamma`. The ``verbose`` parameter specifies
+the amount of text the algorithm prints to the standard output.
+There are many more parameters which are fully documented in
+:class:`pysmc.SMC`. In line 12, we initialize the algorithm at
+:math:`\gamma=10^{-2}`. This essentially performs a number of `MCMC`_
+steps at this easy-to-sample-from probability density. It constructs the
+initialial particle approximation. See
+:meth:`pysmc.SMC.initialize()` the complete list of arguments.
+Finally, in line 14, we instruct the object to move the particle
+approximation to :math:`\gamma=1`, i.e., to the target probability
+density of this particular example.
+
+The output of the algorithm looks like this::
+
+    ------------------------
+    START SMC Initialization
+    ------------------------
+    - initializing at gamma : 0.01
+    - initializing by sampling from the prior: FAILURE
+    - initializing via MCMC
+    - taking a total of 10000
+    - creating a particle every 10
+    [---------------- 43%                  ] 4392 of 10000 complete in 0.5 sec
+    [-----------------83%-----------       ] 8322 of 10000 complete in 1.0 sec
+    ----------------------
+    END SMC Initialization
+    ----------------------
+    -----------------
+    START SMC MOVE TO
+    -----------------
+    initial  gamma : 0.01
+    final gamma : 1.0
+    ess reduction:  0.9
+    - moving to gamma : 0.0204271802459
+    - performing 10 MCMC steps per particle
+    [------------     31%                  ] 3182 of 10000 complete in 0.5 sec
+    [-----------------62%---               ] 6292 of 10000 complete in 1.0 sec
+    [-----------------93%---------------   ] 9322 of 10000 complete in 1.5 sec
+    - moving to gamma : 0.0382316662144
+    - performing 10 MCMC steps per particle
+    [----------       28%                  ] 2822 of 10000 complete in 0.5 sec
+    [-----------------55%-                 ] 5542 of 10000 complete in 1.0 sec
+    [-----------------81%-----------       ] 8162 of 10000 complete in 1.5 sec
+    - moving to gamma : 0.0677677161458
+    - performing 10 MCMC steps per particle
+    [---------        24%                  ] 2442 of 10000 complete in 0.5 sec
+    [-----------------47%                  ] 4732 of 10000 complete in 1.0 sec
+    [-----------------70%------            ] 7032 of 10000 complete in 1.5 sec
+    [-----------------91%--------------    ] 9172 of 10000 complete in 2.0 sec
+    - moving to gamma : 0.118156872826
+    - performing 10 MCMC steps per particle
+    [--------         21%                  ] 2122 of 10000 complete in 0.5 sec
+    [---------------  42%                  ] 4202 of 10000 complete in 1.0 sec
+    [-----------------62%---               ] 6232 of 10000 complete in 1.5 sec
+    [-----------------81%-----------       ] 8172 of 10000 complete in 2.0 sec
+    - moving to gamma : 0.206496296978
+    - performing 10 MCMC steps per particle
+    [-----            15%                  ] 1502 of 10000 complete in 0.5 sec
+    [------------     33%                  ] 3332 of 10000 complete in 1.0 sec
+    [-----------------48%                  ] 4882 of 10000 complete in 1.5 sec
+    [-----------------66%-----             ] 6602 of 10000 complete in 2.0 sec
+    [-----------------82%-----------       ] 8252 of 10000 complete in 2.5 sec
+    [-----------------96%----------------  ] 9692 of 10000 complete in 3.0 sec
+    - moving to gamma : 0.326593174468
+    - performing 10 MCMC steps per particle
+    [------           16%                  ] 1642 of 10000 complete in 0.5 sec
+    [------------     32%                  ] 3252 of 10000 complete in 1.0 sec
+    [-----------------48%                  ] 4842 of 10000 complete in 1.5 sec
+    [-----------------64%----              ] 6412 of 10000 complete in 2.0 sec
+    [-----------------79%----------        ] 7942 of 10000 complete in 2.5 sec
+    [-----------------94%---------------   ] 9432 of 10000 complete in 3.0 sec
+    - moving to gamma : 0.494246909688
+    - performing 10 MCMC steps per particle
+    [-----            14%                  ] 1402 of 10000 complete in 0.5 sec
+    [----------       28%                  ] 2832 of 10000 complete in 1.0 sec
+    [---------------- 42%                  ] 4232 of 10000 complete in 1.5 sec
+    [-----------------56%-                 ] 5622 of 10000 complete in 2.0 sec
+    [-----------------69%------            ] 6992 of 10000 complete in 2.5 sec
+    [-----------------83%-----------       ] 8342 of 10000 complete in 3.0 sec
+    [-----------------96%----------------  ] 9662 of 10000 complete in 3.5 sec
+    - moving to gamma : 0.680964613537
+    - performing 10 MCMC steps per particle
+    [----             13%                  ] 1302 of 10000 complete in 0.5 sec
+    [---------        25%                  ] 2552 of 10000 complete in 1.0 sec
+    [--------------   38%                  ] 3832 of 10000 complete in 1.5 sec
+    [-----------------50%                  ] 5032 of 10000 complete in 2.0 sec
+    [-----------------62%---               ] 6272 of 10000 complete in 2.5 sec
+    [-----------------75%--------          ] 7502 of 10000 complete in 3.0 sec
+    [-----------------86%------------      ] 8672 of 10000 complete in 3.5 sec
+    [-----------------98%----------------- ] 9842 of 10000 complete in 4.0 sec
+    - moving to gamma : 1.0
+    - performing 10 MCMC steps per particle
+    [----             11%                  ] 1172 of 10000 complete in 0.5 sec
+    [--------         23%                  ] 2302 of 10000 complete in 1.0 sec
+    [------------     34%                  ] 3412 of 10000 complete in 1.5 sec
+    [-----------------44%                  ] 4482 of 10000 complete in 2.0 sec
+    [-----------------55%-                 ] 5582 of 10000 complete in 2.5 sec
+    [-----------------67%-----             ] 6702 of 10000 complete in 3.0 sec
+    [-----------------77%---------         ] 7792 of 10000 complete in 3.5 sec
+    [-----------------88%-------------     ] 8892 of 10000 complete in 4.0 sec
+    [-----------------99%----------------- ] 9972 of 10000 complete in 4.5 sec
+    ---------------
+    END SMC MOVE TO
+    ---------------
+
+The figure you should see is shown in
+`Simple Example SMC Histogram Figure`_. You see that SMC has no problem
+discovering the two modes, even though we have not hand-picked the
+parameters of the `MCMC`_ proposal.
+
+.. _Simple Example SMC Histogram Figure:
+.. figure:: images/simple_model_smc.png
+    :align: center
+
+    SMC easily discovers both modes of :eq:`simple_model_pdf`
+
 .. _E. T. Jaynes:
     E. T. Jaynes' http://en.wikipedia.org/wiki/Edwin_Thompson_Jaynes>
-.. _Probability Theory\: The Logic of Science: 
+.. _Probability Theory\: The Logic of Science:
     http://omega.albany.edu:8008/JaynesBook.html
 .. _MCMC:
     http://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo

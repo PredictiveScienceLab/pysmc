@@ -678,7 +678,7 @@ class SMC(object):
         self.verbose = verbose
         self.adapt_proposal_step = adapt_proposal_step
 
-    def initialize(self, gamma, particles=None, num_mcmc_per_particle=1000):
+    def initialize(self, gamma, particles=None, num_mcmc_per_particle=10):
         """
         Initialize SMC at a particular ``gamma``.
 
@@ -795,7 +795,8 @@ class SMC(object):
                 self.mcmc_sampler.set_state(self.particles[i])
                 self.mcmc_sampler.sample(self.num_mcmc)
                 self.particles[i] = self.mcmc_sampler.get_state()
-                pb.update(i * self.size * self.num_mcmc)
+                if self.verbose > 0:
+                    pb.update(i * self.size * self.num_mcmc)
             if self.verbose > 1:
                 print '- acceptance rate for each step method:'
                 for sm in self.mcmc_sampler.step_methods:

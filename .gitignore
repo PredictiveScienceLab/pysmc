@@ -6,7 +6,7 @@
 *.pickle
 *.inv
 *.js
-*.png
+*.out
 *doctree*
 *.so
 *.swp
