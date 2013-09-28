@@ -465,9 +465,16 @@ There are many more parameters which are fully documented in
 steps at this easy-to-sample-from probability density. It constructs the
 initialial particle approximation. See
 :meth:`pysmc.SMC.initialize()` the complete list of arguments.
-Finally, in line 14, we instruct the object to move the particle
+In line 14, we instruct the object to move the particle
 approximation to :math:`\gamma=1`, i.e., to the target probability
-density of this particular example.
+density of this particular example. To see the weights of the final
+particle approximation, we use :attr:`pysmc.SMC.weights`
+(e.g., ``smc_sampler.weights``). To get the particles themselves we may
+use :attr:`pysmc.SMC.particles` (e.g., ``smc_sampler.particles``) which
+returns a dictionary of the particles. However, it is usually most
+convenient to access them via :meth:`pysmc.SMC.get_particles_of()`
+(e.g., ``smc_sampler.get_particles_of('mixture')``) which allows
+you to specify one variable of the model you wish to look at.
 
 The output of the algorithm looks like this::
 

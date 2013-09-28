@@ -20,6 +20,7 @@ from scipy.optimize import brentq
 import math
 import itertools
 import sys
+import warnings
 
 
 class SMC(object):
@@ -117,6 +118,12 @@ class SMC(object):
 
     # The true name of the gamma parameter
     _gamma_name = None
+
+    # A database containing all the particles at all gammas
+    _db = None
+
+    # Count the total number of MCMC samples taken so far
+    _total_num_mcmc = None
 
     @property
     def my_num_particles(self):
@@ -358,6 +365,16 @@ class SMC(object):
         """
         return self._mcmc_sampler
 
+    @property
+    def db(self):
+        """
+        The database containing info about all the particles we visited.
+
+        :getter:    Get the database.
+        :type:      dict
+        """
+        return self._db
+
     @mcmc_sampler.setter
     def mcmc_sampler(self, value):
         """Set the MCMC sampler."""
@@ -467,6 +484,61 @@ class SMC(object):
         """Set the SMC weights."""
         value = np.array(value)
         self._log_w = self._normalize(np.log(value))
+
+    @property
+    def total_num_mcmc(self):
+        """
+        The total number of MCMC steps performed so far.
+        This is zeroed, everytime you call :meth:`pysmc.SMC.initialize()`.
+
+        :getter:    The total number of MCMC steps performed so far.
+        :type:      int
+        """
+        return self._total_num_mcmc
+
+    def _add_current_state_to_db(self):
+        """Add the current state to the database."""
+        if self.verbose > 1:
+            print '\t-adding current state to database'
+        if self._db is None:
+            if self.verbose > 1:
+                print '\t-database does not exist'
+                print '\t-creating database'
+            self._db = dict(gamma_name = self.gamma_name, data = {})
+        if not self.db['gamma_name'] == self.gamma_name:
+            warnings.warn(
+            'Database \'gamma_name\' does not match self.gamma_name')
+        if self.db['data'].has_key(self.gamma):
+            warnings.warn(
+            'Database already contains a record for %1.2f.' % self.gamma
+            + 'It will be replaced!'
+            )
+        state = dict()
+        state['weights'] = np.exp(self.log_w)
+        state['particles'] = self.particles
+        self.db['data'][self.gamma] = state
+
+    def _check_if_gamma_is_in_db(self, gamma):
+        """Check if the particular ``gamma`` is in the database.
+
+        :raises:    :exc:`exceptions.RuntimeError`
+        """
+        if not self.db['data'].has_key(gamma):
+            raise RuntimeError(
+            'Database does not contain a record for %s = %1.2f.'
+            % (self.gamma_name, gamma))
+
+    def _try_to_array(self, data):
+        """Try to turn the data into a numpy array.
+
+        :returns:   If possible, a :class:`numpy.ndarray` containing the
+                    data. Otherwise, it just returns the data.
+        :rtype:     :class:`numpy.ndarray` or ``type(data)``
+        """
+        try:
+            return np.array(data)
+        except:
+            return data
 
     def _logsumexp(self, log_x):
         """Perform the log-sum-exp of the weights."""
@@ -717,6 +789,8 @@ class SMC(object):
             print 'START SMC Initialization'
             print '------------------------'
             print '- initializing at', self.gamma_name, ':', gamma
+        # Zero out the MCMC step counter
+        self._total_num_mcmc = 0
         # Set gamma
         self.gamma = gamma
         # Set the weights and ESS
@@ -726,35 +800,37 @@ class SMC(object):
             sys.stdout.write('- attempting to initialize with particles: ')
             self.particles = particles
             sys.stdout.write('SUCCESS\n')
-            return
-        self.particles[0] = self.mcmc_sampler.get_state()
-        try:
-            if self.verbose > 0:
-                sys.stdout.write('- initializing by sampling from the prior: ')
-            for i in range(1, self.my_num_particles):
-                self.mcmc_sampler.draw_from_prior()
-                self.particles[i] = self.mcmc_sampler.get_state()
-            if self.verbose > 0:
-                sys.stdout.write('SUCCESS\n')
-        except AttributeError:
-            if self.verbose > 0:
-                sys.stdout.write('FAILURE\n')
-                print '- initializing via MCMC'
-                total_samples = self.num_particles * num_mcmc_per_particle
-                print '- taking a total of', total_samples
-                print '- creating a particle every', num_mcmc_per_particle
-            if self.verbose > 0:
-                pb = pymc.progressbar.progress_bar(self.num_particles *
-                                                   num_mcmc_per_particle)
-            for i in range(1, self.my_num_particles):
-                self.mcmc_sampler.sample(num_mcmc_per_particle)
-                self.particles[i] = self.mcmc_sampler.get_state()
+        else:
+            self.particles[0] = self.mcmc_sampler.get_state()
+            try:
                 if self.verbose > 0:
-                    pb.update((i + 2) * self.size * num_mcmc_per_particle)
-            if self.verbose > 0:
-                print '----------------------'
-                print 'END SMC Initialization'
-                print '----------------------'
+                    sys.stdout.write('- initializing by sampling from the prior: ')
+                for i in range(1, self.my_num_particles):
+                    self.mcmc_sampler.draw_from_prior()
+                    self.particles[i] = self.mcmc_sampler.get_state()
+                if self.verbose > 0:
+                    sys.stdout.write('SUCCESS\n')
+            except AttributeError:
+                if self.verbose > 0:
+                    sys.stdout.write('FAILURE\n')
+                    print '- initializing via MCMC'
+                    total_samples = self.num_particles * num_mcmc_per_particle
+                    print '- taking a total of', total_samples
+                    print '- creating a particle every', num_mcmc_per_particle
+                if self.verbose > 0:
+                    pb = pymc.progressbar.progress_bar(self.num_particles *
+                                                       num_mcmc_per_particle)
+                for i in range(1, self.my_num_particles):
+                    self.mcmc_sampler.sample(num_mcmc_per_particle)
+                    self.particles[i] = self.mcmc_sampler.get_state()
+                    self._total_num_mcmc += num_mcmc_per_particle
+                    if self.verbose > 0:
+                        pb.update((i + 2) * self.size * num_mcmc_per_particle)
+        self._add_current_state_to_db()
+        if self.verbose > 0:
+            print '----------------------'
+            print 'END SMC Initialization'
+            print '----------------------'
 
     def move_to(self, gamma):
         """
@@ -795,18 +871,22 @@ class SMC(object):
                 self.mcmc_sampler.set_state(self.particles[i])
                 self.mcmc_sampler.sample(self.num_mcmc)
                 self.particles[i] = self.mcmc_sampler.get_state()
+                self._total_num_mcmc += self.num_mcmc
                 if self.verbose > 0:
                     pb.update(i * self.size * self.num_mcmc)
+            self._add_current_state_to_db()
             if self.verbose > 1:
                 print '- acceptance rate for each step method:'
                 for sm in self.mcmc_sampler.step_methods:
                     acc_rate = sm.accepted / (sm.accepted + sm.rejected)
                     print '\t-', str(sm), ':', acc_rate
-        print '---------------'
-        print 'END SMC MOVE TO'
-        print '---------------'
+        if self.verbose > 0:
+            print '- total number of MCMC steps:', self.total_num_mcmc
+            print '---------------'
+            print 'END SMC MOVE TO'
+            print '---------------'
 
-    def get_particles_of(self, name, type_of_var='stochastics'):
+    def get_particles_of(self, var_name, type_of_var='stochastics'):
         """
         Get the particles pertaining to variable ``name``.
 
@@ -814,9 +894,9 @@ class SMC(object):
         what is returned. Otherwise, we return is as a list of whatever objects
         the particles are.
 
-        :param name:        The name of the variable whose particles you want to
+        :param var_name:    The name of the variable whose particles you want to
                             get.
-        :type name:         str
+        :type var_name:     str
         :param type_of_var: The type of variables you want to get. This can be
                             either 'stochastics' or 'deterministics' if you are
                             are using :mod:`pymc`. The default type is 'stochastics'.
@@ -839,9 +919,64 @@ class SMC(object):
             calls this method.
 
         """
-        r = [self.particles[i][type_of_var][name]
+        r = [self.particles[i][type_of_var][var_name]
              for i in range(self.num_particles)]
-        try:
-            return np.array(r)
-        except:
-            return r
+        return self._try_to_array(r)
+
+    def get_gammas_from_db(self):
+        """
+        Get the gammas we have visited so far from the databse.
+
+        :returns:   The gammas we have visited so far doing SMC.
+        :rtype:     1D :class:`numpy.ndarray`
+        """
+        gammas = self.db['data'].keys()
+        gammas.sort()
+        return np.array(gammas)
+
+    def get_weights_from_db(self, gamma):
+        """
+        Get the weights of each one of the particle approximations
+        constructed so far.
+
+        :param gamma:   The gamma parameter characterizing the
+                        approximation. Do not just put any value here.
+                        Get the values from
+                        :meth:`pysmc.SMC.get_gammas_from_db()`.
+        :type gamma:    float
+        :raises:    :exc:`exceptions.RuntimeError`
+        """
+        self._check_if_gamma_is_in_db(gamma)
+        return self.db['data'][gamma]['weights']
+
+    def get_particles_from_db(self, gamma, var_name,
+                              type_of_var='stochastics'):
+        """
+        Get the particles pertaining to variable ``var_name`` at
+        ``gamma`.
+
+        :param gamma:       The gamma parameter characterizing the
+                            approximation. Do not just put any value here.
+                            Get the values from
+                            :meth:`pysmc.SMC.get_gammas_from_db()`.
+        :type gamma:        float
+        :param var_name:    The name of the variable whose particles you want to
+                            get.
+        :type var_name:     str
+        :param type_of_var: The type of variables you want to get. This can be
+                            either 'stochastics' or 'deterministics' if you are
+                            are using :mod:`pymc`. The default type is 'stochastics'.
+                            However, I do not restrict its value, in case you
+                            would like to define other types by extending
+                            :mod:`pymc`.
+        :type type_of_var:  str
+        :returns:           The particles pertaining to variable ``name`` of
+                            type ``type_of_var``.
+        :rtype:             :class:`numpy.ndarray` if possible, otherwise a
+                            list of whatever types your model has.
+        :raises:    :exc:`exceptions.RuntimeError`
+        """
+        self._check_if_gamma_is_in_db(gamma)
+        r = [self.db['data'][gamma]['particles'][i][type_of_var][var_name]
+             for i in range(self.num_particles)]
+        return self._try_to_array(r)
