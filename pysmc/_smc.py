@@ -1,6 +1,8 @@
 """
 
 .. _smc:
+
++++
 SMC
 +++
 
@@ -14,6 +16,7 @@ __all__ = ['SMC']
 
 
 from . import MCMCWrapper
+from . import get_var_from_particle_list
 import pymc
 import numpy as np
 from scipy.optimize import brentq
@@ -528,18 +531,6 @@ class SMC(object):
             'Database does not contain a record for %s = %1.2f.'
             % (self.gamma_name, gamma))
 
-    def _try_to_array(self, data):
-        """Try to turn the data into a numpy array.
-
-        :returns:   If possible, a :class:`numpy.ndarray` containing the
-                    data. Otherwise, it just returns the data.
-        :rtype:     :class:`numpy.ndarray` or ``type(data)``
-        """
-        try:
-            return np.array(data)
-        except:
-            return data
-
     def _logsumexp(self, log_x):
         """Perform the log-sum-exp of the weights."""
         my_max_exp = log_x.max()
@@ -919,9 +910,7 @@ class SMC(object):
             calls this method.
 
         """
-        r = [self.particles[i][type_of_var][var_name]
-             for i in range(self.num_particles)]
-        return self._try_to_array(r)
+        return get_var_from_particle_list(self.particles, var_name, type_of_var)
 
     def get_gammas_from_db(self):
         """
@@ -965,7 +954,8 @@ class SMC(object):
         :type var_name:     str
         :param type_of_var: The type of variables you want to get. This can be
                             either 'stochastics' or 'deterministics' if you are
-                            are using :mod:`pymc`. The default type is 'stochastics'.
+                            are using :mod:`pymc`. The default type is
+                            'stochastics'.
                             However, I do not restrict its value, in case you
                             would like to define other types by extending
                             :mod:`pymc`.
@@ -977,6 +967,5 @@ class SMC(object):
         :raises:    :exc:`exceptions.RuntimeError`
         """
         self._check_if_gamma_is_in_db(gamma)
-        r = [self.db['data'][gamma]['particles'][i][type_of_var][var_name]
-             for i in range(self.num_particles)]
-        return self._try_to_array(r)
+        particle_list = self.db['data'][gamma]['particles']
+        return get_var_from_particle_list(particle_list, var_name, type_of_var)

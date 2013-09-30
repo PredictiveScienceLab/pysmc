@@ -35,8 +35,11 @@ Here is complete reference of all the classes included in :mod:`pysmc`.
 """
 
 
-__all__ = ['MCMCWrapper', 'SMC']
+__all__ = ['MCMCWrapper', 'SMC', 'ParticleApproximation', 'try_to_array',
+           'get_var_from_particle_list']
 
 
+from ._misc import *
 from ._mcmc_wrapper import *
+from ._particle_approximation import *
 from ._smc import *

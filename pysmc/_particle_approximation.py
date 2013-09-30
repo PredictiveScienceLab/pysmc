@@ -23,7 +23,13 @@ from . import get_var_from_particle_list
 class ParticleApproximation(object):
 
     """
-    Represents a particle approximation.
+    Initialize a particle approximation.
+
+    :param weights:     The weights of the particle approximation.
+    :type weights:      1D :class:`numpy.ndarray`
+    :param particles:   The particles.
+    :type particles:    list
+
     """
 
     # The weights of the approximation
@@ -67,12 +73,23 @@ class ParticleApproximation(object):
         for type_of_var in self.particles[0].keys():
             self._fix_particles_of_type(type_of_var)
 
-    def __init__(self, weights, particles):
+    def __init__(self, weights=None, particles=None,
+                 data=None, var_name='unnamed', type_of_var='stochastics'):
         """
         Initialize the particle approximation.
 
         See the doc of this class for further details.
         """
-        self._weights = weights
+        if particles is None:
+            if data is not None:
+                data = np.atleast_2d(data).T
+                num_particles = data.shape[0]
+                num_dim = data.shape[1]
+                particles = []
+                for range(num_particles):
+                    var_dict = eval('dict(%s = np.array(p[i, 0]))' % var_name)
+                if num_dim = 1:
+                    particles = [dict(p[i, 0] for i in range(num_particles)]
+
         self._particles = particles
         self._fix_particles()
