@@ -343,6 +343,22 @@ tuned by monitoring the acceptance rate.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="pysmc.SMC.db">
+<tt class="descname">db</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.db" title="Permalink to this definition">¶</a></dt>
+<dd><p>The database containing info about all the particles we visited.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the database.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="pysmc.SMC.ess">
 <tt class="descname">ess</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.ess" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -460,8 +476,64 @@ then the particles are automatically resampled.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pysmc.SMC.get_gammas_from_db">
+<tt class="descname">get_gammas_from_db</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.SMC.get_gammas_from_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the gammas we have visited so far from the databse.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The gammas we have visited so far doing SMC.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">1D <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.SMC.get_particles_from_db">
+<tt class="descname">get_particles_from_db</tt><big>(</big><em>gamma</em>, <em>var_name</em>, <em>type_of_var='stochastics'</em><big>)</big><a class="headerlink" href="#pysmc.SMC.get_particles_from_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the particles pertaining to variable <tt class="docutils literal"><span class="pre">var_name</span></tt> at
+<a href="#id4"><span class="problematic" id="id5">``</span></a>gamma`.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gamma</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The gamma parameter characterizing the
+approximation. Do not just put any value here.
+Get the values from
+<a class="reference internal" href="#pysmc.SMC.get_gammas_from_db" title="pysmc.SMC.get_gammas_from_db"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.get_gammas_from_db()</span></tt></a>.</li>
+<li><strong>var_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable whose particles you want to
+get.</li>
+<li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of variables you want to get. This can be
+either &#8216;stochastics&#8217; or &#8216;deterministics&#8217; if you are
+are using <tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt>. The default type is &#8216;stochastics&#8217;.
+However, I do not restrict its value, in case you
+would like to define other types by extending
+<tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The particles pertaining to variable <tt class="docutils literal"><span class="pre">name</span></tt> of
+type <tt class="docutils literal"><span class="pre">type_of_var</span></tt>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt> if possible, otherwise a
+list of whatever types your model has.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.RuntimeError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.RuntimeError</span></tt></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pysmc.SMC.get_particles_of">
-<tt class="descname">get_particles_of</tt><big>(</big><em>name</em>, <em>type_of_var='stochastics'</em><big>)</big><a class="headerlink" href="#pysmc.SMC.get_particles_of" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">get_particles_of</tt><big>(</big><em>var_name</em>, <em>type_of_var='stochastics'</em><big>)</big><a class="headerlink" href="#pysmc.SMC.get_particles_of" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the particles pertaining to variable <tt class="docutils literal"><span class="pre">name</span></tt>.</p>
 <p>If the collected particles can be converted to a numpy array, then this
 what is returned. Otherwise, we return is as a list of whatever objects
@@ -471,7 +543,7 @@ the particles are.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable whose particles you want to
+<li><strong>var_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable whose particles you want to
 get.</li>
 <li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of variables you want to get. This can be
 either &#8216;stochastics&#8217; or &#8216;deterministics&#8217; if you are
@@ -504,8 +576,28 @@ calls this method.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pysmc.SMC.get_weights_from_db">
+<tt class="descname">get_weights_from_db</tt><big>(</big><em>gamma</em><big>)</big><a class="headerlink" href="#pysmc.SMC.get_weights_from_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the weights of each one of the particle approximations
+constructed so far.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gamma</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The gamma parameter characterizing the
+approximation. Do not just put any value here.
+Get the values from
+<a class="reference internal" href="#pysmc.SMC.get_gammas_from_db" title="pysmc.SMC.get_gammas_from_db"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.get_gammas_from_db()</span></tt></a>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.RuntimeError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.RuntimeError</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pysmc.SMC.initialize">
-<tt class="descname">initialize</tt><big>(</big><em>gamma</em>, <em>particles=None</em>, <em>num_mcmc_per_particle=1000</em><big>)</big><a class="headerlink" href="#pysmc.SMC.initialize" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">initialize</tt><big>(</big><em>gamma</em>, <em>particles=None</em>, <em>num_mcmc_per_particle=10</em><big>)</big><a class="headerlink" href="#pysmc.SMC.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize SMC at a particular <tt class="docutils literal"><span class="pre">gamma</span></tt>.</p>
 <p>The method has basically three ways of initializing the particles:</p>
 <ul>
@@ -541,7 +633,7 @@ so on.</p>
 <li><strong>gamma</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The initial <tt class="docutils literal"><span class="pre">gamma</span></tt> parameter. It must, of
 course, be within the right range of
 <tt class="docutils literal"><span class="pre">gamma</span></tt>.</li>
-<li><strong>particles</strong> ((see :attr:<a href="#id4"><span class="problematic" id="id5">`</span></a>pymc.SMC.particles for type)) &#8211; A dictionary of MCMC states representing
+<li><strong>particles</strong> ((see :attr:<a href="#id6"><span class="problematic" id="id7">`</span></a>pymc.SMC.particles for type)) &#8211; A dictionary of MCMC states representing
 the particles. When using MPI, we are
 assuming that each one of the CPU&#8217;s has each
 own collection of particles.</li>
@@ -744,6 +836,23 @@ you get this wrong.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the total number of MPI processes.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.SMC.total_num_mcmc">
+<tt class="descname">total_num_mcmc</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.total_num_mcmc" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total number of MCMC steps performed so far.
+This is zeroed, everytime you call <a class="reference internal" href="#pysmc.SMC.initialize" title="pysmc.SMC.initialize"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.initialize()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">The total number of MCMC steps performed so far.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
 </tr>
