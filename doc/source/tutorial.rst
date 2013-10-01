@@ -441,11 +441,10 @@ Now, let's put everything together using the functionality of
     smc_sampler.initialize(0.01)
     # Move the particles to gamma = 1.0
     smc_sampler.move_to(1.0)
-    # Get the weights of each particle
-    w = smc_sampler.weights
-    # Get the particles pertaining to the mixture
-    x = smc_sampler.get_particles_of('mixture')
-    # Plot a histogram
+    # Get a particle approximation
+    p = smc_sampler.get_particle_approximation()
+     # Plot a histogram
+    plt.hist(p.mixture, weights=p.weights, bins=100, normed=True)
     plt.xlabel('$x$', fontsize=16)
     plt.ylabel('$p(x)$', fontsize=16)
     plt.show()
@@ -472,9 +471,8 @@ particle approximation, we use :attr:`pysmc.SMC.weights`
 (e.g., ``smc_sampler.weights``). To get the particles themselves we may
 use :attr:`pysmc.SMC.particles` (e.g., ``smc_sampler.particles``) which
 returns a dictionary of the particles. However, it is usually most
-convenient to access them via :meth:`pysmc.SMC.get_particles_of()`
-(e.g., ``smc_sampler.get_particles_of('mixture')``) which allows
-you to specify one variable of the model you wish to look at.
+convenient to access them via :meth:`pysmc.SMC.get_particle_approximation()`
+which returns a :class:`pysmc.ParticleApproximation` object.
 
 The output of the algorithm looks like this::
 

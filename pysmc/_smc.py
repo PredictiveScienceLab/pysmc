@@ -16,7 +16,7 @@ __all__ = ['SMC']
 
 
 from . import MCMCWrapper
-from . import get_var_from_particle_list
+from . import ParticleApproximation
 import pymc
 import numpy as np
 from scipy.optimize import brentq
@@ -877,40 +877,15 @@ class SMC(object):
             print 'END SMC MOVE TO'
             print '---------------'
 
-    def get_particles_of(self, var_name, type_of_var='stochastics'):
+    def get_particle_approximation(self):
         """
-        Get the particles pertaining to variable ``name``.
+        Get a :class:`pysmc.ParticleApproximation` representing the current
+        state of SMC.
 
-        If the collected particles can be converted to a numpy array, then this
-        what is returned. Otherwise, we return is as a list of whatever objects
-        the particles are.
-
-        :param var_name:    The name of the variable whose particles you want to
-                            get.
-        :type var_name:     str
-        :param type_of_var: The type of variables you want to get. This can be
-                            either 'stochastics' or 'deterministics' if you are
-                            are using :mod:`pymc`. The default type is 'stochastics'.
-                            However, I do not restrict its value, in case you
-                            would like to define other types by extending
-                            :mod:`pymc`.
-        :type type_of_var:  str
-        :returns:           The particles pertaining to variable ``name`` of
-                            type ``type_of_var``.
-        :rtype:             :class:`numpy.ndarray` if possible, otherwise a
-                            list of whatever types your model has.
-
-        .. note::
-
-            The object must represent a valid particle approximation.
-
-        .. warning::
-
-            When in parallel, you will get the particles owned by the cpu that
-            calls this method.
-
+        :returns:   A particle approximation of the current state.
+        :rtype:     :class:`pysmc.ParticleApproximation`
         """
-        return get_var_from_particle_list(self.particles, var_name, type_of_var)
+        return ParticleApproximation(self.weights, self.particles)
 
     def get_gammas_from_db(self):
         """

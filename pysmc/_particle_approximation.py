@@ -18,6 +18,8 @@ __all__ = ['ParticleApproximation']
 
 
 from . import get_var_from_particle_list
+import numpy as np
+import warnings
 
 
 class ParticleApproximation(object):
@@ -25,10 +27,14 @@ class ParticleApproximation(object):
     """
     Initialize a particle approximation.
 
+    If :math:`x` denotes collectively all the variables involved in the
+    particle approximation, then this object represents :math:`p(x)` as
+    discussed in the :ref:`tutorial`.
+
     :param weights:     The weights of the particle approximation.
     :type weights:      1D :class:`numpy.ndarray`
     :param particles:   The particles.
-    :type particles:    list
+    :type particles:    list of dict
 
     """
 
@@ -37,6 +43,12 @@ class ParticleApproximation(object):
 
     # The particles as returned from pysmc.SMC
     _particles = None
+
+    # The mean of the approximation
+    _mean = None
+
+    # The variance of the approximation
+    _variance = None
 
     @property
     def weights(self):
@@ -58,38 +70,303 @@ class ParticleApproximation(object):
         """
         return self._particles
 
+    @property
+    def num_particles(self):
+        """
+        The number of particles.
+
+        :getter:    Get the number of particles.
+        :type:      int
+        """
+        return len(self.particles)
+
+    @property
+    def mean(self):
+        """
+        The mean of the variables of all types of the particle approximation.
+
+        The mean of a variable :math:`x` is computed as:
+
+        .. math::
+            m(x) := \\sum_{j=1}^N w^{(j)} x^{(j)}.
+            :label: x_mean
+
+        :getter:    Get the mean of the particles.
+        :type:      dict
+        """
+        self.compute_all_means()
+        return self._mean
+
+    @property
+    def variance(self):
+        """
+        The variance of all the variables of all types of the particle
+        approximation.
+
+        The variance of a variable :math:`x` is computed as:
+
+        .. math::
+            v(x) := \\sum_{j=1}^N w^{(j)} \\left(x^{(j)}\\right)^2 - m^2(x),
+            :label: x_var
+
+        where :math:`m(x)` is given in :eq:`x_mean`.
+
+        :getter:    Get the variance of all particles.
+        :type:      dict
+        """
+        self.compute_all_variances()
+        return self._variance
+
     def _fix_particles_of_type_and_name(self, type_of_var, var_name):
+        """
+        Expose the particles themselves.
+        """
         var_data = get_var_from_particle_list(self.particles, var_name,
                                               type_of_var=type_of_var)
         setattr(self, var_name, var_data)
         getattr(self, type_of_var)[var_name] = var_data
+        self._mean[type_of_var][var_name] = None
+        self._variance[type_of_var][var_name] = None
 
     def _fix_particles_of_type(self, type_of_var):
+        """
+        Expose the dictionary of the type of vars.
+        """
         setattr(self, type_of_var, dict())
+        self._mean[type_of_var] = {}
+        self._variance[type_of_var] = {}
         for var_name in self.particles[0][type_of_var].keys():
             self._fix_particles_of_type_and_name(type_of_var, var_name)
 
     def _fix_particles(self):
+        """
+        Fix the local variables based on the particles stored locally.
+        """
+        self._mean = dict()
+        self._variance = dict()
         for type_of_var in self.particles[0].keys():
             self._fix_particles_of_type(type_of_var)
 
-    def __init__(self, weights=None, particles=None,
-                 data=None, var_name='unnamed', type_of_var='stochastics'):
+    def __init__(self, weights=None, particles=None):
         """
         Initialize the particle approximation.
 
         See the doc of this class for further details.
         """
-        if particles is None:
-            if data is not None:
-                data = np.atleast_2d(data).T
-                num_particles = data.shape[0]
-                num_dim = data.shape[1]
-                particles = []
-                for range(num_particles):
-                    var_dict = eval('dict(%s = np.array(p[i, 0]))' % var_name)
-                if num_dim = 1:
-                    particles = [dict(p[i, 0] for i in range(num_particles)]
+        if particles is not None:
+            if weights is None:
+                weights = 1. / len(particles)
+            self._weights = weights
+            self._particles = particles
+            self._fix_particles()
 
-        self._particles = particles
-        self._fix_particles()
+    def __getstate__(self):
+        """
+        Get the state of the object so that it can be stored.
+        """
+        state = dict()
+        state['weights'] = self.weights
+        state['particles'] = self.particles
+        return state
+
+    def __setstate__(self, state):
+        """
+        Set the state of the object.
+        """
+        self.__init__(weights=state['weights'],
+                      particles=state['particles'])
+
+    def _check_if_valid_type_of_var(self, type_of_var):
+        """
+        Check if ``type_of_var`` is a valid type of variable.
+        """
+        if not self.particles[0].has_key(type_of_var):
+            raise RuntimeError(
+        'The particles do not have a \'%s\' type of variables!' % type_of_var)
+
+    def _check_if_valid_var(self, var_name, type_of_var):
+        """
+        Check if ``var_name`` of type ``type_of_var`` exists.
+        """
+        self._check_if_valid_type_of_var(type_of_var)
+        if not self.particles[0][type_of_var].has_key(var_name):
+            raise RuntimeError(
+        'The particles do not have a \'%s\' variable of type \'%s\'!'
+        % (var_name, type_of_var))
+
+    def get_particle_approximation_of(self, func, var_name,
+                                      type_of_var='stochastics',
+                                      func_name='func'):
+        """
+        Returns the particle approximation of a function of ``var_name``
+        variable of type ``type_of_var`` of the particle approximation.
+
+        Let the variable and the function we are referring to be :math:`x` and
+        :math:`f(x)`, respectively. Then, let :math:`y = f(x)` denote the
+        induced random variable when we pass :math:`x` through the function.
+        The method returns the following particle approximation to the
+        probability density of :math:`y`:
+
+        .. math::
+            p(y) \\approx \\sum_{j=1}^N w^{(j)}
+            \\delta\\left(y - f\\left(x^{(j)} \\right)\\right)
+
+        :param func:        A function of the desired variable.
+        :type func:         function
+        :param var_name:    The name of the desired variable.
+        :type var_name:     str
+        :param type_of_var: The type of the variable.
+        :type type_of_var:  str
+        :param func_name:   A name for the function. The new variable will be
+                            named ``func_name + '_' + var_name``.
+        :type func_name:    str
+        :returns:           A particle approximation representing the random
+                            variable ``func(var_name)``.
+        :rtype:             :class:`pysmc.ParticleApproximation`
+        """
+        self._check_if_valid_var(var_name, type_of_var)
+        func_var_name = func_name + '_' + var_name
+        weights = self.weights
+        particles = [dict() for i in xrange(self.num_particles)]
+        for i in xrange(self.num_particles):
+            particles[i][type_of_var] = dict()
+            func_part_i = func(self.particles[i][type_of_var][var_name])
+            particles[i][type_of_var][func_var_name] = func_part_i
+        return ParticleApproximation(weights=weights, particles=particles)
+
+    def get_mean_of_func(self, func, var_name, type_of_var):
+        """
+        Get the mean of the ``func`` applied on ``var_name`` which is of type
+        ``type_of_var``.
+
+        Let the variable and the function we are referring to be :math:`x` and
+        :math:`f(x)`, respectively. Then the method computes and returns:
+
+        .. math::
+            \sum_{j=1}^Nw^{(j)}f\left(x^{(j)}\\right).
+
+        :param func:        A function of one variable.
+        :type func:         function
+        :param var_name:    The name of the variable.
+        :type var_name:     str
+        :param type_of_var: The type of the variable.
+        :type type_of_var:  str
+        :returns:           The mean of the random variable :math:`y = f(x)`.
+        :rtype:             unknown
+        """
+        self._check_if_valid_var(var_name, type_of_var)
+        res = 0.
+        for i in xrange(self.num_particles):
+            res += (self.weights[i] *
+                    func(self.particles[i][type_of_var][var_name]))
+        return res
+
+    def compute_mean_of_var(self, var_name, type_of_var,
+                             force_calculation=False):
+        """
+        Compute the mean of the particle approximation.
+
+        :param var_name:    The name of the variable.
+        :type var_name:     str
+        :param type_of_var: The type of the variable.
+        :type type_of_var:  str
+        :param force_calculation:   Computes the statistics even if a previous
+                                    calculation was already made.
+        :type force_calculation:    bool
+        """
+        self._check_if_valid_var(var_name, type_of_var)
+        if (self._mean[type_of_var][var_name] is not None
+            and not force_calculation):
+            return
+        self._mean[type_of_var][var_name] = self.get_mean_of_func(
+            lambda x: x, var_name, type_of_var)
+
+    def compute_all_means_of_type(self, type_of_var,
+                                   force_calculation=False):
+        """
+        Compute the means of every variable of a type ``type_of_var``.
+
+        :param type_of_var: The type of the variable.
+        :type type_of_var:  str
+        :param force_calculation:   Computes the statistics even if a previous
+                                    calculation was already made.
+        :type force_calculation:    bool
+        """
+        for var_name in self.particles[0][type_of_var].keys():
+            self.compute_mean_of_var(var_name, type_of_var,
+                                      force_calculation=force_calculation)
+
+    def compute_all_means(self, force_calculation=False):
+        """
+        Compute all the means associated with the particle approximation.
+
+        :param force_calculation:   Computes the statistics even if a previous
+                                    calculation was already made.
+        :type force_calculation:    bool
+        """
+        for type_of_var in self.particles[0].keys():
+            self.compute_all_means_of_type(type_of_var,
+                                            force_calculation=force_calculation)
+
+    def compute_variance_of_var(self, var_name, type_of_var,
+                                 force_calculation=False):
+        """
+        Compute the variance of ``var_name``.
+
+        :param var_name:    The name of the variable.
+        :type var_name:     str
+        :param type_of_var: The type of the variable.
+        :type type_of_var:  str
+
+        :param force_calculation:   Computes the statistics even if a previous
+                                    calculation was already made.
+        :type force_calculation:    bool
+        """
+        self._check_if_valid_var(var_name, type_of_var)
+        if (self._variance[type_of_var][var_name] is not None
+            and not force_calculation):
+            return
+        self._variance[type_of_var][var_name] = self.get_mean_of_func(
+            lambda x: x ** 2, var_name, type_of_var)
+        self.compute_mean_of_var(var_name, type_of_var,
+                                  force_calculation=force_calculation)
+        self._variance[type_of_var][var_name] -= (
+            self._mean[type_of_var][var_name])
+
+    def compute_all_variances_of_type(self, type_of_var,
+                                       force_calculation=False):
+        """
+        Compute all variances of type ``type_of_var``.
+
+        :param type_of_var: The type of the variable.
+        :type type_of_var:  str
+        :param force_calculation:   Computes the statistics even if a previous
+                                    calculation was already made.
+        :type force_calculation:    bool
+        """
+        for var_name in self.particles[0][type_of_var].keys():
+            self.compute_variance_of_var(var_name, type_of_var,
+                                          force_calculation=force_calculation)
+
+    def compute_all_variances(self, force_calculation=False):
+        """
+        Compute all the variances.
+
+        :param force_calculation:   Computes the statistics even if a previous
+                                    calculation was already made.
+        :type force_calculation:    bool
+        """
+        for type_of_var in self.particles[0].keys():
+            self.compute_all_variances_of_type(type_of_var,
+                                            force_calculation=force_calculation)
+
+    def compute_all_statistics(self, force_calculation=False):
+        """
+        Compute all the statistics of the particle approximation.
+
+        :param force_calculation:   Computes the statistics even if a previous
+                                    calculation was already made.
+        :type force_calculation:    bool
+        """
+        self.compute_all_means(force_calculation=force_calculation)
+        self.compute_all_variances(force_calculation=force_calculation)

@@ -28,6 +28,10 @@ Here is complete reference of all the classes included in :mod:`pysmc`.
 .. autoclass:: pysmc.MCMCWrapper
     :members:
 
+.. automodule:: pysmc._particle_approximation
+.. autoclass:: pysmc.ParticleApproximation
+    :members:
+
 .. automodule:: pysmc._smc
 .. autoclass:: pysmc.SMC
     :members:
