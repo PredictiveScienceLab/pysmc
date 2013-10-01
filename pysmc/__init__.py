@@ -36,14 +36,32 @@ Here is complete reference of all the classes included in :mod:`pysmc`.
 .. autoclass:: pysmc.SMC
     :members:
 
+.. automodule:: pysmc._db
+.. autoclass:: pysmc.DataBase
+    :members:
+
+.. _methods:
+
+-------
+Methods
+-------
+
+.. automodule:: pysmc._plot
+.. autofunction:: pysmc.hist
+
+.. automodule:: pysmc._misc
+.. autofunction:: pysmc.try_to_array
+
 """
 
 
 __all__ = ['MCMCWrapper', 'SMC', 'ParticleApproximation', 'try_to_array',
-           'get_var_from_particle_list']
+           'get_var_from_particle_list', 'DataBase']
 
 
 from ._misc import *
 from ._mcmc_wrapper import *
 from ._particle_approximation import *
+from ._db import *
 from ._smc import *
+from ._plot import *

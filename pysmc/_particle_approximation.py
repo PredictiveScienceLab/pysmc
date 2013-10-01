@@ -31,12 +31,16 @@ class ParticleApproximation(object):
     particle approximation, then this object represents :math:`p(x)` as
     discussed in the :ref:`tutorial`.
 
-    :param weights:     The weights of the particle approximation.
-    :type weights:      1D :class:`numpy.ndarray`
+    :param log_w:     The logarithms of the weights of the particle
+                      approximation.
+    :type log_w:      1D :class:`numpy.ndarray`
     :param particles:   The particles.
     :type particles:    list of dict
 
     """
+
+    # The logarithms of the weights
+    _log_w = None
 
     # The weights of the approximation
     _weights = None
@@ -49,6 +53,17 @@ class ParticleApproximation(object):
 
     # The variance of the approximation
     _variance = None
+
+    @property
+    def log_w(self):
+        """
+        The logarithms of the weights of the particle approximation.
+
+        :getter:    Get the logarithms of the weights of the particle
+                    approximation.
+        :type:      1D :class:`numpy.ndarray`
+        """
+        return self._log_w
 
     @property
     def weights(self):
@@ -147,16 +162,17 @@ class ParticleApproximation(object):
         for type_of_var in self.particles[0].keys():
             self._fix_particles_of_type(type_of_var)
 
-    def __init__(self, weights=None, particles=None):
+    def __init__(self, log_w=None, particles=None):
         """
         Initialize the particle approximation.
 
         See the doc of this class for further details.
         """
         if particles is not None:
-            if weights is None:
-                weights = 1. / len(particles)
-            self._weights = weights
+            if log_w is None:
+                log_w = np.ones(len(particles)) * (-math.log(len(particles)))
+            self._log_w = log_w
+            self._weights = np.exp(log_w)
             self._particles = particles
             self._fix_particles()
 
@@ -165,7 +181,7 @@ class ParticleApproximation(object):
         Get the state of the object so that it can be stored.
         """
         state = dict()
-        state['weights'] = self.weights
+        state['log_w'] = self.weights
         state['particles'] = self.particles
         return state
 
@@ -173,7 +189,7 @@ class ParticleApproximation(object):
         """
         Set the state of the object.
         """
-        self.__init__(weights=state['weights'],
+        self.__init__(log_w=state['log_w'],
                       particles=state['particles'])
 
     def _check_if_valid_type_of_var(self, type_of_var):

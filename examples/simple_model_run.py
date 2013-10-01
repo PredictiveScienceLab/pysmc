@@ -22,18 +22,18 @@ import cPickle as pickle
 
 if __name__ == '__main__':
     # Construct the MCMC sampler
-    mcmc_sampler = pymc.MCMC(model)
+    #mcmc_sampler = pymc.MCMC(model)
     # Construct the SMC sampler
-    smc_sampler = pysmc.SMC(mcmc_sampler, num_particles=100,
-                            num_mcmc=10, verbose=1)
+    smc_sampler = pysmc.SMC(model, num_particles=1000,
+                            num_mcmc=10, verbose=1,
+                            db_filename='db.pickle',
+                            update_db=True)
     # Initialize SMC at gamma = 0.01
-    smc_sampler.initialize(0.01)
+    #smc_sampler.initialize(0.01)
     # Move the particles to gamma = 1.0
-    smc_sampler.move_to(1.0)
+    smc_sampler.move_to(1.)
     # Get a particle approximation
     p = smc_sampler.get_particle_approximation()
-     # Plot a histogram
-    plt.hist(p.mixture, weights=p.weights, bins=100, normed=True)
-    plt.xlabel('$x$', fontsize=16)
-    plt.ylabel('$p(x)$', fontsize=16)
+    # Plot a histogram
+    pysmc.hist(plt, p, 'mixture', bins=100)
     plt.show()

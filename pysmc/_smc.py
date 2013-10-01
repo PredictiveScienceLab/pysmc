@@ -17,6 +17,7 @@ __all__ = ['SMC']
 
 from . import MCMCWrapper
 from . import ParticleApproximation
+from . import DataBase
 import pymc
 import numpy as np
 from scipy.optimize import brentq
@@ -24,14 +25,20 @@ import math
 import itertools
 import sys
 import warnings
+import os
 
 
 class SMC(object):
     """
     Use Sequential Monte Carlo (SMC) to sample from a distribution.
 
-    :param mcmc_sampler:        An mcmc_sampler object.
-    :type mcmc_sampler:         :class:`pymc.MCMC`
+    :param mcmc_sampler:        This is an essential part in initializing the
+                                object. It can either be a ready to go
+                                MCMC sampler or a module/class representing
+                                a :mod:`pymc` model. In the latter case, the
+                                MCMC sampler will be initialized automatically.
+    :type mcmc_sampler:         :class:`pymc.MCMC`, :class:`pysmc.MCMCWrapper`
+                                or a :mod:`pymc` model
     :param num_particles:       The number of particles.
     :type num_particles:        int
     :param num_mcmc:            The number of MCMC steps per gamma.
@@ -52,18 +59,21 @@ class SMC(object):
                                 default value is ``'gamma'``, but you can
                                 change it to whatever you want.
     :type gamma_name:           str
+    :param db_filename:         The filename of a database for the object. If
+                                the database exists and is a valid one, then
+                                the object will be initialized at each last
+                                state. If the parameter ``update_db`` is also
+                                set, then the algorithm will dump the state of
+                                each ``gamma`` it visits and commit it to the
+                                data base. Otherwise, commits can be forced by
+                                calling :meth:`pysmc.SMC.commit()`.
+    :type db_filename:          str
     :param mpi:                 The MPI class (see :mod:`mpi4py` and
                                 :ref:`mpi_example`). If ``None``, then no
                                 parallelism is used.
     :param comm:                Set this to the MPI communicator. If ``None``,
                                 then ``mpi.COMM_WORLD`` is used.
     """
-
-    # The number of particles of this CPU
-    _my_num_particles = None
-
-    # The number of particles to be used
-    _num_particles = None
 
     # The logarithm of the weights
     _log_w = None
@@ -73,15 +83,6 @@ class SMC(object):
 
     # The number of MCMC steps for each gamma
     _num_mcmc = None
-
-    # The MCMC proposal
-    _proposal = None
-
-    # The particles
-    _particles = None
-
-    # The acceptance rate observed by each particle
-    _acceptance_rate = None
 
     # The thresshold of the effective sample size (percentage)
     _ess_threshold = None
@@ -125,6 +126,9 @@ class SMC(object):
     # A database containing all the particles at all gammas
     _db = None
 
+    # Update the database or not
+    _update_db = False
+
     # Count the total number of MCMC samples taken so far
     _total_num_mcmc = None
 
@@ -142,28 +146,15 @@ class SMC(object):
             processes.
 
         """
-        return self._my_num_particles
+        return self.num_particles / self.size
 
     @property
     def num_particles(self):
         """
         :getter:    Get the number of particles.
-        :setter:    Set the number of particles. All data in the instant of the
-                    class will be lost if this is called.
         :type:      int
-        :raises:    :exc:`exceptions.ValueError`
         """
-        return self._num_particles
-
-    @num_particles.setter
-    def num_particles(self, value):
-        """Set the number of particles."""
-        value = int(value)
-        if value <= 0:
-            raise ValueError('The number of particles must be positive.')
-        self._my_num_particles = value / self.size
-        self._num_particles = self.my_num_particles * self.size
-        self._allocate_memory()
+        return len(self.particles)
 
     @property
     def log_w(self):
@@ -196,7 +187,7 @@ class SMC(object):
         """Set the number of MCMC steps per gamma."""
         value = int(value)
         if value <= 0:
-            raise ValueError('The number of MCMC steps must be positive.')
+            raise ValueError('num_mcmc <= 0!')
         self._num_mcmc = value
 
     @property
@@ -299,7 +290,6 @@ class SMC(object):
         The MPI communicator.
 
         :getter:    Get the MPI communicator.
-        :setter:    Set the MPI communicator.
         :type:      We do not check it.
         """
         return self._comm
@@ -310,21 +300,9 @@ class SMC(object):
         The MPI class.
 
         :getter:    Get the MPI class.
-        :setter:    Set the MPI class.
         :type:      We do not check it.
         """
         return self._mpi
-
-    @comm.setter
-    def comm(self, value):
-        """Set the MPI communicator."""
-        self._comm = value
-        if self.use_mpi:
-            self._rank = self.comm.Get_rank()
-            self._size = self.comm.Get_size()
-        else:
-            self._rank = 0
-            self._size = 1
 
     @property
     def use_mpi(self):
@@ -378,13 +356,24 @@ class SMC(object):
         """
         return self._db
 
-    @mcmc_sampler.setter
-    def mcmc_sampler(self, value):
-        """Set the MCMC sampler."""
-        if not isinstance(value, pymc.MCMC):
-            raise TypeError('mcmc_sampler must be a pymc.MCMC object!')
-        self._mcmc_sampler = value
-        self._update_gamma_rv()
+    @property
+    def update_db(self):
+        """
+        Update the database or not.
+
+        :getter:    Get the ``update_db`` flag.
+        :setter:    Set the ``update_db`` flag.
+        :type:      bool
+        """
+        return self._update_db
+
+    @update_db.setter
+    def update_db(self, value):
+        """
+        Set the ``update_db`` flag.
+        """
+        value = bool(value)
+        self._update_db = value
 
     def _update_gamma_rv(self):
         """Update the variable that points to the observed rv."""
@@ -415,8 +404,10 @@ class SMC(object):
         """
         return self._gamma_rv.parents[self.gamma_name]
 
-    @gamma.setter
-    def gamma(self, value):
+    def _set_gamma(self, value):
+        """
+        Set the value of gamma.
+        """
         self._gamma_rv.parents[self.gamma_name] = value
 
     @property
@@ -443,50 +434,9 @@ class SMC(object):
         The SMC particles.
 
         :getter:    Get the SMC particles.
-        :setter:    Set the SMC particles.
         :type:      list of whatever objects your method supports.
-        :raises:    :exc:`exceptions.ValueError`
-
-        .. note::
-
-            When using MPI and you must assign to the setter only the particles
-            that pertain to the process that calls it. That is, you are
-            responsible for scattering the particles from the root to everybody
-            else. Hopefully, you will get an :exc:`exceptions.ValueError` if
-            you get this wrong.
-
         """
         return self._particles
-
-    @particles.setter
-    def particles(self, value):
-        """Set the SMC particles."""
-        if not len(value) == self.my_num_particles:
-            raise ValueError('The number of particles you specified is wrong.')
-        self._particles = particles
-
-    @property
-    def weights(self):
-        """
-        The weights of the SMC particles.
-
-        :getter:    Get the SMC weights.
-        :setter:    Set the SMC weights.
-        :type:      1D :class:`numpy.ndarray`
-
-        .. note::
-
-            When using MPI, the same concerns as in :attr:`pysmc.SMC.particles`
-            hold here.
-
-        """
-        return np.exp(self.log_w)
-
-    @weights.setter
-    def weights(self, value):
-        """Set the SMC weights."""
-        value = np.array(value)
-        self._log_w = self._normalize(np.log(value))
 
     @property
     def total_num_mcmc(self):
@@ -498,38 +448,6 @@ class SMC(object):
         :type:      int
         """
         return self._total_num_mcmc
-
-    def _add_current_state_to_db(self):
-        """Add the current state to the database."""
-        if self.verbose > 1:
-            print '\t-adding current state to database'
-        if self._db is None:
-            if self.verbose > 1:
-                print '\t-database does not exist'
-                print '\t-creating database'
-            self._db = dict(gamma_name = self.gamma_name, data = {})
-        if not self.db['gamma_name'] == self.gamma_name:
-            warnings.warn(
-            'Database \'gamma_name\' does not match self.gamma_name')
-        if self.db['data'].has_key(self.gamma):
-            warnings.warn(
-            'Database already contains a record for %1.2f.' % self.gamma
-            + 'It will be replaced!'
-            )
-        state = dict()
-        state['weights'] = np.exp(self.log_w)
-        state['particles'] = self.particles
-        self.db['data'][self.gamma] = state
-
-    def _check_if_gamma_is_in_db(self, gamma):
-        """Check if the particular ``gamma`` is in the database.
-
-        :raises:    :exc:`exceptions.RuntimeError`
-        """
-        if not self.db['data'].has_key(gamma):
-            raise RuntimeError(
-            'Database does not contain a record for %s = %1.2f.'
-            % (self.gamma_name, gamma))
 
     def _logsumexp(self, log_x):
         """Perform the log-sum-exp of the weights."""
@@ -578,9 +496,9 @@ class SMC(object):
         for i in range(self.my_num_particles):
             self.mcmc_sampler.set_state(self.particles[i])
             tmp_prev[i] = self.mcmc_sampler.logp
-            self.gamma = gamma
+            self._set_gamma(gamma)
             tmp_new[i] = self.mcmc_sampler.logp
-            self.gamma = old_gamma
+            self._set_gamma(old_gamma)
         return tmp_new - tmp_prev
 
     def _get_unormalized_weights_at(self, gamma):
@@ -650,18 +568,6 @@ class SMC(object):
         if self.verbose > 1:
             sys.stdout.write('SUCCESS\n')
 
-    def _allocate_memory(self):
-        """Allocate memory.
-
-        Precondition
-        ------------
-        ``num_particles`` have been set.
-        """
-        # Allocate and initialize the weights
-        self._log_w = (np.ones(self.my_num_particles)
-                       * (-math.log(self.num_particles)))
-        self._particles = [None for i in range(self.my_num_particles)]
-
     def _tune(self):
         """Tune the parameters of the proposals.."""
         # TODO: Make sure this actually works!
@@ -707,6 +613,121 @@ class SMC(object):
                 self.comm.barrier()
             return next_gamma
 
+    def _initialize_db(self, db_filename, update_db):
+        """
+        Initialize the database.
+        """
+        if db_filename is not None:
+            db_filename = os.path.abspath(db_filename)
+            if self.verbose > 0:
+                print '- db: ' + db_filename
+            if os.path.exists(db_filename):
+                if self.verbose > 0:
+                    print '- db exists'
+                    print '- assuming this is a restart run'
+                self._db = DataBase.load(db_filename)
+                # Sanity check
+                if not self.db.gamma_name == self.gamma_name:
+                    raise RuntimeError(
+                    '%s in db does not match %s in SMC' % (seld.db.gamma_name,
+                                                           gamma_name))
+                if self.verbose > 0:
+                    print '- db:'
+                    print '\t- num. of %s: %d' % (self.gamma_name,
+                                                  self.db.num_gammas)
+                    print '\t- first %s: %1.4f' % (self.gamma_name,
+                                                  self.db.gammas[0])
+                    print '\t- last %s: %1.4f' % (self.gamma_name,
+                                                  self.db.gammas[-1])
+                print '- initializing the object at the last state of db'
+                self.initialize(self.db.gamma,
+                        particle_approximation=self.db.particle_approximation)
+            else:
+                if self.verbose > 0:
+                    print '- db does not exist'
+                    print '- creating db file'
+                self._db = DataBase(gamma_name=self.gamma_name,
+                                    filename=db_filename)
+            if self.verbose > 0:
+                if update_db:
+                    print '- commiting to the database at every step'
+                else:
+                    print '- manually commiting to the database'
+        elif update_db:
+            if self.verbose > 0:
+                warnings.warn(
+                '- update_db flag is on but no db_filename was specified\n'
+              + '- setting the update_db flag to off')
+            update_db = False
+        self._update_db = update_db
+
+    def _set_gamma_name(self, gamma_name):
+        """
+        Safely, set the gamma_name parameter.
+        """
+        if not isinstance(gamma_name, str):
+            raise TypeError('The \'gamma_name\' parameter must be a str!')
+        self._gamma_name = gamma_name
+
+    def _set_mcmc_sampler(self, mcmc_sampler):
+        """
+        Safely, set the MCMC sampler.
+        """
+        if (not isinstance(mcmc_sampler, pymc.MCMC)
+            and not isinstance(mcmc_sampler, MCMCWrapper)):
+            # Try to make an MCMC sampler out of it (it will work if it is a
+            # valid model).
+            try:
+                warnings.warn(
+                '- mcmc_sampler is not a pymc.MCMC.\n'
+              + '- attempting to make it one!')
+                mcmc_sampler = pymc.MCMC(mcmc_sampler)
+            except:
+                raise RuntimeError(
+            'The mcmc_sampler object could not be converted to a pymc.MCMC!')
+        if not isinstance(mcmc_sampler, MCMCWrapper):
+            mcmc_sampler = MCMCWrapper(mcmc_sampler)
+        self._mcmc_sampler = mcmc_sampler
+        self._update_gamma_rv()
+
+    def _set_mpi(self, mpi, comm):
+        """
+        Safely set mpi.
+        """
+        self._mpi = mpi
+        if self.mpi is not None and comm is None:
+            self._comm = self.mpi.COMM_WORLD
+        elif comm is None:
+            self._comm = None
+        else:
+            raise RuntimeError('To use MPI you have to specify '
+                               + 'the mpi variable.')
+        if self.use_mpi:
+            self._rank = self.comm.Get_rank()
+            self._size = self.comm.Get_size()
+        else:
+            self._rank = 0
+            self._size = 1
+
+    def _set_initial_particles(self, num_particles):
+        """
+        Safely, set the initial particles.
+        """
+        num_particles = int(num_particles)
+        if num_particles <= 0:
+            raise ValueError('num_particles <= 0!')
+        my_num_particles = num_particles / self.size
+        if my_num_particles * self.size < num_particles:
+            warnings.warn(
+            '- number of particles (%d) not supported on %d mpi processes' %
+                (num_particles, size))
+            num_particles = my_num_particles * self.size
+            warnings.warn(
+             '- changing the number of particles to %d' % num_particles)
+        self._particles = [None for i in xrange(my_num_particles)]
+        self._log_w = (np.ones(my_num_particles)
+                       * (-math.log(num_particles)))
+
     def __init__(self, mcmc_sampler=None,
                  num_particles=10, num_mcmc=10,
                  ess_threshold=0.67,
@@ -715,59 +736,55 @@ class SMC(object):
                  verbose=0,
                  mpi=None,
                  comm=None,
-                 gamma_name='gamma'):
+                 gamma_name='gamma',
+                 db_filename=None,
+                 update_db=False):
         """
         Initialize the object.
 
         See the doc of the class for the description.
         """
-        assert isinstance(gamma_name, str)
-        self._gamma_name = gamma_name
-        self.mcmc_sampler = mcmc_sampler
-        self._mpi = mpi
-        if self.mpi is not None and comm is None:
-            self.comm = self.mpi.COMM_WORLD
-        elif comm is None:
-            self.comm = None
-        else:
-            raise RunTimeError('To use MPI you have to specify '
-                               + 'the mpi variable.')
-        assert isinstance(mcmc_sampler, pymc.MCMC)
-        self._mcmc_sampler = MCMCWrapper(mcmc_sampler)
-        self.num_particles = num_particles
+        self._set_gamma_name(gamma_name)
+        self._set_mcmc_sampler(mcmc_sampler)
+        self._set_mpi(mpi, comm)
+        self._set_initial_particles(num_particles)
         self.num_mcmc = num_mcmc
         self.ess_threshold = ess_threshold
         self.ess_reduction = ess_reduction
         self.verbose = verbose
         self.adapt_proposal_step = adapt_proposal_step
+        self._initialize_db(db_filename, update_db)
 
-    def initialize(self, gamma, particles=None, num_mcmc_per_particle=10):
+    def initialize(self, gamma, particle_approximation=None,
+                   num_mcmc_per_particle=10):
         """
         Initialize SMC at a particular ``gamma``.
 
         The method has basically three ways of initializing the particles:
 
-        + If ``particles`` is not ``None``, then it is assumed to contain the
-           particles at the corresponding value of ``gamma``.
-        + If ``particles`` is ``None`` and the MCMC sampler class has a method
-           called ``draw_from_prior()`` that works, then it is called to
-           initialize the particles.
+        + If ``particles_approximation`` is not ``None``,
+          then it is assumed to contain the
+          particles at the corresponding value of ``gamma``.
+        + If ``particles_approximation`` is ``None`` and the
+          MCMC sampler class has a method
+          called ``draw_from_prior()`` that works, then it is called to
+          initialize the particles.
         + In any other case, MCMC sampling is used to initialize the particles.
-           We are assuming that the MCMC sampler has already been tuned for
-           that particular gamma and that a sufficient burning period has past.
-           Then we record the current state as the first particle, we sample
-           ``num_mcmc_per_particle`` times and record the second particle, and
-           so on.
+          We are assuming that the MCMC sampler has already been tuned for
+          that particular gamma and that a sufficient burning period has past.
+          Then we record the current state as the first particle, we sample
+          ``num_mcmc_per_particle`` times and record the second particle, and
+          so on.
 
         :param gamma:               The initial ``gamma`` parameter. It must, of
                                     course, be within the right range of
                                     ``gamma``.
         :type gamma:                float
-        :param particles:           A dictionary of MCMC states representing
-                                    the particles. When using MPI, we are
-                                    assuming that each one of the CPU's has each
-                                    own collection of particles.
-        :type particles:            (see :attr:`pymc.SMC.particles for type)
+        :param particles_approximation: A dictionary of MCMC states representing
+                                        the particles. When using MPI, we are
+                                        assuming that each one of the CPU's
+                                        has each own collection of particles.
+        :type particles_approximation:  :class:`pysmc.ParticleApproximation`
         :param num_mcmc_per_particle:   This parameter is ignored if
                                         ``particles`` is not ``None``. If the
                                         only way to initialize the particles is
@@ -783,19 +800,22 @@ class SMC(object):
         # Zero out the MCMC step counter
         self._total_num_mcmc = 0
         # Set gamma
-        self.gamma = gamma
+        self._set_gamma(gamma)
         # Set the weights and ESS
         self.log_w.fill(-math.log(self.num_particles))
         self._ess = float(self.num_particles)
-        if particles is not None:
-            sys.stdout.write('- attempting to initialize with particles: ')
-            self.particles = particles
-            sys.stdout.write('SUCCESS\n')
+        if particle_approximation is not None:
+            if self.verbose > 0:
+                print '- initializing with a particle approximation.'
+                self._particles = particle_approximation.particles
+                self._log_w = particle_approximation.log_w
+                return
         else:
             self.particles[0] = self.mcmc_sampler.get_state()
             try:
                 if self.verbose > 0:
-                    sys.stdout.write('- initializing by sampling from the prior: ')
+                    sys.stdout.write(
+                            '- initializing by sampling from the prior: ')
                 for i in range(1, self.my_num_particles):
                     self.mcmc_sampler.draw_from_prior()
                     self.particles[i] = self.mcmc_sampler.get_state()
@@ -817,7 +837,9 @@ class SMC(object):
                     self._total_num_mcmc += num_mcmc_per_particle
                     if self.verbose > 0:
                         pb.update((i + 2) * self.size * num_mcmc_per_particle)
-        self._add_current_state_to_db()
+        if self.update_db:
+            self.db.add(self.gamma, self.get_particle_approximation())
+            self.db.commit()
         if self.verbose > 0:
             print '----------------------'
             print 'END SMC Initialization'
@@ -850,7 +872,7 @@ class SMC(object):
             log_w = self._get_unormalized_weights_at(new_gamma)
             self._log_w = self._normalize(log_w)
             self._ess = self._get_ess_at(self.log_w)
-            self.gamma = new_gamma
+            self._set_gamma(new_gamma)
             if self.ess < self.ess_threshold * self.num_particles:
                 self._resample()
             if self.verbose > 0:
@@ -865,7 +887,9 @@ class SMC(object):
                 self._total_num_mcmc += self.num_mcmc
                 if self.verbose > 0:
                     pb.update(i * self.size * self.num_mcmc)
-            self._add_current_state_to_db()
+            if self.update_db:
+                self.db.add(self.gamma, self.get_particle_approximation())
+                self.db.commit()
             if self.verbose > 1:
                 print '- acceptance rate for each step method:'
                 for sm in self.mcmc_sampler.step_methods:
@@ -885,62 +909,16 @@ class SMC(object):
         :returns:   A particle approximation of the current state.
         :rtype:     :class:`pysmc.ParticleApproximation`
         """
-        return ParticleApproximation(self.weights, self.particles)
+        return ParticleApproximation(log_w=self.log_w, particles=self.particles)
 
-    def get_gammas_from_db(self):
+    def commit(self):
         """
-        Get the gammas we have visited so far from the databse.
-
-        :returns:   The gammas we have visited so far doing SMC.
-        :rtype:     1D :class:`numpy.ndarray`
+        Commit the current state to the data base.
         """
-        gammas = self.db['data'].keys()
-        gammas.sort()
-        return np.array(gammas)
-
-    def get_weights_from_db(self, gamma):
-        """
-        Get the weights of each one of the particle approximations
-        constructed so far.
-
-        :param gamma:   The gamma parameter characterizing the
-                        approximation. Do not just put any value here.
-                        Get the values from
-                        :meth:`pysmc.SMC.get_gammas_from_db()`.
-        :type gamma:    float
-        :raises:    :exc:`exceptions.RuntimeError`
-        """
-        self._check_if_gamma_is_in_db(gamma)
-        return self.db['data'][gamma]['weights']
-
-    def get_particles_from_db(self, gamma, var_name,
-                              type_of_var='stochastics'):
-        """
-        Get the particles pertaining to variable ``var_name`` at
-        ``gamma`.
-
-        :param gamma:       The gamma parameter characterizing the
-                            approximation. Do not just put any value here.
-                            Get the values from
-                            :meth:`pysmc.SMC.get_gammas_from_db()`.
-        :type gamma:        float
-        :param var_name:    The name of the variable whose particles you want to
-                            get.
-        :type var_name:     str
-        :param type_of_var: The type of variables you want to get. This can be
-                            either 'stochastics' or 'deterministics' if you are
-                            are using :mod:`pymc`. The default type is
-                            'stochastics'.
-                            However, I do not restrict its value, in case you
-                            would like to define other types by extending
-                            :mod:`pymc`.
-        :type type_of_var:  str
-        :returns:           The particles pertaining to variable ``name`` of
-                            type ``type_of_var``.
-        :rtype:             :class:`numpy.ndarray` if possible, otherwise a
-                            list of whatever types your model has.
-        :raises:    :exc:`exceptions.RuntimeError`
-        """
-        self._check_if_gamma_is_in_db(gamma)
-        particle_list = self.db['data'][gamma]['particles']
-        return get_var_from_particle_list(particle_list, var_name, type_of_var)
+        if not self.update_db:
+            warnings.warn(
+        '- requested a commit to the db but no db found\n'
+        '- ignoring request')
+            return
+        self.db.add(self.gamma, self.get_particle_approximation())
+        self.db.commit()

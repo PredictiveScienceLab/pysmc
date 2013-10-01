@@ -56,6 +56,7 @@ class MCMCWrapper(object):
     def mcmc_sampler(self, value):
         if not isinstance(value, MCMC):
             raise TypeError('You must provide a pymc.MCMC object!')
+        value.assign_step_methods()
         self._mcmc_sampler = value
 
     @property
