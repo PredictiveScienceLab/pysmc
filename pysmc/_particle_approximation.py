@@ -181,7 +181,7 @@ class ParticleApproximation(object):
         Get the state of the object so that it can be stored.
         """
         state = dict()
-        state['log_w'] = self.weights
+        state['log_w'] = self.log_w
         state['particles'] = self.particles
         return state
 

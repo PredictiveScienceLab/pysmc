@@ -51,12 +51,17 @@ Methods
 
 .. automodule:: pysmc._misc
 .. autofunction:: pysmc.try_to_array
+.. autofunction:: pysmc.hist
+.. autofunction:: pysmc.make_movie_from_db
+.. autofunction:: pysmc.multinomial_resample
+.. autofunction:: pysmc.kde
 
 """
 
 
 __all__ = ['MCMCWrapper', 'SMC', 'ParticleApproximation', 'try_to_array',
-           'get_var_from_particle_list', 'DataBase']
+           'get_var_from_particle_list', 'DataBase',
+           'hist', 'make_movie_from_db', 'multinomial_resample', 'kde']
 
 
 from ._misc import *

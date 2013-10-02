@@ -6,6 +6,21 @@
 Welcome to pysmc's documentation!
 =================================
 
+:mod:`pysmc` is a Python package for sampling complicated probability
+densities using the celebrated Sequential Monte Carlo method.
+The core of this package was written during my PhD at
+`Cornell University <http://www.cornell.edu>`_
+at the
+`Materials Process Design and Controll Laboratory <http://mpdc.mae.cornell.edu/>`_
+under the
+supervision of Prof. `Nicholas Zabaras <http://mpdc.mae.cornell.edu/People/ZabarasCv/Zabaras.html>`_. It is part of the 
+`Bayesian Exploration Statistical Toolbox (BEST)
+<http://ebilionis.github.io/py-best/html/>`_ initiative.
+The coupling of the code with `PyMC <http://pymc-devs.github.io/pymc/>`_ 
+took part at 
+the `Mathematics and Computer Science Division <http://www.mcs.anl.gov>`_
+at `Argonne National Laboratory <http://www.anl.gov>`_.
+
 Contents:
 
 .. toctree::
@@ -24,3 +39,5 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. _PyMC:
+    http://pymc-devs.github.io/pymc/

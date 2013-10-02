@@ -430,7 +430,6 @@ Now, let's put everything together using the functionality of
     import simple_model as model
     import pymc
     import pysmc
-    import matplotlib.pyplot as plt
 
     # Construct the MCMC sampler
     mcmc_sampler = pymc.MCMC(model)
@@ -443,28 +442,26 @@ Now, let's put everything together using the functionality of
     smc_sampler.move_to(1.0)
     # Get a particle approximation
     p = smc_sampler.get_particle_approximation()
-     # Plot a histogram
-    plt.hist(p.mixture, weights=p.weights, bins=100, normed=True)
-    plt.xlabel('$x$', fontsize=16)
-    plt.ylabel('$p(x)$', fontsize=16)
+    # Plot a histogram
+    pysmc.hist(p, 'mixture')
     plt.show()
 
 This code can be found in
 :download:`examples/simple_model_run.py <../../examples/simple_model_run.py>`.
 
-In lines 9-10, we initialize the SMC class. Of course, it requires a
+In lines 8-9, we initialize the SMC class. Of course, it requires a
 ``mcmc_sampler`` which is a :class:`pymc.MCMC` object.
 ``num_particles`` specifies the number of particles we wish to use and
 ``num_mcmc`` the number of `MCMC`_ steps we are going to perform at each
 different value of :math:`\gamma`. The ``verbose`` parameter specifies
 the amount of text the algorithm prints to the standard output.
 There are many more parameters which are fully documented in
-:class:`pysmc.SMC`. In line 12, we initialize the algorithm at
+:class:`pysmc.SMC`. In line 11, we initialize the algorithm at
 :math:`\gamma=10^{-2}`. This essentially performs a number of `MCMC`_
 steps at this easy-to-sample-from probability density. It constructs the
 initialial particle approximation. See
 :meth:`pysmc.SMC.initialize()` the complete list of arguments.
-In line 14, we instruct the object to move the particle
+In line 13, we instruct the object to move the particle
 approximation to :math:`\gamma=1`, i.e., to the target probability
 density of this particular example. To see the weights of the final
 particle approximation, we use :attr:`pysmc.SMC.weights`
@@ -577,6 +574,111 @@ parameters of the `MCMC`_ proposal.
     :align: center
 
     SMC easily discovers both modes of :eq:`simple_model_pdf`
+
+.. _smc_without_mcmc:
+
+++++++++++++++++++++++++++++++++++++
+Initializing SMC with just the model
+++++++++++++++++++++++++++++++++++++
+
+It is also possible to initialize SMC without explicitly specifying a
+:class:`pymc.MCMC`. This allows `PyMC`_ to select everything for you.
+It can be done like this:
+
+.. code-block:: python
+    :linenos:
+
+    import simple_model as model
+    import pysmc
+
+    # Construct the SMC sampler
+    smc_sampler = pysmc.SMC(model, num_particles=1000,
+                            num_mcmc=10, verbose=1)
+    # Do whatever you want to smc_sampler...
+
+.. _database:
+
+++++++++++++++++++++++++++++++
+Dumping the data to a database
+++++++++++++++++++++++++++++++
+
+At the moment we support only a very simple database (see
+:class:`pysmc.DataBase`) which is built on :mod:`cPickle`. There are two
+options of :class:`pysmc.SMC` that you need to specify when you want to use
+the database functionality: ``db_filename`` and ``update_db``. See the
+documentation of :class:`pysmc.SMC` for their complete details. If you are
+using a database, you can force the current state of SMC to be written to
+it by calling :meth:`pysmc.commit()`. If you want to access a database,
+the all you have to do is use the attribute :attr:`pysmc.db`.
+Here is a very simple illustration of what you can do with this:
+
+.. code-block:: python
+    :linenos:
+
+    import simple_model as model
+    import pysmc
+
+    smc_sampler = pysmc.SMC(model, num_particles=1000,
+                            num_mcmc=10, verbose=1,
+                            db_filename='db.pickle',
+                            update_db=True)
+    smc_sampler.initialize(0.01)
+    smc_sampler.move(0.5)
+
+As you have probably grasped until now, this will construct an initial
+particle approximation at :math:`\gamma=0.01` and it will move it to
+:math:`\gamma=0.5`. The ``db_filename`` option specifies the file on which
+the database will write data. Let us assume that the file does not exist.
+Then, it will be created. The option ``update_db`` specifies that SMC should
+commit data to the database everytime it moves to another :math:`\gamma`.
+Now, assume that you quit python. The database is saved in ``db.pickle``.
+If you want to continue from the point you had stopped, all you have to do
+is:
+
+.. code-block:: python
+    :linenos:
+
+    import simple_model as model
+    import pysmc
+
+    smc_sampler = pysmc.SMC(model, num_particles=1000,
+                            num_mcmc=10, verbose=1,
+                            db_filename='db.pickle',
+                            update_db=True)
+    smc_sampler.move(1.)
+
+Now, we have just skipped the initialization line. Sine the database already
+exists, :class:`pysmc.SMC` looks at it and initializes the particle
+approximation from the last state stored in it. Therefore, you actually
+start moving from :math:`\gamma=0.5` to :math:`\gamma=1`.
+
+.. _db_movie:
+
++++++++++++++++++++++++++++++++
+Making a movie of the particles
++++++++++++++++++++++++++++++++
+
+If you have stored the particle approximations of the various 
+:math:`\gamma`'s in a database, then it is possible to make a movie out of
+them using :func:`pysmc.make_movie_from_db()`. Here is how:
+
+.. code-block:: python
+    :linenos:
+
+    import pysmc
+    import matplotlib.pyplot as plt
+
+    # Load the database
+    db = pysmc.DataBase.load('db.pickle')
+    # Make the movie
+    movie = make_movie_from_db(db, 'mixture')
+    # See the movie
+    plt.show()
+    # Save the movie
+    movie.save('smc_movie.mp4')
+
+The movie created in this way can be downloaded from
+:download:`videos/smc_movie.mp4`.
 
 .. _E. T. Jaynes:
     E. T. Jaynes' http://en.wikipedia.org/wiki/Edwin_Thompson_Jaynes>
