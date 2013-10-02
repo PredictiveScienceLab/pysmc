@@ -266,21 +266,349 @@ appropriate format.</td>
 
 </dd></dl>
 
-<span class="target" id="module-pysmc._smc"></span><div class="section" id="id3">
-<h3>SMC<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-pysmc._particle_approximation"></span><div class="section" id="particleapproximation">
+<span id="particle-approx"></span><h3>ParticleApproximation<a class="headerlink" href="#particleapproximation" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a> is a class that implements a
+a particle approximation.</p>
+<p>Here is the complete reference of the public members:</p>
+</div>
+<dl class="class">
+<dt id="pysmc.ParticleApproximation">
+<em class="property">class </em><tt class="descclassname">pysmc.</tt><tt class="descname">ParticleApproximation</tt><big>(</big><em>log_w=None</em>, <em>particles=None</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize a particle approximation.</p>
+<p>If <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x"/> denotes collectively all the variables involved in the
+particle approximation, then this object represents <img class="math" src="_images/math/2751d79d3bbfb34440d68c685fe6ba7414951749.png" alt="p(x)"/> as
+discussed in the <a class="reference internal" href="tutorial.html#tutorial"><em>Tutorial</em></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>log_w</strong> (1D <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt>) &#8211; The logarithms of the weights of the particle
+approximation.</li>
+<li><strong>particles</strong> (<em>list of dict</em>) &#8211; The particles.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.compute_all_means">
+<tt class="descname">compute_all_means</tt><big>(</big><em>force_calculation=False</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.compute_all_means" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute all the means associated with the particle approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>force_calculation</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Computes the statistics even if a previous
+calculation was already made.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.compute_all_means_of_type">
+<tt class="descname">compute_all_means_of_type</tt><big>(</big><em>type_of_var</em>, <em>force_calculation=False</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.compute_all_means_of_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the means of every variable of a type <tt class="docutils literal"><span class="pre">type_of_var</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of the variable.</li>
+<li><strong>force_calculation</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Computes the statistics even if a previous
+calculation was already made.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.compute_all_statistics">
+<tt class="descname">compute_all_statistics</tt><big>(</big><em>force_calculation=False</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.compute_all_statistics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute all the statistics of the particle approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>force_calculation</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Computes the statistics even if a previous
+calculation was already made.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.compute_all_variances">
+<tt class="descname">compute_all_variances</tt><big>(</big><em>force_calculation=False</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.compute_all_variances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute all the variances.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>force_calculation</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Computes the statistics even if a previous
+calculation was already made.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.compute_all_variances_of_type">
+<tt class="descname">compute_all_variances_of_type</tt><big>(</big><em>type_of_var</em>, <em>force_calculation=False</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.compute_all_variances_of_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute all variances of type <tt class="docutils literal"><span class="pre">type_of_var</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of the variable.</li>
+<li><strong>force_calculation</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Computes the statistics even if a previous
+calculation was already made.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.compute_mean_of_var">
+<tt class="descname">compute_mean_of_var</tt><big>(</big><em>var_name</em>, <em>type_of_var</em>, <em>force_calculation=False</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.compute_mean_of_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the mean of the particle approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>var_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable.</li>
+<li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of the variable.</li>
+<li><strong>force_calculation</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Computes the statistics even if a previous
+calculation was already made.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.compute_variance_of_var">
+<tt class="descname">compute_variance_of_var</tt><big>(</big><em>var_name</em>, <em>type_of_var</em>, <em>force_calculation=False</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.compute_variance_of_var" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the variance of <tt class="docutils literal"><span class="pre">var_name</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>var_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable.</li>
+<li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of the variable.</li>
+<li><strong>force_calculation</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Computes the statistics even if a previous
+calculation was already made.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.get_mean_of_func">
+<tt class="descname">get_mean_of_func</tt><big>(</big><em>func</em>, <em>var_name</em>, <em>type_of_var</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.get_mean_of_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the mean of the <tt class="docutils literal"><span class="pre">func</span></tt> applied on <tt class="docutils literal"><span class="pre">var_name</span></tt> which is of type
+<tt class="docutils literal"><span class="pre">type_of_var</span></tt>.</p>
+<p>Let the variable and the function we are referring to be <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x"/> and
+<img class="math" src="_images/math/c96dd6ec1dc4ad7520fbdc78fcdbec9edd068d0c.png" alt="f(x)"/>, respectively. Then the method computes and returns:</p>
+<div class="math">
+<p><img src="_images/math/0d3edbfa7fadbef8a71d2a782447908e2e712559.png" alt="\sum_{j=1}^Nw^{(j)}f\left(x^{(j)}\right)."/></p>
+</div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>func</strong> (<em>function</em>) &#8211; A function of one variable.</li>
+<li><strong>var_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable.</li>
+<li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of the variable.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The mean of the random variable <img class="math" src="_images/math/b87bab82790e7da89285041886327223094f8171.png" alt="y = f(x)"/>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">unknown</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.get_particle_approximation_of">
+<tt class="descname">get_particle_approximation_of</tt><big>(</big><em>func</em>, <em>var_name</em>, <em>type_of_var='stochastics'</em>, <em>func_name='func'</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.get_particle_approximation_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the particle approximation of a function of <tt class="docutils literal"><span class="pre">var_name</span></tt>
+variable of type <tt class="docutils literal"><span class="pre">type_of_var</span></tt> of the particle approximation.</p>
+<p>Let the variable and the function we are referring to be <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x"/> and
+<img class="math" src="_images/math/c96dd6ec1dc4ad7520fbdc78fcdbec9edd068d0c.png" alt="f(x)"/>, respectively. Then, let <img class="math" src="_images/math/b87bab82790e7da89285041886327223094f8171.png" alt="y = f(x)"/> denote the
+induced random variable when we pass <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x"/> through the function.
+The method returns the following particle approximation to the
+probability density of <img class="math" src="_images/math/092e364e1d9d19ad5fffb0b46ef4cc7f2da02c1c.png" alt="y"/>:</p>
+<div class="math">
+<p><img src="_images/math/29235d2820f2e07f40bbb9a958b4779ce00f3d18.png" alt="p(y) \approx \sum_{j=1}^N w^{(j)}
+\delta\left(y - f\left(x^{(j)} \right)\right)"/></p>
+</div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>func</strong> (<em>function</em>) &#8211; A function of the desired variable.</li>
+<li><strong>var_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the desired variable.</li>
+<li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of the variable.</li>
+<li><strong>func_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; A name for the function. The new variable will be
+named <tt class="docutils literal"><span class="pre">func_name</span> <span class="pre">+</span> <span class="pre">'_'</span> <span class="pre">+</span> <span class="pre">var_name</span></tt>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A particle approximation representing the random
+variable <tt class="docutils literal"><span class="pre">func(var_name)</span></tt>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.ParticleApproximation.log_w">
+<tt class="descname">log_w</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.ParticleApproximation.log_w" title="Permalink to this definition">¶</a></dt>
+<dd><p>The logarithms of the weights of the particle approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the logarithms of the weights of the particle
+approximation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">1D <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.ParticleApproximation.mean">
+<tt class="descname">mean</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.ParticleApproximation.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mean of the variables of all types of the particle approximation.</p>
+<p>The mean of a variable <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x"/> is computed as:</p>
+<div class="math" id="equation-x_mean">
+<p><span class="eqno">(1)</span><img src="_images/math/d9c0872c01daaba5eac2b1ee624b3d90a8103868.png" alt="m(x) := \sum_{j=1}^N w^{(j)} x^{(j)}."/></p>
+</div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the mean of the particles.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.ParticleApproximation.num_particles">
+<tt class="descname">num_particles</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.ParticleApproximation.num_particles" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of particles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the number of particles.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.ParticleApproximation.particles">
+<tt class="descname">particles</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.ParticleApproximation.particles" title="Permalink to this definition">¶</a></dt>
+<dd><p>The particles of the particle approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the particles of the particle approximation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">A list of whatever types the approximation has.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.ParticleApproximation.variance">
+<tt class="descname">variance</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.ParticleApproximation.variance" title="Permalink to this definition">¶</a></dt>
+<dd><p>The variance of all the variables of all types of the particle
+approximation.</p>
+<p>The variance of a variable <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x"/> is computed as:</p>
+<div class="math" id="equation-x_var">
+<p><span class="eqno">(2)</span><img src="_images/math/a8d61ac752e12855bd25f6882e7698ff5fb9f34f.png" alt="v(x) := \sum_{j=1}^N w^{(j)} \left(x^{(j)}\right)^2 - m^2(x),"/></p>
+</div><p>where <img class="math" src="_images/math/2509b99e1e82df0bafb5df19c874576813318594.png" alt="m(x)"/> is given in <a href="#equation-x_mean">(1)</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the variance of all particles.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.ParticleApproximation.weights">
+<tt class="descname">weights</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.ParticleApproximation.weights" title="Permalink to this definition">¶</a></dt>
+<dd><p>The weights of the particle approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the weights of the particle approximation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">1D <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-pysmc._smc"></span><div class="section" id="smc">
+<span id="id3"></span><h3>SMC<a class="headerlink" href="#smc" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="#pysmc.SMC" title="pysmc.SMC"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt></a> is the class that makes everything happen.</p>
 <p>Here is a complete reference of the public members:</p>
 </div>
 <dl class="class">
 <dt id="pysmc.SMC">
-<em class="property">class </em><tt class="descclassname">pysmc.</tt><tt class="descname">SMC</tt><big>(</big><em>mcmc_sampler=None</em>, <em>num_particles=10</em>, <em>num_mcmc=10</em>, <em>ess_threshold=0.67</em>, <em>ess_reduction=0.9</em>, <em>adapt_proposal_step=True</em>, <em>verbose=0</em>, <em>mpi=None</em>, <em>comm=None</em>, <em>gamma_name='gamma'</em><big>)</big><a class="headerlink" href="#pysmc.SMC" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">pysmc.</tt><tt class="descname">SMC</tt><big>(</big><em>mcmc_sampler=None</em>, <em>num_particles=10</em>, <em>num_mcmc=10</em>, <em>ess_threshold=0.67</em>, <em>ess_reduction=0.9</em>, <em>adapt_proposal_step=True</em>, <em>verbose=0</em>, <em>mpi=None</em>, <em>comm=None</em>, <em>gamma_name='gamma'</em>, <em>db_filename=None</em>, <em>update_db=False</em><big>)</big><a class="headerlink" href="#pysmc.SMC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use Sequential Monte Carlo (SMC) to sample from a distribution.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>mcmc_sampler</strong> (<tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt>) &#8211; An mcmc_sampler object.</li>
+<li><strong>mcmc_sampler</strong> (<tt class="xref py py-class docutils literal"><span class="pre">pymc.MCMC</span></tt>, <a class="reference internal" href="#pysmc.MCMCWrapper" title="pysmc.MCMCWrapper"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.MCMCWrapper</span></tt></a>
+or a <tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt> model) &#8211; This is an essential part in initializing the
+object. It can either be a ready to go
+MCMC sampler or a module/class representing
+a <tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt> model. In the latter case, the
+MCMC sampler will be initialized automatically.</li>
 <li><strong>num_particles</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of particles.</li>
 <li><strong>num_mcmc</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of MCMC steps per gamma.</li>
 <li><strong>ess_threshold</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The ESS threshold below which resampling
@@ -294,6 +622,14 @@ monitoring the acceptance rate.</li>
 refered to in your <tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt> model. The
 default value is <tt class="docutils literal"><span class="pre">'gamma'</span></tt>, but you can
 change it to whatever you want.</li>
+<li><strong>db_filename</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The filename of a database for the object. If
+the database exists and is a valid one, then
+the object will be initialized at each last
+state. If the parameter <tt class="docutils literal"><span class="pre">update_db</span></tt> is also
+set, then the algorithm will dump the state of
+each <tt class="docutils literal"><span class="pre">gamma</span></tt> it visits and commit it to the
+data base. Otherwise, commits can be forced by
+calling <a class="reference internal" href="#pysmc.SMC.commit" title="pysmc.SMC.commit"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.commit()</span></tt></a>.</li>
 <li><strong>mpi</strong> &#8211; The MPI class (see <tt class="xref py py-mod docutils literal"><span class="pre">mpi4py</span></tt> and
 <em class="xref std std-ref">mpi_example</em>). If <tt class="docutils literal"><span class="pre">None</span></tt>, then no
 parallelism is used.</li>
@@ -334,12 +670,16 @@ tuned by monitoring the acceptance rate.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the MPI communicator.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the MPI communicator.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">We do not check it.</td>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">We do not check it.</td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.SMC.commit">
+<tt class="descname">commit</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.SMC.commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commit the current state to the data base.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -476,120 +816,17 @@ then the particles are automatically resampled.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysmc.SMC.get_gammas_from_db">
-<tt class="descname">get_gammas_from_db</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.SMC.get_gammas_from_db" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the gammas we have visited so far from the databse.</p>
+<dt id="pysmc.SMC.get_particle_approximation">
+<tt class="descname">get_particle_approximation</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.SMC.get_particle_approximation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a <a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a> representing the current
+state of SMC.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The gammas we have visited so far doing SMC.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A particle approximation of the current state.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">1D <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysmc.SMC.get_particles_from_db">
-<tt class="descname">get_particles_from_db</tt><big>(</big><em>gamma</em>, <em>var_name</em>, <em>type_of_var='stochastics'</em><big>)</big><a class="headerlink" href="#pysmc.SMC.get_particles_from_db" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the particles pertaining to variable <tt class="docutils literal"><span class="pre">var_name</span></tt> at
-<a href="#id4"><span class="problematic" id="id5">``</span></a>gamma`.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>gamma</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The gamma parameter characterizing the
-approximation. Do not just put any value here.
-Get the values from
-<a class="reference internal" href="#pysmc.SMC.get_gammas_from_db" title="pysmc.SMC.get_gammas_from_db"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.get_gammas_from_db()</span></tt></a>.</li>
-<li><strong>var_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable whose particles you want to
-get.</li>
-<li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of variables you want to get. This can be
-either &#8216;stochastics&#8217; or &#8216;deterministics&#8217; if you are
-are using <tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt>. The default type is &#8216;stochastics&#8217;.
-However, I do not restrict its value, in case you
-would like to define other types by extending
-<tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt>.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The particles pertaining to variable <tt class="docutils literal"><span class="pre">name</span></tt> of
-type <tt class="docutils literal"><span class="pre">type_of_var</span></tt>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt> if possible, otherwise a
-list of whatever types your model has.</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.RuntimeError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.RuntimeError</span></tt></a></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysmc.SMC.get_particles_of">
-<tt class="descname">get_particles_of</tt><big>(</big><em>var_name</em>, <em>type_of_var='stochastics'</em><big>)</big><a class="headerlink" href="#pysmc.SMC.get_particles_of" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the particles pertaining to variable <tt class="docutils literal"><span class="pre">name</span></tt>.</p>
-<p>If the collected particles can be converted to a numpy array, then this
-what is returned. Otherwise, we return is as a list of whatever objects
-the particles are.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>var_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable whose particles you want to
-get.</li>
-<li><strong>type_of_var</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The type of variables you want to get. This can be
-either &#8216;stochastics&#8217; or &#8216;deterministics&#8217; if you are
-are using <tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt>. The default type is &#8216;stochastics&#8217;.
-However, I do not restrict its value, in case you
-would like to define other types by extending
-<tt class="xref py py-mod docutils literal"><span class="pre">pymc</span></tt>.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The particles pertaining to variable <tt class="docutils literal"><span class="pre">name</span></tt> of
-type <tt class="docutils literal"><span class="pre">type_of_var</span></tt>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt> if possible, otherwise a
-list of whatever types your model has.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The object must represent a valid particle approximation.</p>
-</div>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">When in parallel, you will get the particles owned by the cpu that
-calls this method.</p>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysmc.SMC.get_weights_from_db">
-<tt class="descname">get_weights_from_db</tt><big>(</big><em>gamma</em><big>)</big><a class="headerlink" href="#pysmc.SMC.get_weights_from_db" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the weights of each one of the particle approximations
-constructed so far.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gamma</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The gamma parameter characterizing the
-approximation. Do not just put any value here.
-Get the values from
-<a class="reference internal" href="#pysmc.SMC.get_gammas_from_db" title="pysmc.SMC.get_gammas_from_db"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.get_gammas_from_db()</span></tt></a>.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.RuntimeError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.RuntimeError</span></tt></a></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a></td>
 </tr>
 </tbody>
 </table>
@@ -597,33 +834,23 @@ Get the values from
 
 <dl class="method">
 <dt id="pysmc.SMC.initialize">
-<tt class="descname">initialize</tt><big>(</big><em>gamma</em>, <em>particles=None</em>, <em>num_mcmc_per_particle=10</em><big>)</big><a class="headerlink" href="#pysmc.SMC.initialize" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">initialize</tt><big>(</big><em>gamma</em>, <em>particle_approximation=None</em>, <em>num_mcmc_per_particle=10</em><big>)</big><a class="headerlink" href="#pysmc.SMC.initialize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize SMC at a particular <tt class="docutils literal"><span class="pre">gamma</span></tt>.</p>
 <p>The method has basically three ways of initializing the particles:</p>
-<ul>
-<li><dl class="first docutils">
-<dt>If <tt class="docutils literal"><span class="pre">particles</span></tt> is not <tt class="docutils literal"><span class="pre">None</span></tt>, then it is assumed to contain the</dt>
-<dd><p class="first last">particles at the corresponding value of <tt class="docutils literal"><span class="pre">gamma</span></tt>.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>If <tt class="docutils literal"><span class="pre">particles</span></tt> is <tt class="docutils literal"><span class="pre">None</span></tt> and the MCMC sampler class has a method</dt>
-<dd><p class="first last">called <tt class="docutils literal"><span class="pre">draw_from_prior()</span></tt> that works, then it is called to
-initialize the particles.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>In any other case, MCMC sampling is used to initialize the particles.</dt>
-<dd><p class="first last">We are assuming that the MCMC sampler has already been tuned for
+<ul class="simple">
+<li>If <tt class="docutils literal"><span class="pre">particles_approximation</span></tt> is not <tt class="docutils literal"><span class="pre">None</span></tt>,
+then it is assumed to contain the
+particles at the corresponding value of <tt class="docutils literal"><span class="pre">gamma</span></tt>.</li>
+<li>If <tt class="docutils literal"><span class="pre">particles_approximation</span></tt> is <tt class="docutils literal"><span class="pre">None</span></tt> and the
+MCMC sampler class has a method
+called <tt class="docutils literal"><span class="pre">draw_from_prior()</span></tt> that works, then it is called to
+initialize the particles.</li>
+<li>In any other case, MCMC sampling is used to initialize the particles.
+We are assuming that the MCMC sampler has already been tuned for
 that particular gamma and that a sufficient burning period has past.
 Then we record the current state as the first particle, we sample
 <tt class="docutils literal"><span class="pre">num_mcmc_per_particle</span></tt> times and record the second particle, and
-so on.</p>
-</dd>
-</dl>
-</li>
+so on.</li>
 </ul>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -633,10 +860,10 @@ so on.</p>
 <li><strong>gamma</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The initial <tt class="docutils literal"><span class="pre">gamma</span></tt> parameter. It must, of
 course, be within the right range of
 <tt class="docutils literal"><span class="pre">gamma</span></tt>.</li>
-<li><strong>particles</strong> ((see :attr:<a href="#id6"><span class="problematic" id="id7">`</span></a>pymc.SMC.particles for type)) &#8211; A dictionary of MCMC states representing
+<li><strong>particles_approximation</strong> (<a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a>) &#8211; A dictionary of MCMC states representing
 the particles. When using MPI, we are
-assuming that each one of the CPU&#8217;s has each
-own collection of particles.</li>
+assuming that each one of the CPU&#8217;s
+has each own collection of particles.</li>
 <li><strong>num_mcmc_per_particle</strong> &#8211; This parameter is ignored if
 <tt class="docutils literal"><span class="pre">particles</span></tt> is not <tt class="docutils literal"><span class="pre">None</span></tt>. If the
 only way to initialize the particles is
@@ -714,9 +941,7 @@ a SMC particle.</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the MPI class.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the MPI class.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">We do not check it.</td>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">We do not check it.</td>
 </tr>
 </tbody>
 </table>
@@ -772,12 +997,7 @@ processes.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the number of particles.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the number of particles. All data in the instant of the
-class will be lost if this is called.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.ValueError</span></tt></a></td>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
 </tr>
 </tbody>
 </table>
@@ -793,22 +1013,10 @@ class will be lost if this is called.</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the SMC particles.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the SMC particles.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">list of whatever objects your method supports.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.ValueError</span></tt></a></td>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">list of whatever objects your method supports.</td>
 </tr>
 </tbody>
 </table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">When using MPI and you must assign to the setter only the particles
-that pertain to the process that calls it. That is, you are
-responsible for scattering the particles from the root to everybody
-else. Hopefully, you will get an <a class="reference external" href="http://docs.python.org/library/exceptions.html#exceptions.ValueError" title="(in Python v2.7)"><tt class="xref py py-exc docutils literal"><span class="pre">exceptions.ValueError</span></tt></a> if
-you get this wrong.</p>
-</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -861,6 +1069,24 @@ This is zeroed, everytime you call <a class="reference internal" href="#pysmc.SM
 </dd></dl>
 
 <dl class="attribute">
+<dt id="pysmc.SMC.update_db">
+<tt class="descname">update_db</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.update_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the database or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the <tt class="docutils literal"><span class="pre">update_db</span></tt> flag.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the <tt class="docutils literal"><span class="pre">update_db</span></tt> flag.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="pysmc.SMC.use_mpi">
 <tt class="descname">use_mpi</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.use_mpi" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if MPI is being used.</p>
@@ -903,29 +1129,292 @@ levels:</p>
 </table>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="pysmc.SMC.weights">
-<tt class="descname">weights</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.SMC.weights" title="Permalink to this definition">¶</a></dt>
-<dd><p>The weights of the SMC particles.</p>
+</dd></dl>
+
+<span class="target" id="module-pysmc._db"></span><div class="section" id="database">
+<span id="db"></span><h3>DataBase<a class="headerlink" href="#database" title="Permalink to this headline">¶</a></h3>
+<p>The class <a class="reference internal" href="#pysmc.DataBase" title="pysmc.DataBase"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.DataBase</span></tt></a> implements a simple database for dumping
+SMC steps.</p>
+</div>
+<dl class="class">
+<dt id="pysmc.DataBase">
+<em class="property">class </em><tt class="descclassname">pysmc.</tt><tt class="descname">DataBase</tt><big>(</big><em>gamma_name=None</em>, <em>filename=None</em><big>)</big><a class="headerlink" href="#pysmc.DataBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>A data base storing the evolution of SMC particles as gamma changes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the SMC weights.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Setter:</th><td class="field-body">Set the SMC weights.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">1D <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>gamma_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name we are using for gamma.</li>
+<li><strong>filename</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The desired filename for the output. If <tt class="docutils literal"><span class="pre">None</span></tt>
+then everything is stored on the ram.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">When using MPI, the same concerns as in <a class="reference internal" href="#pysmc.SMC.particles" title="pysmc.SMC.particles"><tt class="xref py py-attr docutils literal"><span class="pre">pysmc.SMC.particles</span></tt></a>
-hold here.</p>
-</div>
+<dl class="method">
+<dt id="pysmc.DataBase.add">
+<tt class="descname">add</tt><big>(</big><em>gamma</em>, <em>particle_approximation</em><big>)</big><a class="headerlink" href="#pysmc.DataBase.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the <tt class="docutils literal"><span class="pre">particle_approximation</span></tt> corresponding to <tt class="docutils literal"><span class="pre">gamma</span></tt> to the
+database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>gamma</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#any" title="(in Python v2.7)"><em>any</em></a>) &#8211; The gamma parameter.</li>
+<li><strong>particle_approximation</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#any" title="(in Python v2.7)"><em>any</em></a>) &#8211; particle_approximation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
+<dl class="method">
+<dt id="pysmc.DataBase.commit">
+<tt class="descname">commit</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.DataBase.commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commit everything we have so far to the database.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DataBase.filename">
+<tt class="descname">filename</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DataBase.filename" title="Permalink to this definition">¶</a></dt>
+<dd><p>The filename you have selected for dumping the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the filename you have selected for dumping the data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DataBase.gamma">
+<tt class="descname">gamma</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DataBase.gamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current gamma of the database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the current gamma of the database.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">unknown</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DataBase.gamma_name">
+<tt class="descname">gamma_name</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DataBase.gamma_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name we used for gamma.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the name we used for gamma.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DataBase.gammas">
+<tt class="descname">gammas</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DataBase.gammas" title="Permalink to this definition">¶</a></dt>
+<dd><p>The list of gammas we have visited.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the list of gammas we have visited.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pysmc.DataBase.load">
+<em class="property">static </em><tt class="descname">load</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#pysmc.DataBase.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a static method. It loads a database from <tt class="docutils literal"><span class="pre">filename</span></tt>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DataBase.num_gammas">
+<tt class="descname">num_gammas</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DataBase.num_gammas" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of gammas added to the database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the number of gammas added to the data base.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DataBase.particle_approximation">
+<tt class="descname">particle_approximation</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DataBase.particle_approximation" title="Permalink to this definition">¶</a></dt>
+<dd><p>The current particle approximation of the database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the current particle approximation of the database.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">unknown</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DataBase.particle_approximations">
+<tt class="descname">particle_approximations</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DataBase.particle_approximations" title="Permalink to this definition">¶</a></dt>
+<dd><p>The particle approximations associated with each gamma.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the particle approximations associated with each gamma.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DataBase.write_to_disk">
+<tt class="descname">write_to_disk</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DataBase.write_to_disk" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">True</span></tt> if the class writes data to disk, <tt class="docutils literal"><span class="pre">False</span></tt> otherwise.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="methods">
+<span id="id4"></span><h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-pysmc._plot"></span><div class="section" id="plotting">
+<span id="plot"></span><h3>Plotting<a class="headerlink" href="#plotting" title="Permalink to this headline">¶</a></h3>
+</div>
+<dl class="function">
+<dt id="pysmc.hist">
+<tt class="descclassname">pysmc.</tt><tt class="descname">hist</tt><big>(</big><em>particle_approximation</em>, <em>var_name</em>, <em>normed=True</em><big>)</big><a class="headerlink" href="#pysmc.hist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the histogram of variable of a particle approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>particle_approximation</strong> (<a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a>) &#8211; A particle approximation.</li>
+<li><strong>var_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable you want to plot.</li>
+<li><strong>bins</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of bins you want to use.</li>
+<li><strong>normed</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; <tt class="docutils literal"><span class="pre">True</span></tt> if you want the histogram to be normalized,
+<tt class="docutils literal"><span class="pre">False</span></tt> otherwise.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<span class="target" id="module-pysmc._misc"></span><div class="section" id="miscellaneous-routines">
+<span id="misc"></span><h3>Miscellaneous routines<a class="headerlink" href="#miscellaneous-routines" title="Permalink to this headline">¶</a></h3>
+<p>This contains methods that do not fit into the other sections of the
+reference manual.</p>
+</div>
+<dl class="function">
+<dt id="pysmc.try_to_array">
+<tt class="descclassname">pysmc.</tt><tt class="descname">try_to_array</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#pysmc.try_to_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to turn the data into a numpy array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">If possible, a <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt> containing the
+data. Otherwise, it just returns the data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt> or <tt class="docutils literal"><span class="pre">type(data)</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<tt class="descclassname">pysmc.</tt><tt class="descname">hist</tt><big>(</big><em>particle_approximation</em>, <em>var_name</em>, <em>normed=True</em><big>)</big></dt>
+<dd><p>Plot the histogram of variable of a particle approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>particle_approximation</strong> (<a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a>) &#8211; A particle approximation.</li>
+<li><strong>var_name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the variable you want to plot.</li>
+<li><strong>bins</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of bins you want to use.</li>
+<li><strong>normed</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; <tt class="docutils literal"><span class="pre">True</span></tt> if you want the histogram to be normalized,
+<tt class="docutils literal"><span class="pre">False</span></tt> otherwise.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pysmc.make_movie_from_db">
+<tt class="descclassname">pysmc.</tt><tt class="descname">make_movie_from_db</tt><big>(</big><em>db</em>, <em>var_name</em><big>)</big><a class="headerlink" href="#pysmc.make_movie_from_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a movie from a database.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pysmc.multinomial_resample">
+<tt class="descclassname">pysmc.</tt><tt class="descname">multinomial_resample</tt><big>(</big><em>p</em><big>)</big><a class="headerlink" href="#pysmc.multinomial_resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample the multinomial according to <tt class="docutils literal"><span class="pre">p</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>p</strong> (1D <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt>) &#8211; A numpy array of positive numbers that sum to one.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A set of indices sampled according to p.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">1D <tt class="xref py py-class docutils literal"><span class="pre">numpy.ndarray</span></tt> of int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pysmc.kde">
+<tt class="descclassname">pysmc.</tt><tt class="descname">kde</tt><big>(</big><em>particle_approximation</em>, <em>var_name</em><big>)</big><a class="headerlink" href="#pysmc.kde" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a kernel density approximation of the probability density
+of <tt class="docutils literal"><span class="pre">var_name</span></tt> of <a href="#id5"><span class="problematic" id="id6">``</span></a>particle_approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>particle_approximation</strong> (<a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a>) &#8211; A particle approximation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A kernel density approximation.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">scipy.stats.gaussian_kde</span></tt></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -942,7 +1431,14 @@ hold here.</p>
 <li><a class="reference internal" href="#">Reference</a><ul>
 <li><a class="reference internal" href="#id2">Classes</a><ul>
 <li><a class="reference internal" href="#mcmcwrapper">MCMCWrapper</a></li>
-<li><a class="reference internal" href="#id3">SMC</a></li>
+<li><a class="reference internal" href="#particleapproximation">ParticleApproximation</a></li>
+<li><a class="reference internal" href="#smc">SMC</a></li>
+<li><a class="reference internal" href="#database">DataBase</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#methods">Methods</a><ul>
+<li><a class="reference internal" href="#plotting">Plotting</a></li>
+<li><a class="reference internal" href="#miscellaneous-routines">Miscellaneous routines</a></li>
 </ul>
 </li>
 </ul>
