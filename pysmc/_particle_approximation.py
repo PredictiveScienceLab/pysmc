@@ -17,12 +17,13 @@ Here is the complete reference of the public members:
 __all__ = ['ParticleApproximation']
 
 
+from . import DistributedObject
 from . import get_var_from_particle_list
 import numpy as np
 import warnings
 
 
-class ParticleApproximation(object):
+class ParticleApproximation(DistributedObject):
 
     """
     Initialize a particle approximation.
@@ -31,11 +32,21 @@ class ParticleApproximation(object):
     particle approximation, then this object represents :math:`p(x)` as
     discussed in the :ref:`tutorial`.
 
-    :param log_w:     The logarithms of the weights of the particle
-                      approximation.
-    :type log_w:      1D :class:`numpy.ndarray`
+    :param log_w:       The logarithms of the weights of the particle
+                        approximation.
+    :type log_w:        1D :class:`numpy.ndarray`
     :param particles:   The particles.
     :type particles:    list of dict
+    :param mpi:         Specify this if you are creating a distributed particle
+                        approximation.
+    :type mpi:          :class:`mpi4py.MPI`
+    :param comm:        The MPI communicator.
+    :type comm:         :class:`mpi4py.COMM`
+
+    .. note::
+
+        When creating a distributed object, the particles must already be
+        scattered.
 
     """
 
@@ -87,6 +98,16 @@ class ParticleApproximation(object):
         return self._particles
 
     @property
+    def my_num_particles(self):
+        """
+        The number of particles owned by this process.
+
+        :getter:    Get the number of particles owned by this process.
+        :type:      int
+        """
+        return len(self.particles)
+
+    @property
     def num_particles(self):
         """
         The number of particles.
@@ -94,7 +115,7 @@ class ParticleApproximation(object):
         :getter:    Get the number of particles.
         :type:      int
         """
-        return len(self.particles)
+        return self.my_num_particles * self.size
 
     @property
     def mean(self):
@@ -163,18 +184,20 @@ class ParticleApproximation(object):
         for type_of_var in self.particles[0].keys():
             self._fix_particles_of_type(type_of_var)
 
-    def __init__(self, log_w=None, particles=None):
+    def __init__(self, log_w=None, particles=None, mpi=None, comm=None):
         """
         Initialize the particle approximation.
 
         See the doc of this class for further details.
         """
+        super(ParticleApproximation, self).__init__(mpi=mpi, comm=comm)
         if particles is not None:
+            self._particles = particles
             if log_w is None:
-                log_w = np.ones(len(particles)) * (-math.log(len(particles)))
+                log_w = (np.ones(self.my_num_particles) *
+                         (-math.log(self.num_particles)))
             self._log_w = log_w
             self._weights = np.exp(log_w)
-            self._particles = particles
             self._fix_particles()
 
     def __getstate__(self):
@@ -244,8 +267,8 @@ class ParticleApproximation(object):
         self._check_if_valid_var(var_name, type_of_var)
         func_var_name = func_name + '_' + var_name
         weights = self.weights
-        particles = [dict() for i in xrange(self.num_particles)]
-        for i in xrange(self.num_particles):
+        particles = [dict() for i in xrange(self.my_num_particles)]
+        for i in xrange(self.my_num_particles):
             particles[i][type_of_var] = dict()
             func_part_i = func(self.particles[i][type_of_var][var_name])
             particles[i][type_of_var][func_var_name] = func_part_i
@@ -273,9 +296,11 @@ class ParticleApproximation(object):
         """
         self._check_if_valid_var(var_name, type_of_var)
         res = 0.
-        for i in xrange(self.num_particles):
+        for i in xrange(self.my_num_particles):
             res += (self.weights[i] *
                     func(self.particles[i][type_of_var][var_name]))
+        if self.use_mpi:
+            res = self.comm.reduce(res, op=self.mpi.SUM)
         return res
 
     def compute_mean_of_var(self, var_name, type_of_var,
@@ -347,8 +372,9 @@ class ParticleApproximation(object):
             lambda x: x ** 2, var_name, type_of_var)
         self.compute_mean_of_var(var_name, type_of_var,
                                   force_calculation=force_calculation)
-        self._variance[type_of_var][var_name] -= (
-            self._mean[type_of_var][var_name])
+        if self.rank == 0:
+            self._variance[type_of_var][var_name] -= (
+                self._mean[type_of_var][var_name])
 
     def compute_all_variances_of_type(self, type_of_var,
                                        force_calculation=False):

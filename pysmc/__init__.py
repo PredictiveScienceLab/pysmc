@@ -59,12 +59,16 @@ Methods
 """
 
 
+__docformat__ = 'reStructuredText'
+
+
 __all__ = ['MCMCWrapper', 'SMC', 'ParticleApproximation', 'try_to_array',
-           'get_var_from_particle_list', 'DataBase',
+           'get_var_from_particle_list', 'DataBase', 'DistributedObject',
            'hist', 'make_movie_from_db', 'multinomial_resample', 'kde']
 
 
 from ._misc import *
+from ._mpi import *
 from ._mcmc_wrapper import *
 from ._particle_approximation import *
 from ._db import *

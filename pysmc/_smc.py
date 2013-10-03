@@ -16,6 +16,7 @@ __all__ = ['SMC']
 
 
 from . import MCMCWrapper
+from . import DistributedObject
 from . import ParticleApproximation
 from . import DataBase
 import pymc
@@ -28,7 +29,7 @@ import warnings
 import os
 
 
-class SMC(object):
+class SMC(DistributedObject):
     """
     Use Sequential Monte Carlo (SMC) to sample from a distribution.
 
@@ -96,18 +97,6 @@ class SMC(object):
     # The amount of verbosity
     _verbose = None
 
-    # The MPI class
-    _mpi = None
-
-    # The MPI communicator
-    _comm = None
-
-    # The rank of the CPU
-    _rank = None
-
-    # The size of the CPU pool
-    _size = None
-
     # The monte carlo sampler
     _mcmc_sampler = None
 
@@ -154,7 +143,7 @@ class SMC(object):
         :getter:    Get the number of particles.
         :type:      int
         """
-        return len(self.particles) * self.size
+        return self.my_num_particles * self.size
 
     @property
     def log_w(self):
@@ -283,56 +272,6 @@ class SMC(object):
         """Set the verbosity flag."""
         value = int(value)
         self._verbose = value
-
-    @property
-    def comm(self):
-        """
-        The MPI communicator.
-
-        :getter:    Get the MPI communicator.
-        :type:      We do not check it.
-        """
-        return self._comm
-
-    @property
-    def mpi(self):
-        """
-        The MPI class.
-
-        :getter:    Get the MPI class.
-        :type:      We do not check it.
-        """
-        return self._mpi
-
-    @property
-    def use_mpi(self):
-        """
-        Check if MPI is being used.
-
-        :returns:   ``True`` if MPI is used and ``False`` otherwise.
-        :rtype:     bool
-        """
-        return self.comm is not None
-
-    @property
-    def rank(self):
-        """
-        The rank of the process that calls this method.
-
-        :getter:    Get the rank of the process that calls this method.
-        :type:      int
-        """
-        return self._rank
-
-    @property
-    def size(self):
-        """
-        The total number of MPI processes.
-
-        :getter:    Get the total number of MPI processes.
-        :type:      int
-        """
-        return self._size
 
     @property
     def mcmc_sampler(self):
@@ -695,25 +634,6 @@ class SMC(object):
         self._mcmc_sampler = mcmc_sampler
         self._update_gamma_rv()
 
-    def _set_mpi(self, mpi, comm):
-        """
-        Safely set mpi.
-        """
-        self._mpi = mpi
-        if self.mpi is not None and comm is None:
-            self._comm = self.mpi.COMM_WORLD
-        elif comm is None:
-            self._comm = None
-        else:
-            raise RuntimeError('To use MPI you have to specify '
-                               + 'the mpi variable.')
-        if self.use_mpi:
-            self._rank = self.comm.Get_rank()
-            self._size = self.comm.Get_size()
-        else:
-            self._rank = 0
-            self._size = 1
-
     def _set_initial_particles(self, num_particles):
         """
         Safely, set the initial particles.
@@ -749,9 +669,9 @@ class SMC(object):
 
         See the doc of the class for the description.
         """
+        super(SMC, self).__init__(mpi=mpi, comm=comm)
         self._set_gamma_name(gamma_name)
         self._set_mcmc_sampler(mcmc_sampler)
-        self._set_mpi(mpi, comm)
         self._set_initial_particles(num_particles)
         self.num_mcmc = num_mcmc
         self.ess_threshold = ess_threshold
@@ -930,7 +850,8 @@ class SMC(object):
         :returns:   A particle approximation of the current state.
         :rtype:     :class:`pysmc.ParticleApproximation`
         """
-        return ParticleApproximation(log_w=self.log_w, particles=self.particles)
+        return ParticleApproximation(log_w=self.log_w, particles=self.particles,
+                                     mpi=self.mpi, comm=self.comm)
 
     def commit(self):
         """
