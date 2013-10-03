@@ -54,6 +54,7 @@ class ParticleApproximation(object):
     # The variance of the approximation
     _variance = None
 
+
     @property
     def log_w(self):
         """

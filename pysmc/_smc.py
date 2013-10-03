@@ -840,7 +840,7 @@ class SMC(object):
                         print '- taking a total of', total_samples, 'samples'
                     print '- creating a particle every', num_mcmc_per_particle
                 if self.verbose > 0:
-                    pb = pymc.progressbar.progress_bar(self.num_particles *
+                    pb = pymc.progressbar.ProgressBar(self.num_particles *
                                                        num_mcmc_per_particle)
                 # Only rank 0 keeps the first particle
                 if self.rank == 0:
@@ -852,7 +852,9 @@ class SMC(object):
                     self.particles[i] = self.mcmc_sampler.get_state()
                     self._total_num_mcmc += num_mcmc_per_particle
                     if self.verbose > 0:
-                        pb.update((i + 2) * self.size * num_mcmc_per_particle)
+                        pb.animate((i + 2) * self.size * num_mcmc_per_particle)
+                if self.verbose > 0:
+                    print ''
         if self.update_db:
             self.db.add(self.gamma, self.get_particle_approximation())
             self.db.commit()
@@ -893,7 +895,7 @@ class SMC(object):
                 self._resample()
             if self.verbose > 0:
                 print '- moving to', self.gamma_name, ':', self.gamma
-                pb = pymc.progressbar.progress_bar(self.num_particles *
+                pb = pymc.progressbar.ProgressBar(self.num_particles *
                                                    self.num_mcmc)
                 print '- performing', self.num_mcmc, 'MCMC steps per particle'
             for i in range(self.my_num_particles):
@@ -902,7 +904,9 @@ class SMC(object):
                 self.particles[i] = self.mcmc_sampler.get_state()
                 self._total_num_mcmc += self.num_mcmc
                 if self.verbose > 0:
-                    pb.update(i * self.size * self.num_mcmc)
+                    pb.animate(i * self.size * self.num_mcmc)
+            if self.verbose > 0:
+                print ''
             if self.update_db:
                 self.db.add(self.gamma, self.get_particle_approximation())
                 self.db.commit()
