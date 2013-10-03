@@ -22,7 +22,7 @@ import mpi4py.MPI as mpi
 
 if __name__ == '__main__':
     # Construct the SMC sampler
-    smc_sampler = pysmc.SMC(model, num_particles=400,
+    smc_sampler = pysmc.SMC(model, num_particles=4000,
                             num_mcmc=10, verbose=1,
                             mpi=mpi)
     # Initialize SMC at gamma = 0.01

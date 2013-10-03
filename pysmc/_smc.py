@@ -432,16 +432,14 @@ class SMC(DistributedObject):
 
     def _get_log_of_weight_factor_at(self, gamma):
         """Return the log of the weight factor when going to the new gamma."""
-        tmp_prev = np.zeros(self.my_num_particles)
-        tmp_new = np.zeros(self.my_num_particles)
+        logp_new = np.zeros(self.my_num_particles)
         old_gamma = self.gamma
+        self._set_gamma(gamma)
         for i in range(self.my_num_particles):
             self.mcmc_sampler.set_state(self.particles[i])
-            tmp_prev[i] = self.mcmc_sampler.logp
-            self._set_gamma(gamma)
-            tmp_new[i] = self.mcmc_sampler.logp
-            self._set_gamma(old_gamma)
-        return tmp_new - tmp_prev
+            logp_new[i] = self.mcmc_sampler.logp
+        self._set_gamma(old_gamma)
+        return logp_new - self._logp_prev
 
     def _get_unormalized_weights_at(self, gamma):
         """Return the unormalized weights at a given gamma."""
@@ -541,10 +539,18 @@ class SMC(DistributedObject):
         """
         if self.verbose > 1:
             print '- finding next gamma.'
+
+        # Just copy the current logp
+        self._logp_prev = np.zeros(self.my_num_particles)
+        for i in range(self.my_num_particles):
+            self.mcmc_sampler.set_state(self.particles[i])
+            self._logp_prev[i] = self.mcmc_sampler.logp
+
         # Define the function whoose root we are seeking
         def f(test_gamma, args):
             ess_test_gamma = args._get_ess_given_gamma(test_gamma)
             return ess_test_gamma - args.ess_reduction * args.ess
+
         if f(gamma, self) > 0:
             if self.verbose > 1:
                 print '- \twe can move directly to the target gamma...'
