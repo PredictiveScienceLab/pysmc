@@ -146,7 +146,7 @@ class SMC(object):
             processes.
 
         """
-        return self.num_particles / self.size
+        return len(self.particles)
 
     @property
     def num_particles(self):
@@ -154,7 +154,7 @@ class SMC(object):
         :getter:    Get the number of particles.
         :type:      int
         """
-        return len(self.particles)
+        return len(self.particles) * self.size
 
     @property
     def log_w(self):
@@ -447,7 +447,10 @@ class SMC(object):
         :getter:    The total number of MCMC steps performed so far.
         :type:      int
         """
-        return self._total_num_mcmc
+        if self.use_mpi:
+            return self.comm.allreduce(self._total_num_mcmc, op=self.mpi.SUM)
+        else:
+            return self._total_num_mcmc
 
     def _logsumexp(self, log_x):
         """Perform the log-sum-exp of the weights."""
@@ -545,20 +548,21 @@ class SMC(object):
         if self.use_mpi:
             self.comm.Bcast([idx, self.mpi.INT])
             self.comm.barrier()
+            num_particles = self.num_particles
+            my_num_particles = self.my_num_particles
             old_particles = self._particles
-            old_evaluated_state = self._evaluated_state
             self._particles = []
-            for i in xrange(self.num_particles):
-                to_whom = i / self.my_num_particles
-                from_whom = idx[i] / self.my_num_particles
+            for i in xrange(num_particles):
+                to_whom = i / my_num_particles
+                from_whom = idx[i] / my_num_particles
                 if from_whom == to_whom and to_whom == self.rank:
-                    my_idx = idx[i] % self.my_num_particles
+                    my_idx = idx[i] % my_num_particles
                     self._particles.append(old_particles[my_idx].copy())
                 elif to_whom == self.rank:
                     self._particles.append(self.comm.recv(
                                                        source=from_whom, tag=i))
                 elif from_whom == self.rank:
-                    my_idx = idx[i] % self.my_num_particles
+                    my_idx = idx[i] % my_num_particles
                     self.comm.send(old_particles[my_idx], dest=to_whom, tag=i)
                 self.comm.barrier()
         else:
@@ -678,9 +682,10 @@ class SMC(object):
             # Try to make an MCMC sampler out of it (it will work if it is a
             # valid model).
             try:
-                warnings.warn(
-                '- mcmc_sampler is not a pymc.MCMC.\n'
-              + '- attempting to make it one!')
+                if self.rank == 0:
+                    warnings.warn(
+                    '- mcmc_sampler is not a pymc.MCMC.\n'
+                  + '- attempting to make it one!')
                 mcmc_sampler = pymc.MCMC(mcmc_sampler)
             except:
                 raise RuntimeError(
@@ -807,9 +812,9 @@ class SMC(object):
         if particle_approximation is not None:
             if self.verbose > 0:
                 print '- initializing with a particle approximation.'
-                self._particles = particle_approximation.particles
-                self._log_w = particle_approximation.log_w
-                return
+            self._particles = particle_approximation.particles
+            self._log_w = particle_approximation.log_w
+            return
         else:
             self.particles[0] = self.mcmc_sampler.get_state()
             try:
@@ -825,13 +830,24 @@ class SMC(object):
                 if self.verbose > 0:
                     sys.stdout.write('FAILURE\n')
                     print '- initializing via MCMC'
-                    total_samples = self.num_particles * num_mcmc_per_particle
-                    print '- taking a total of', total_samples
+                    if self.use_mpi:
+                        total_samples = (self.my_num_particles
+                                         * num_mcmc_per_particle)
+                        print '- taking a total of', total_samples, 'samples per process'
+                    else:
+                        total_samples = (self.num_particles
+                                         * num_mcmc_per_particle)
+                        print '- taking a total of', total_samples, 'samples'
                     print '- creating a particle every', num_mcmc_per_particle
                 if self.verbose > 0:
                     pb = pymc.progressbar.progress_bar(self.num_particles *
                                                        num_mcmc_per_particle)
-                for i in range(1, self.my_num_particles):
+                # Only rank 0 keeps the first particle
+                if self.rank == 0:
+                    start_idx = 1
+                else:
+                    start_idx = 0
+                for i in range(start_idx, self.my_num_particles):
                     self.mcmc_sampler.sample(num_mcmc_per_particle)
                     self.particles[i] = self.mcmc_sampler.get_state()
                     self._total_num_mcmc += num_mcmc_per_particle
@@ -895,8 +911,9 @@ class SMC(object):
                 for sm in self.mcmc_sampler.step_methods:
                     acc_rate = sm.accepted / (sm.accepted + sm.rejected)
                     print '\t-', str(sm), ':', acc_rate
+        total_num_mcmc = self.total_num_mcmc
         if self.verbose > 0:
-            print '- total number of MCMC steps:', self.total_num_mcmc
+            print '- total number of MCMC steps:', total_num_mcmc
             print '---------------'
             print 'END SMC MOVE TO'
             print '---------------'

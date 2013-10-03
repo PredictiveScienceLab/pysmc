@@ -21,16 +21,14 @@ import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     # Construct the SMC sampler
-    smc_sampler = pysmc.SMC(model, num_particles=1000,
-                            num_mcmc=10, verbose=1,
-                            db_filename='test.pickle',
-                            update_db=True)
+    smc_sampler = pysmc.SMC(model, num_particles=4000,
+                            num_mcmc=10, verbose=1)
     # Initialize SMC at gamma = 0.01
     smc_sampler.initialize(0.01)
     # Move the particles to gamma = 1.0
     smc_sampler.move_to(1.)
     # Get a particle approximation
-    p = smc_sampler.get_particle_approximation()
+    #p = smc_sampler.get_particle_approximation()
     # Plot a histogram
-    pysmc.hist(plt, p, 'mixture', bins=100)
-    plt.show()
+    #pysmc.hist(plt, p, 'mixture', bins=100)
+    #plt.show()
