@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="pysmc 0.0 documentation" href="index.html" />
-    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="next" title="&lt;no title&gt;" href="reference.html" />
     <link rel="prev" title="Installation" href="install.html" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Neuton&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
 <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Nobile:regular,italic,bold,bolditalic&amp;subset=latin" type="text/css" media="screen" charset="utf-8" />
@@ -42,10 +42,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="reference.html" title="Reference"
+          <a href="reference.html" title="&lt;no title&gt;"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="install.html" title="Installation"
@@ -75,7 +72,7 @@ able to construct your own <a class="reference external" href="http://pymc-devs.
 <li>Of course, I have to assume some familiarity with the so called
 Sequential Monte Carlo (SMC) or Particle Methods. Many resources can
 be found online at <a class="reference external" href="http://www.stats.ox.ac.uk/~doucet/smc_resources.html">Arnaud Doucet&#8217;s collection</a> or in his book
-<a class="reference external" href="http://books.google.com/books/about/Sequential_Monte_Carlo_Methods_in_Practi.html?id=BnWAcgAACAAJ">Sequential Monte Carlo Methods in Practice</a>. What exactly <a class="reference internal" href="reference.html#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a>
+<a class="reference external" href="http://books.google.com/books/about/Sequential_Monte_Carlo_Methods_in_Practi.html?id=BnWAcgAACAAJ">Sequential Monte Carlo Methods in Practice</a>. What exactly <tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt>
 does is documented in <a class="reference internal" href="math.html#math"><em>Mathematical Details</em></a>.</li>
 </ul>
 </div></blockquote>
@@ -160,8 +157,8 @@ corresponding particle approximation satisfies <a href="#equation-smc_approx_def
 </ol>
 </div>
 <div class="section" id="what-is-implemented-in-pysmc">
-<span id="what-is-in-pysmc"></span><h2>What is implemented in <a class="reference internal" href="reference.html#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a>?<a class="headerlink" href="#what-is-implemented-in-pysmc" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="reference.html#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a> implements something a little bit more complicated than what is
+<span id="what-is-in-pysmc"></span><h2>What is implemented in <tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt>?<a class="headerlink" href="#what-is-implemented-in-pysmc" title="Permalink to this headline">¶</a></h2>
+<p><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt> implements something a little bit more complicated than what is
 described in <a class="reference internal" href="#what-is-smc"><em>What is Sequential Monte Carlo?</em></a>. The full description can be found in
 <a class="reference internal" href="math.html#math"><em>Mathematical Details</em></a>. Basically, we assume that the user has defined a one-parameter
 family of probability densities:</p>
@@ -169,7 +166,7 @@ family of probability densities:</p>
 <p><span class="eqno">(5)</span><img src="_images/math/25eb4344cfbbf657a399dcd55a32062f8aa12759.png" alt="p_{\gamma}(x) \propto \pi_{\gamma}(x)."/></p>
 </div><p>The code must be initialized with a particle approximation at a desired value
 of <img class="math" src="_images/math/4ece42902a35d5def1b35b4c4b9dd6cf8be65477.png" alt="\gamma=\gamma_0"/>. This can be done either manually by the user or
-automatically by <a class="reference internal" href="reference.html#module-pysmc" title="pysmc: The main PySMC module."><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a> (e.g. by direct sampling or MCMC).
+automatically by <tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt> (e.g. by direct sampling or MCMC).
 Having constructed an initial particle approximation, the code can be instructed
 to move it to another <img class="math" src="_images/math/e9842b3a541c8e8ed65cea6742ac6a3b12628076.png" alt="\gamma=\gamma_1"/>. If the two probability densities
 <img class="math" src="_images/math/1ddf9402cd7168374aad5ad710e30b47dd2cc71b.png" alt="p_{\gamma_0}(x)"/> and <img class="math" src="_images/math/4e9033b0682735fab12efb31aba6aa4ee6391fa9.png" alt="p_{\gamma_1}(x)"/> are close, then the code
@@ -446,7 +443,7 @@ probability density to our target (we created this in
 <li>an <cite>MCMC</cite> sampler (we saw how to create one in <a class="reference internal" href="#mcmc-attempt"><em>Attempting to do MCMC</em></a>).</li>
 </ul>
 <p>Now, let&#8217;s put everything together using the functionality of
-<a class="reference internal" href="reference.html#pysmc.SMC" title="pysmc.SMC"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt></a>:</p>
+<tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt>:</p>
 <div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -493,20 +490,20 @@ probability density to our target (we created this in
 different value of <img class="math" src="_images/math/66981fa3920210c6ad8dbe5e968783d5dd7520c3.png" alt="\gamma"/>. The <tt class="docutils literal"><span class="pre">verbose</span></tt> parameter specifies
 the amount of text the algorithm prints to the standard output.
 There are many more parameters which are fully documented in
-<a class="reference internal" href="reference.html#pysmc.SMC" title="pysmc.SMC"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt></a>. In line 11, we initialize the algorithm at
+<tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt>. In line 11, we initialize the algorithm at
 <img class="math" src="_images/math/7fe07176ed9974e8b19dcfbd381079d5ef313ce3.png" alt="\gamma=10^{-2}"/>. This essentially performs a number of <a class="reference external" href="http://en.wikipedia.org/wiki/Markov_chain_Monte_Carlo">MCMC</a>
 steps at this easy-to-sample-from probability density. It constructs the
 initialial particle approximation. See
-<a class="reference internal" href="reference.html#pysmc.SMC.initialize" title="pysmc.SMC.initialize"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.initialize()</span></tt></a> the complete list of arguments.
+<tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.initialize()</span></tt> the complete list of arguments.
 In line 13, we instruct the object to move the particle
 approximation to <img class="math" src="_images/math/e2ce879a30de26bdc81e97a97a4df4021567c568.png" alt="\gamma=1"/>, i.e., to the target probability
 density of this particular example. To see the weights of the final
 particle approximation, we use <tt class="xref py py-attr docutils literal"><span class="pre">pysmc.SMC.weights</span></tt>
 (e.g., <tt class="docutils literal"><span class="pre">smc_sampler.weights</span></tt>). To get the particles themselves we may
-use <a class="reference internal" href="reference.html#pysmc.SMC.particles" title="pysmc.SMC.particles"><tt class="xref py py-attr docutils literal"><span class="pre">pysmc.SMC.particles</span></tt></a> (e.g., <tt class="docutils literal"><span class="pre">smc_sampler.particles</span></tt>) which
+use <tt class="xref py py-attr docutils literal"><span class="pre">pysmc.SMC.particles</span></tt> (e.g., <tt class="docutils literal"><span class="pre">smc_sampler.particles</span></tt>) which
 returns a dictionary of the particles. However, it is usually most
-convenient to access them via <a class="reference internal" href="reference.html#pysmc.SMC.get_particle_approximation" title="pysmc.SMC.get_particle_approximation"><tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.get_particle_approximation()</span></tt></a>
-which returns a <a class="reference internal" href="reference.html#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a> object.</p>
+convenient to access them via <tt class="xref py py-meth docutils literal"><span class="pre">pysmc.SMC.get_particle_approximation()</span></tt>
+which returns a <tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt> object.</p>
 <p>The output of the algorithm looks like this:</p>
 <div class="highlight-python"><pre>------------------------
 START SMC Initialization
@@ -632,10 +629,10 @@ It can be done like this:</p>
 <div class="section" id="dumping-the-data-to-a-database">
 <span id="database"></span><h3>Dumping the data to a database<a class="headerlink" href="#dumping-the-data-to-a-database" title="Permalink to this headline">¶</a></h3>
 <p>At the moment we support only a very simple database (see
-<a class="reference internal" href="reference.html#pysmc.DataBase" title="pysmc.DataBase"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.DataBase</span></tt></a>) which is built on <a class="reference external" href="http://docs.python.org/library/pickle.html#module-cPickle" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">cPickle</span></tt></a>. There are two
-options of <a class="reference internal" href="reference.html#pysmc.SMC" title="pysmc.SMC"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt></a> that you need to specify when you want to use
+<tt class="xref py py-class docutils literal"><span class="pre">pysmc.DataBase</span></tt>) which is built on <a class="reference external" href="http://docs.python.org/library/pickle.html#module-cPickle" title="(in Python v2.7)"><tt class="xref py py-mod docutils literal"><span class="pre">cPickle</span></tt></a>. There are two
+options of <tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt> that you need to specify when you want to use
 the database functionality: <tt class="docutils literal"><span class="pre">db_filename</span></tt> and <tt class="docutils literal"><span class="pre">update_db</span></tt>. See the
-documentation of <a class="reference internal" href="reference.html#pysmc.SMC" title="pysmc.SMC"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt></a> for their complete details. If you are
+documentation of <tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt> for their complete details. If you are
 using a database, you can force the current state of SMC to be written to
 it by calling <tt class="xref py py-meth docutils literal"><span class="pre">pysmc.commit()</span></tt>. If you want to access a database,
 the all you have to do is use the attribute <tt class="xref py py-attr docutils literal"><span class="pre">pysmc.db</span></tt>.
@@ -686,7 +683,7 @@ is:</p>
 </pre></div>
 </td></tr></table></div>
 <p>Now, we have just skipped the initialization line. Sine the database already
-exists, <a class="reference internal" href="reference.html#pysmc.SMC" title="pysmc.SMC"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt></a> looks at it and initializes the particle
+exists, <tt class="xref py py-class docutils literal"><span class="pre">pysmc.SMC</span></tt> looks at it and initializes the particle
 approximation from the last state stored in it. Therefore, you actually
 start moving from <img class="math" src="_images/math/fda4170163a99bfdddd77dc823d474ea7c2f236c.png" alt="\gamma=0.5"/> to <img class="math" src="_images/math/e2ce879a30de26bdc81e97a97a4df4021567c568.png" alt="\gamma=1"/>.</p>
 </div>
@@ -694,7 +691,7 @@ start moving from <img class="math" src="_images/math/fda4170163a99bfdddd77dc823
 <span id="db-movie"></span><h3>Making a movie of the particles<a class="headerlink" href="#making-a-movie-of-the-particles" title="Permalink to this headline">¶</a></h3>
 <p>If you have stored the particle approximations of the various
 <img class="math" src="_images/math/66981fa3920210c6ad8dbe5e968783d5dd7520c3.png" alt="\gamma"/>&#8216;s in a database, then it is possible to make a movie out of
-them using <a class="reference internal" href="reference.html#pysmc.make_movie_from_db" title="pysmc.make_movie_from_db"><tt class="xref py py-func docutils literal"><span class="pre">pysmc.make_movie_from_db()</span></tt></a>. Here is how:</p>
+them using <tt class="xref py py-func docutils literal"><span class="pre">pysmc.make_movie_from_db()</span></tt>. Here is how:</p>
 <div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
  3
@@ -754,7 +751,7 @@ them using <a class="reference internal" href="reference.html#pysmc.make_movie_f
                         title="previous chapter">Installation</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="reference.html"
-                        title="next chapter">Reference</a></p>
+                        title="next chapter">&lt;no title&gt;</a></p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -779,10 +776,7 @@ them using <a class="reference internal" href="reference.html#pysmc.make_movie_f
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="reference.html" title="Reference"
+          <a href="reference.html" title="&lt;no title&gt;"
              >next</a> |</li>
         <li class="right" >
           <a href="install.html" title="Installation"
