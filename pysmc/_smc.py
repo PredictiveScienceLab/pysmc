@@ -60,6 +60,16 @@ class SMC(DistributedObject):
                                 default value is ``'gamma'``, but you can
                                 change it to whatever you want.
     :type gamma_name:           str
+    :param gamma_is_an_exponent: A flag that should be ``True`` if ``gamma``
+                                 appears as an exponent in the probability
+                                 density, e.g.,
+                                 :math:`p(x | y) \\propto p(y | x)^{\\gamma} p(x)`.
+                                 The default value is ``False``. However, if
+                                 your model is of the right form **it pays off**
+                                 to set it to ``True``. Then we can solve the
+                                 problem of finding the next :math:``\gamma``
+                                 in the sequence a lot faster.
+    :type gamma_is_an_exponent:  bool
     :param db_filename:         The filename of a database for the object. If
                                 the database exists and is a valid one, then
                                 the object will be initialized at each last
@@ -120,6 +130,27 @@ class SMC(DistributedObject):
 
     # Count the total number of MCMC samples taken so far
     _total_num_mcmc = None
+
+    # Does gamma appear as an exponent in the probability density?
+    _gamma_is_an_exponent = None
+
+    @property
+    def gamma_is_an_exponent(self):
+        """
+        The Flag that determines if gamma is an exponent in the probability
+        density.
+
+        :getter:        Get the flag.
+        :setter:        Set the flag.
+        :type:          bool
+        """
+        return self._gamma_is_an_exponent
+
+    @gamma_is_an_exponent.setter
+    def gamma_is_an_exponent(self, value):
+        """Set the value of the flag."""
+        value = bool(value)
+        self._gamma_is_an_exponent = value
 
     @property
     def my_num_particles(self):
@@ -250,9 +281,9 @@ class SMC(DistributedObject):
     @property
     def verbose(self):
         """
-
         Specify the amount of output printed by the class. There are three
         levels:
+
             + 0:    Print nothing.
             + 1:    Print info from methods you call.
             + 2:    Print info from methods the methods you call call...
@@ -432,13 +463,9 @@ class SMC(DistributedObject):
 
     def _get_log_of_weight_factor_at(self, gamma):
         """Return the log of the weight factor when going to the new gamma."""
-        logp_new = np.zeros(self.my_num_particles)
-        old_gamma = self.gamma
-        self._set_gamma(gamma)
-        for i in range(self.my_num_particles):
-            self.mcmc_sampler.set_state(self.particles[i])
-            logp_new[i] = self.mcmc_sampler.logp
-        self._set_gamma(old_gamma)
+        if self.gamma_is_an_exponent:
+            return (gamma  - self.gamma)* self._loglike
+        logp_new = self._get_logp_at_gamma(gamma)
         return logp_new - self._logp_prev
 
     def _get_unormalized_weights_at(self, gamma):
@@ -524,8 +551,44 @@ class SMC(DistributedObject):
                 if self.verbose > 1:
                     sys.stdout.write('\n\t\tFAILURE\n')
 
+    def _get_logp_of_particle(self, i):
+        """
+        Get the logp of a particle.
+        """
+        self.mcmc_sampler.set_state(self.particles[i])
+        return self.mcmc_sampler.logp
+
+    def _get_logp_of_particles(self):
+        """
+        Get the logp of all particles.
+        """
+        return np.array([self._get_logp_of_particle(i)
+                         for i in xrange(self.my_num_particles)])
+
+    def _get_logp_at_gamma(self, gamma):
+        """
+        Get the logp at gamma.
+        """
+        if gamma is not self.gamma:
+            old_gamma = self.gamma
+            self._set_gamma(gamma)
+            logp = self._get_logp_of_particles()
+            self._set_gamma(old_gamma)
+        else:
+            logp = self._get_logp_of_particles()
+        return logp
+
+    def _get_loglike(self, gamma0, gamma1):
+        """
+        Get the log likelihood assuming that gamma appears in the exponent.
+        """
+        logp0 = self._get_logp_at_gamma(gamma0)
+        logp1 = self._get_logp_at_gamma(gamma1)
+        return (logp1 - logp0) / (gamma1 - gamma0)
+
     def _find_next_gamma(self, gamma):
-        """Find the next gamma.
+        """
+        Find the next gamma.
 
         Parameters
         ----------
@@ -540,11 +603,10 @@ class SMC(DistributedObject):
         if self.verbose > 1:
             print '- finding next gamma.'
 
-        # Just copy the current logp
-        self._logp_prev = np.zeros(self.my_num_particles)
-        for i in range(self.my_num_particles):
-            self.mcmc_sampler.set_state(self.particles[i])
-            self._logp_prev[i] = self.mcmc_sampler.logp
+        if self.gamma_is_an_exponent:
+            self._loglike = self._get_loglike(self.gamma, gamma)
+        else:
+            self._logp_prev = self._get_logp_at_gamma(self.gamma)
 
         # Define the function whoose root we are seeking
         def f(test_gamma, args):
@@ -669,7 +731,8 @@ class SMC(DistributedObject):
                  comm=None,
                  gamma_name='gamma',
                  db_filename=None,
-                 update_db=False):
+                 update_db=False,
+                 gamma_is_an_exponent=False):
         """
         Initialize the object.
 
@@ -684,6 +747,7 @@ class SMC(DistributedObject):
         self.ess_reduction = ess_reduction
         self.verbose = verbose
         self.adapt_proposal_step = adapt_proposal_step
+        self.gamma_is_an_exponent = gamma_is_an_exponent
         self._initialize_db(db_filename, update_db)
 
     def initialize(self, gamma, particle_approximation=None,
@@ -767,7 +831,7 @@ class SMC(DistributedObject):
                     print '- creating a particle every', num_mcmc_per_particle
                 if self.verbose > 0:
                     pb = pymc.progressbar.ProgressBar(self.num_particles *
-                                                       num_mcmc_per_particle)
+                                                      num_mcmc_per_particle)
                 # Only rank 0 keeps the first particle
                 if self.rank == 0:
                     start_idx = 1

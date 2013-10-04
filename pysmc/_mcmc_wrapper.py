@@ -1,6 +1,7 @@
 """
 
 .. _mcmc_wrapper:
+
 +++++++++++
 MCMCWrapper
 +++++++++++
@@ -110,11 +111,14 @@ class MCMCWrapper(object):
 
         :returns:   A dictionary ``state`` containing the current state of
                     MCMC. The keys of the dictionary are as follows:
-                        - ``state['stochastics']``: A dictionary keeping the values of
-                          all stochastic variables.
-                        - ``state['deterministics']``: A dictionary keeping the values
-                          of all deterministic variables.
+
+                    - ``state['stochastics']``: A dictionary keeping the values of
+                      all stochastic variables.
+                    - ``state['deterministics']``: A dictionary keeping the values
+                      of all deterministic variables.
+
         :rtype:     :class:`dict`
+
         """
         state = dict(stochastics={}, deterministics={})
 

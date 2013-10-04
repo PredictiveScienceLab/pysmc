@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # Construct the SMC sampler
     smc_sampler = pysmc.SMC(model, num_particles=4000,
                             num_mcmc=10, verbose=1,
-                            mpi=mpi)
+                            mpi=mpi, gamma_is_an_exponent=True)
     # Initialize SMC at gamma = 0.01
     smc_sampler.initialize(0.01)
     # Move the particles to gamma = 1.0

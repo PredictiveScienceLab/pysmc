@@ -77,7 +77,7 @@ def multinomial_resample(p):
 def kde(particle_approximation, var_name):
     """
     Construct a kernel density approximation of the probability density
-    of ``var_name`` of ``particle_approximation.
+    of ``var_name`` of ``particle_approximation``.
 
     :param particle_approximation:  A particle approximation.
     :type particle_approximation:   :class:`pysmc.ParticleApproximation`
