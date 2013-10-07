@@ -713,7 +713,7 @@ class SMC(DistributedObject):
         if my_num_particles * self.size < num_particles:
             warnings.warn(
             '- number of particles (%d) not supported on %d mpi processes' %
-                (num_particles, size))
+                (num_particles, self.size))
             num_particles = my_num_particles * self.size
             warnings.warn(
              '- changing the number of particles to %d' % num_particles)

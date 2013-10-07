@@ -374,7 +374,7 @@ class ParticleApproximation(DistributedObject):
                                   force_calculation=force_calculation)
         if self.rank == 0:
             self._variance[type_of_var][var_name] -= (
-                self._mean[type_of_var][var_name])
+                self._mean[type_of_var][var_name] ** 2)
 
     def compute_all_variances_of_type(self, type_of_var,
                                        force_calculation=False):
