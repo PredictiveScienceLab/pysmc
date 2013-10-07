@@ -413,3 +413,63 @@ class ParticleApproximation(DistributedObject):
         """
         self.compute_all_means(force_calculation=force_calculation)
         self.compute_all_variances(force_calculation=force_calculation)
+
+    def resample(self):
+        """
+        Resample the particles. After calling this, all particles will have
+        the same weight.
+        """
+        idx_list = []
+        log_w_all = np.ndarray(self.num_particles)
+        if self.use_mpi:
+            self.comm.Gather([self.log_w, self.mpi.DOUBLE],
+                [log_w_all, self.mpi.DOUBLE])
+        else:
+            log_w_all = self.log_w
+        if self.rank == 0:
+            births = np.random.multinomial(self.num_particles,
+                                           np.exp(log_w_all))
+            for i in xrange(self.num_particles):
+                idx_list += [i] * births[i]
+        if self.rank == 0:
+            idx = np.array(idx_list, 'i')
+        else:
+            idx = np.ndarray(self.num_particles, 'i')
+        if self.use_mpi:
+            self.comm.Bcast([idx, self.mpi.INT])
+            self.comm.barrier()
+            num_particles = self.num_particles
+            my_num_particles = self.my_num_particles
+            old_particles = self._particles
+            self._particles = []
+            for i in xrange(num_particles):
+                to_whom = i / my_num_particles
+                from_whom = idx[i] / my_num_particles
+                if from_whom == to_whom and to_whom == self.rank:
+                    my_idx = idx[i] % my_num_particles
+                    self._particles.append(old_particles[my_idx].copy())
+                elif to_whom == self.rank:
+                    self._particles.append(self.comm.recv(
+                                                       source=from_whom, tag=i))
+                elif from_whom == self.rank:
+                    my_idx = idx[i] % my_num_particles
+                    self.comm.send(old_particles[my_idx], dest=to_whom, tag=i)
+                self.comm.barrier()
+        else:
+            self._particles = [self._particles[i].copy() for i in idx]
+        self.log_w.fill(-math.log(self.num_particles))
+        self._weights = np.exp(self.log_w)
+        self._fix_particles()
+
+    def copy(self):
+        """
+        Copy the particle approximation.
+
+        :returns:   A copy of the current particle approximation.
+        :rtype:     :class:`pysmc.ParticleApproximation`
+        """
+        new_pa = ParticleApproximation(self.weights, self.particles,
+                                       mpi=self.mpi, comm=self.comm)
+        new_pa.mean = deepcopy(self.mean)
+        new_pa.variance = deepcopy(self.variance)
+        return new_pa
