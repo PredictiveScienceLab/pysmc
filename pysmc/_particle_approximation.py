@@ -192,11 +192,11 @@ class ParticleApproximation(DistributedObject):
         """
         super(ParticleApproximation, self).__init__(mpi=mpi, comm=comm)
         if particles is not None:
-            self._particles = particles
+            self._particles = particles[:]
             if log_w is None:
                 log_w = (np.ones(self.my_num_particles) *
                          (-math.log(self.num_particles)))
-            self._log_w = log_w
+            self._log_w = log_w[:]
             self._weights = np.exp(log_w)
             self._fix_particles()
 
@@ -468,8 +468,28 @@ class ParticleApproximation(DistributedObject):
         :returns:   A copy of the current particle approximation.
         :rtype:     :class:`pysmc.ParticleApproximation`
         """
-        new_pa = ParticleApproximation(self.weights, self.particles,
+        new_pa = ParticleApproximation(self.log_w, self.particles,
                                        mpi=self.mpi, comm=self.comm)
         new_pa.mean = deepcopy(self.mean)
         new_pa.variance = deepcopy(self.variance)
         return new_pa
+
+    def allgather(self):
+        """
+        Get a particle approximation on every process.
+
+        If we are not using MPI, it will simply return a copy of the object.
+
+        :returns:       A fully functional particle approximation on a single
+                        process.
+        :rtype:         :class:`smc.ParticleApproximation`
+        """
+        if not self.use_mpi:
+            return self.copy()
+        log_w = np.ndarray(self.num_particles)
+        #self.comm.Gather([self._log_w, self.mpi.DOUBLE],
+        #                 [log_w, self.mpi.DOUBLE])
+        log_w = np.hstack(self.comm.allgather(self._log_w))
+        tmp = self.comm.allgather(self.particles)
+        particles = [t[i] for t in tmp for i in range(len(t))]
+        return ParticleApproximation(log_w=log_w, particles=particles)
