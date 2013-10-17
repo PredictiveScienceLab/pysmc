@@ -160,6 +160,9 @@ class ParticleApproximation(DistributedObject):
         """
         var_data = get_var_from_particle_list(self.particles, var_name,
                                               type_of_var=type_of_var)
+        if (var_data.ndim == 2 and (var_data.shape[0] == 1
+                                   or var_data.shape[1] == 0)):
+            var_data = var_data.flatten()
         setattr(self, var_name, var_data)
         getattr(self, type_of_var)[var_name] = var_data
         self._mean[type_of_var][var_name] = None
