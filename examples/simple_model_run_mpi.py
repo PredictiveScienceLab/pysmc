@@ -31,13 +31,13 @@ if __name__ == '__main__':
     smc_sampler.move_to(1.)
     # Get a particle approximation
     p = smc_sampler.get_particle_approximation()
-    m = p.mean
-    v = p.variance
-    if mpi.COMM_WORLD.Get_rank() == 0:
-        print m
-        print v
-    lp = p.allgather()
+    #m = p.mean
+    #v = p.variance
+    #if mpi.COMM_WORLD.Get_rank() == 0:
+    #    print m
+    #    print v
+    #lp = p.allgather()
     # Plot a histogram
+    pysmc.hist(p, 'mixture')
     if mpi.COMM_WORLD.Get_rank() == 0:
-        pysmc.hist(lp, 'mixture')
         plt.show()

@@ -36,6 +36,10 @@ def hist(particle_approximation, var_name, normed=True):
     """
     x = getattr(particle_approximation, var_name)
     w = particle_approximation.weights
+    if particle_approximation.use_mpi:
+        comm = particle_approximation.comm
+        x = np.hstack(comm.allgather(x))
+        w = np.hstack(comm.allgather(w))
     bins = w.shape[0] / 10
     plt.xlabel(var_name, fontsize=16)
     plt.ylabel('p(%s)' % var_name, fontsize=16)
