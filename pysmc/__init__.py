@@ -12,6 +12,10 @@ Here is complete reference of all the classes included in :mod:`pysmc`.
 .. autoclass:: pysmc.MCMCWrapper
     :members:
 
+.. automodule:: pysmc._mpi
+.. autoclass:: pysmc.DistributedObject
+    :members:
+
 .. automodule:: pysmc._particle_approximation
 .. autoclass:: pysmc.ParticleApproximation
     :members:
@@ -22,6 +26,10 @@ Here is complete reference of all the classes included in :mod:`pysmc`.
 
 .. automodule:: pysmc._db
 .. autoclass:: pysmc.DataBase
+    :members:
+
+.. automodule:: pysmc._step_methods
+.. autoclass:: pysmc.LognormalRandomWalk
     :members:
 
 .. _methods:

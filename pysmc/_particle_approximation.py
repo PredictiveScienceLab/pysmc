@@ -32,6 +32,8 @@ class ParticleApproximation(DistributedObject):
     particle approximation, then this object represents :math:`p(x)` as
     discussed in the :ref:`tutorial`.
 
+    **Base class:** :class:`pysmc.DistributedObject`
+
     :param log_w:       The logarithms of the weights of the particle
                         approximation.
     :type log_w:        1D :class:`numpy.ndarray`
@@ -485,7 +487,7 @@ class ParticleApproximation(DistributedObject):
 
         :returns:       A fully functional particle approximation on a single
                         process.
-        :rtype:         :class:`smc.ParticleApproximation`
+        :rtype:         :class:`pysmc.ParticleApproximation`
         """
         if not self.use_mpi:
             return self.copy()

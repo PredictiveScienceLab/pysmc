@@ -8,6 +8,9 @@ Step Methods
 
 In PySMC we define a few step methods for the Metropolis-Hastings algorithm
 that extend the capabilities of PyMC.
+
+Here is a list of what we offer:
+
 """
 
 
@@ -22,6 +25,8 @@ class LognormalRandomWalk(pymc.Metropolis):
     """
     This is a step method class that is good for positive random variables.
     It is a essentially a random walk in the logarithmic scale.
+
+    **Base class:** :class:`pymc.Metropolis`
     """
 
     def __init__(self, stochastic, *args, **kwargs):

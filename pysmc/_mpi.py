@@ -1,9 +1,15 @@
 """
-.. _mpi::
+.. _distributed_object:
 
-+++++++++++++++++++++++++++++++
-MPI related classes and methods
-+++++++++++++++++++++++++++++++
++++++++++++++++++
+DistributedObject
++++++++++++++++++
+
+The :class:`pysmc.DistributedObject` class implements some basic
+functionality that is used by every distributed object in :mod:`pysmc`.
+
+Here follows its complete reference:
+
 """
 
 

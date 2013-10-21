@@ -680,6 +680,49 @@ them using :func:`pysmc.make_movie_from_db()`. Here is how:
 The movie created in this way can be downloaded from
 :download:`videos/smc_movie.mp4`.
 
+.. _parallel_sampling:
+
+--------------------
+Sampling in Parallel
+--------------------
+
+With :mod:`pysmc` it is possible to carry out the sampling procedure in
+parallel. As is well known, SMC is embarransingly parallelizable. Taking it to
+the extreme, its process has to deal with only one particle. Communication is
+only necessary when there is a need to resample the particle approximation
+and for finding the next :math:`\gamma` in the sequence of probability
+densities. Parallelization in :mod:`pysmc` is achieved with the help of
+`mpi4py <http://mpi4py.scipy.org/>`_. Here is a simple example:
+
+.. code-block:: python
+    :linenos:
+    :emphasize-lines: 3, 9, 18, 19
+
+    import pysmc
+    import simple_model as model
+    import mpi4py.MPI as mpi
+    import matplotlib.pyplot as plt
+
+    # Construct the SMC sampler
+    smc_sampler = pysmc.SMC(model, num_particles=1000,
+                            num_mcmc=10, verbose=1,
+                            mpi=mpi, gamma_is_an_exponent=True)
+    # Initialize SMC at gamma = 0.01
+    smc_sampler.initialize(0.01)
+    # Move the particles to gamma = 1.0
+    smc_sampler.move_to(1.)
+    # Get a particle approximation
+    p = smc_sampler.get_particle_approximation()
+    # Plot a histogram
+    pysmc.hist(p, 'mixture')
+    if mpi.COMM_WORLD.Get_rank() == 0:
+        plt.show()
+
+As you can see the only difference is at line 3 where :mod:`mpi4py` is 
+instantiated, line 8 where mpi is passed as an argument to :class:`pysmc.SMC`
+and the last two lines where we simply specify that only one process should
+attempt to plot the histogram. 
+
 .. _E. T. Jaynes:
     E. T. Jaynes' http://en.wikipedia.org/wiki/Edwin_Thompson_Jaynes>
 .. _Probability Theory\: The Logic of Science:

@@ -33,6 +33,8 @@ class SMC(DistributedObject):
     """
     Use Sequential Monte Carlo (SMC) to sample from a distribution.
 
+    **Base class:** :class:`pysmc.DistributedObject`
+
     :param mcmc_sampler:        This is an essential part in initializing the
                                 object. It can either be a ready to go
                                 MCMC sampler or a module/class representing
