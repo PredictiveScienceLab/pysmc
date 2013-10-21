@@ -32,5 +32,5 @@ if __name__ == '__main__':
     print p.mean
     print p.variance
     # Plot a histogram
-    #pysmc.hist(plt, p, 'mixture', bins=100)
-    #plt.show()
+    pysmc.hist(p, 'mixture', bins=100)
+    plt.show()
