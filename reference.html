@@ -264,6 +264,99 @@ appropriate format.</td>
 
 </dd></dl>
 
+<span class="target" id="module-pysmc._mpi"></span><div class="section" id="distributedobject">
+<span id="distributed-object"></span><h3>DistributedObject<a class="headerlink" href="#distributedobject" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="#pysmc.DistributedObject" title="pysmc.DistributedObject"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.DistributedObject</span></tt></a> class implements some basic
+functionality that is used by every distributed object in <a class="reference internal" href="#module-pysmc" title="pysmc"><tt class="xref py py-mod docutils literal"><span class="pre">pysmc</span></tt></a>.</p>
+<p>Here follows its complete reference:</p>
+</div>
+<dl class="class">
+<dt id="pysmc.DistributedObject">
+<em class="property">class </em><tt class="descclassname">pysmc.</tt><tt class="descname">DistributedObject</tt><big>(</big><em>mpi=None</em>, <em>comm=None</em><big>)</big><a class="headerlink" href="#pysmc.DistributedObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a class that represents an object that is (potentially)
+distributed in parallel.</p>
+<dl class="attribute">
+<dt id="pysmc.DistributedObject.comm">
+<tt class="descname">comm</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DistributedObject.comm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The MPI communicator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the MPI communicator.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">mpi4py.COMM</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DistributedObject.mpi">
+<tt class="descname">mpi</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DistributedObject.mpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>The MPI class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the MPI class.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">mpi4py.MPI</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DistributedObject.rank">
+<tt class="descname">rank</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DistributedObject.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>The rank of this process.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the rank of this process.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DistributedObject.size">
+<tt class="descname">size</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DistributedObject.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>The size of the MPI pool.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Getter:</th><td class="field-body">Get the size of MPI pool.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysmc.DistributedObject.use_mpi">
+<tt class="descname">use_mpi</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.DistributedObject.use_mpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if MPI is being used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><tt class="docutils literal"><span class="pre">True</span></tt> if MPI is used and <tt class="docutils literal"><span class="pre">False</span></tt> otherwise.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <span class="target" id="module-pysmc._particle_approximation"></span><div class="section" id="particleapproximation">
 <span id="particle-approx"></span><h3>ParticleApproximation<a class="headerlink" href="#particleapproximation" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a> is a class that implements a
@@ -277,6 +370,7 @@ a particle approximation.</p>
 <p>If <img class="math" src="_images/math/26eeb5258ca5099acf8fe96b2a1049c48c89a5e6.png" alt="x"/> denotes collectively all the variables involved in the
 particle approximation, then this object represents <img class="math" src="_images/math/2751d79d3bbfb34440d68c685fe6ba7414951749.png" alt="p(x)"/> as
 discussed in the <a class="reference internal" href="tutorial.html#tutorial"><em>Tutorial</em></a>.</p>
+<p><strong>Base class:</strong> <a class="reference internal" href="#pysmc.DistributedObject" title="pysmc.DistributedObject"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.DistributedObject</span></tt></a></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -298,6 +392,24 @@ approximation.</li>
 <p class="last">When creating a distributed object, the particles must already be
 scattered.</p>
 </div>
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.allgather">
+<tt class="descname">allgather</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.allgather" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a particle approximation on every process.</p>
+<p>If we are not using MPI, it will simply return a copy of the object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A fully functional particle approximation on a single
+process.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="pysmc.ParticleApproximation.compute_all_means">
 <tt class="descname">compute_all_means</tt><big>(</big><em>force_calculation=False</em><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.compute_all_means" title="Permalink to this definition">¶</a></dt>
@@ -416,6 +528,22 @@ calculation was already made.</li>
 calculation was already made.</li>
 </ul>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy the particle approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A copy of the current particle approximation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysmc.ParticleApproximation" title="pysmc.ParticleApproximation"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.ParticleApproximation</span></tt></a></td>
 </tr>
 </tbody>
 </table>
@@ -572,6 +700,13 @@ approximation.</td>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="pysmc.ParticleApproximation.resample">
+<tt class="descname">resample</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.ParticleApproximation.resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample the particles. After calling this, all particles will have
+the same weight.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="pysmc.ParticleApproximation.variance">
 <tt class="descname">variance</tt><em class="property"> None</em><a class="headerlink" href="#pysmc.ParticleApproximation.variance" title="Permalink to this definition">¶</a></dt>
@@ -620,6 +755,7 @@ approximation.</p>
 <dt id="pysmc.SMC">
 <em class="property">class </em><tt class="descclassname">pysmc.</tt><tt class="descname">SMC</tt><big>(</big><em>mcmc_sampler=None</em>, <em>num_particles=10</em>, <em>num_mcmc=10</em>, <em>ess_threshold=0.67</em>, <em>ess_reduction=0.9</em>, <em>adapt_proposal_step=True</em>, <em>verbose=0</em>, <em>mpi=None</em>, <em>comm=None</em>, <em>gamma_name='gamma'</em>, <em>db_filename=None</em>, <em>update_db=False</em>, <em>gamma_is_an_exponent=False</em><big>)</big><a class="headerlink" href="#pysmc.SMC" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use Sequential Monte Carlo (SMC) to sample from a distribution.</p>
+<p><strong>Base class:</strong> <a class="reference internal" href="#pysmc.DistributedObject" title="pysmc.DistributedObject"><tt class="xref py py-class docutils literal"><span class="pre">pysmc.DistributedObject</span></tt></a></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1274,9 +1410,43 @@ database.</p>
 
 </dd></dl>
 
+<span class="target" id="module-pysmc._step_methods"></span><div class="section" id="step-methods">
+<span id="id4"></span><h3>Step Methods<a class="headerlink" href="#step-methods" title="Permalink to this headline">¶</a></h3>
+<p>In PySMC we define a few step methods for the Metropolis-Hastings algorithm
+that extend the capabilities of PyMC.</p>
+<p>Here is a list of what we offer:</p>
+</div>
+<dl class="class">
+<dt id="pysmc.LognormalRandomWalk">
+<em class="property">class </em><tt class="descclassname">pysmc.</tt><tt class="descname">LognormalRandomWalk</tt><big>(</big><em>stochastic</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pysmc.LognormalRandomWalk" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a step method class that is good for positive random variables.
+It is a essentially a random walk in the logarithmic scale.</p>
+<p><strong>Base class:</strong> <tt class="xref py py-class docutils literal"><span class="pre">pymc.Metropolis</span></tt></p>
+<dl class="staticmethod">
+<dt id="pysmc.LognormalRandomWalk.competence">
+<em class="property">static </em><tt class="descname">competence</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#pysmc.LognormalRandomWalk.competence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell PyMC that this step method is good for Lognormal, Exponential
+and Gamma random variables. In general, it should be good for positive
+random variables.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.LognormalRandomWalk.hastings_factor">
+<tt class="descname">hastings_factor</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.LognormalRandomWalk.hastings_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the hastings factor.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysmc.LognormalRandomWalk.propose">
+<tt class="descname">propose</tt><big>(</big><big>)</big><a class="headerlink" href="#pysmc.LognormalRandomWalk.propose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Propose a move.</p>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="methods">
-<span id="id4"></span><h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
+<span id="id5"></span><h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="module-pysmc._plot"></span><div class="section" id="plotting">
 <span id="plot"></span><h3>Plotting<a class="headerlink" href="#plotting" title="Permalink to this headline">¶</a></h3>
 </div>
@@ -1401,9 +1571,11 @@ of <tt class="docutils literal"><span class="pre">var_name</span></tt> of <tt cl
 <li><a class="reference internal" href="#">Reference</a><ul>
 <li><a class="reference internal" href="#classes">Classes</a><ul>
 <li><a class="reference internal" href="#mcmcwrapper">MCMCWrapper</a></li>
+<li><a class="reference internal" href="#distributedobject">DistributedObject</a></li>
 <li><a class="reference internal" href="#particleapproximation">ParticleApproximation</a></li>
 <li><a class="reference internal" href="#smc">SMC</a></li>
 <li><a class="reference internal" href="#database">DataBase</a></li>
+<li><a class="reference internal" href="#step-methods">Step Methods</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#methods">Methods</a><ul>
