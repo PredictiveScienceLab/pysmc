@@ -632,36 +632,53 @@ class SMC(DistributedObject):
         Initialize the database.
         """
         if db_filename is not None:
-            db_filename = os.path.abspath(db_filename)
-            if self.verbose > 0:
-                print '- db: ' + db_filename
-            if os.path.exists(db_filename):
+            if self.rank == 0:
+                db_filename = os.path.abspath(db_filename)
                 if self.verbose > 0:
-                    print '- db exists'
-                    print '- assuming this is a restart run'
-                self._db = DataBase.load(db_filename)
-                # Sanity check
-                if not self.db.gamma_name == self.gamma_name:
-                    raise RuntimeError(
-                    '%s in db does not match %s in SMC' % (seld.db.gamma_name,
-                                                           gamma_name))
-                if self.verbose > 0:
-                    print '- db:'
-                    print '\t- num. of %s: %d' % (self.gamma_name,
-                                                  self.db.num_gammas)
-                    print '\t- first %s: %1.4f' % (self.gamma_name,
-                                                  self.db.gammas[0])
-                    print '\t- last %s: %1.4f' % (self.gamma_name,
-                                                  self.db.gammas[-1])
-                print '- initializing the object at the last state of db'
-                self.initialize(self.db.gamma,
-                        particle_approximation=self.db.particle_approximation)
+                    print '- db: ' + db_filename
+                if os.path.exists(db_filename):
+                    if self.verbose > 0:
+                        print '- db exists'
+                        print '- assuming this is a restart run'
+                    self._db = DataBase.load(db_filename)
+                    # Sanity check
+                    if not self.db.gamma_name == self.gamma_name:
+                        raise RuntimeError(
+                        '%s in db does not match %s in SMC' % (seld.db.gamma_name,
+                                                               gamma_name))
+                    db_exists = True
+                else:
+                    if self.verbose > 0:
+                        print '- db does not exist'
+                        print '- creating db file'
+                    self._db = DataBase(gamma_name=self.gamma_name,
+                                        filename=db_filename)
+                    db_exists = False
             else:
-                if self.verbose > 0:
-                    print '- db does not exist'
-                    print '- creating db file'
-                self._db = DataBase(gamma_name=self.gamma_name,
-                                    filename=db_filename)
+                db_exists = None
+            if self.use_mpi:
+                db_exists = self.comm.bcast(db_exists)
+            if db_exists:
+                if self.rank == 0:
+                    if self.verbose > 0:
+                        print '- db:'
+                        print '\t- num. of %s: %d' % (self.gamma_name,
+                                                      self.db.num_gammas)
+                        print '\t- first %s: %1.4f' % (self.gamma_name,
+                                                       self.db.gammas[0])
+                        print '\t- last %s: %1.4f' % (self.gamma_name,
+                                                      self.db.gammas[-1])
+                    print '- initializing the object at the last state of db'
+                    gamma = self.db.gamma
+                    pa = self.db.particle_approximation
+                else:
+                    gamma = None
+                    pa = None
+                if self.use_mpi:
+                    gamma = self.comm.bcast(gamma)
+                    pa = ParticleApproximation.scatter(pa, mpi=self.mpi,
+                                                       comm=self.comm)
+                self.initialize(gamma, particle_approximation=pa)
             if self.verbose > 0:
                 if update_db:
                     print '- commiting to the database at every step'
@@ -807,6 +824,7 @@ class SMC(DistributedObject):
                 print '- initializing with a particle approximation.'
             self._particles = particle_approximation.particles
             self._log_w = particle_approximation.log_w
+            self._ess = self._get_ess_at(self.log_w)
             return
         else:
             self.particles[0] = self.mcmc_sampler.get_state()
@@ -848,7 +866,7 @@ class SMC(DistributedObject):
                         pb.animate((i + 2) * self.size * num_mcmc_per_particle)
                 if self.verbose > 0:
                     print ''
-        if self.update_db:
+        if self.update_db and self.rank == 0:
             self.db.add(self.gamma, self.get_particle_approximation())
             self.db.commit()
         if self.verbose > 0:
@@ -901,8 +919,10 @@ class SMC(DistributedObject):
             if self.verbose > 0:
                 print ''
             if self.update_db:
-                self.db.add(self.gamma, self.get_particle_approximation())
-                self.db.commit()
+                p = self.get_particle_approximation().gather()
+                if self.rank == 0:
+                    self.db.add(self.gamma, p)
+                    self.db.commit()
             if self.verbose > 1:
                 print '- acceptance rate for each step method:'
                 for sm in self.mcmc_sampler.step_methods:

@@ -17,6 +17,7 @@ import os
 sys.path.insert(0, os.path.abspath('..'))
 import pysmc
 import matplotlib.pyplot as plt
+import cPickle as pickle
 
 
 if __name__ == '__main__':
@@ -33,5 +34,5 @@ if __name__ == '__main__':
     print p.mean
     print p.variance
     # Plot a histogram
-    pysmc.hist(p, 'mixture', bins=100)
+    pysmc.hist(p, 'mixture')
     plt.show()

@@ -491,10 +491,57 @@ class ParticleApproximation(DistributedObject):
         """
         if not self.use_mpi:
             return self.copy()
-        log_w = np.ndarray(self.num_particles)
         #self.comm.Gather([self._log_w, self.mpi.DOUBLE],
         #                 [log_w, self.mpi.DOUBLE])
         log_w = np.hstack(self.comm.allgather(self._log_w))
         tmp = self.comm.allgather(self.particles)
         particles = [t[i] for t in tmp for i in range(len(t))]
         return ParticleApproximation(log_w=log_w, particles=particles)
+
+    def gather(self):
+        """
+        Get a particle approximation on every process.
+
+        If we are not using MPI, it will simply return a copy of the object.
+
+        :returns:       A fully functional particle approximation on a single
+                        process.
+        :rtype:         :class:`pysmc.ParticleApproximation`
+        """
+        if not self.use_mpi:
+            return self.copy()
+        log_w = self.comm.gather(self._log_w)
+        tmp = self.comm.gather(self.particles)
+        if self.rank == 0:
+            log_w = np.hstack(log_w)
+            particles = [t[i] for t in tmp for i in range(len(t))]
+            return ParticleApproximation(log_w=log_w, particles=particles)
+        else:
+            return None
+
+    @staticmethod
+    def scatter(pa, mpi=None, comm=None):
+        """
+        Scatter the particle approximation across the tasks.
+
+        Assuming here that only the root processor (rank == 0) has it.
+        """
+        if mpi is None:
+            return pa
+        if comm is None:
+            comm = mpi.COMM_WORLD
+        rank = comm.Get_rank()
+        size = comm.Get_size()
+        if rank == 0:
+            chunk = pa.num_particles / size
+            log_w = [pa.log_w[i * chunk:(i + 1) * chunk]
+                     for i in xrange(size)]
+            particles = [pa.particles[i * chunk:(i + 1) * chunk]
+                         for i in xrange(size)]
+        else:
+            log_w = None
+            particles = None
+        my_log_w = comm.scatter(log_w)
+        my_particles = comm.scatter(particles)
+        return ParticleApproximation(log_w=my_log_w, particles=my_particles,
+                                     mpi=mpi, comm=comm)
