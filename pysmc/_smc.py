@@ -349,10 +349,10 @@ class SMC(DistributedObject):
 
     def _update_gamma_rv(self):
         """Update the variable that points to the observed rv."""
+        self._gamma_rv = []
         for rv in self.mcmc_sampler.nodes:
             if rv.parents.has_key(self.gamma_name):
-                self._gamma_rv = rv
-                break
+                self._gamma_rv.append(rv)
 
     @property
     def gamma_rv(self):
@@ -374,13 +374,14 @@ class SMC(DistributedObject):
         :setter:    Set the value of the ``gamma_name`` parameter.
         :type:      float
         """
-        return self._gamma_rv.parents[self.gamma_name]
+        return self._gamma_rv[0].parents[self.gamma_name]
 
     def _set_gamma(self, value):
         """
         Set the value of gamma.
         """
-        self._gamma_rv.parents[self.gamma_name] = value
+        for rv in self._gamma_rv:
+            rv.parents[self.gamma_name] = value
 
     @property
     def gamma_name(self):

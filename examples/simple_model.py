@@ -14,42 +14,48 @@ import numpy as np
 import math
 
 
-@pymc.stochastic(dtype=float)
-def mixture(value=1., gamma=1., pi=[0.2, 0.8], mu=[-1., 2.],
-            sigma=[0.01, 0.01]):
-    """
-    The log probability of a mixture of normal densities.
+def make_model():
+    # The gamma parameter
+    gamma = 1.
 
-    :param value:       The point of evaluation.
-    :type value :       float
-    :param gamma:       The parameter characterizing the SMC one-parameter
-                        family.
-    :type gamma :       float
-    :param pi   :       The weights of the components.
-    :type pi    :       1D :class:`numpy.ndarray`
-    :param mu   :       The mean of each component.
-    :type mu    :       1D :class:`numpy.ndarray`
-    :param sigma:       The standard deviation of each component.
-    :type sigma :       1D :class:`numpy.ndarray`
-    """
-    # Make sure everything is a numpy array
-    pi = np.array(pi)
-    mu = np.array(mu)
-    sigma = np.array(sigma)
-    # The number of components in the mixture
-    n = pi.shape[0]
-    # pymc.normal_like requires the precision not the variance:
-    tau = np.sqrt(1. / sigma ** 2)
-    # The following looks a little bit awkward because of the need for
-    # numerical stability:
-    p = np.log(pi)
-    p += np.array([pymc.normal_like(value, mu[i], tau[i])
-                      for i in range(n)])
-    p = math.fsum(np.exp(p))
-    # logp should never be negative, but it can be zero...
-    if p <= 0.:
-        return -np.inf
-    return gamma * math.log(p)
+    @pymc.stochastic(dtype=float)
+    def mixture(value=1., gamma=gamma, pi=[0.2, 0.8], mu=[-1., 2.],
+                sigma=[0.01, 0.01]):
+        """
+        The log probability of a mixture of normal densities.
+
+        :param value:       The point of evaluation.
+        :type value :       float
+        :param gamma:       The parameter characterizing the SMC one-parameter
+                            family.
+        :type gamma :       float
+        :param pi   :       The weights of the components.
+        :type pi    :       1D :class:`numpy.ndarray`
+        :param mu   :       The mean of each component.
+        :type mu    :       1D :class:`numpy.ndarray`
+        :param sigma:       The standard deviation of each component.
+        :type sigma :       1D :class:`numpy.ndarray`
+        """
+        # Make sure everything is a numpy array
+        pi = np.array(pi)
+        mu = np.array(mu)
+        sigma = np.array(sigma)
+        # The number of components in the mixture
+        n = pi.shape[0]
+        # pymc.normal_like requires the precision not the variance:
+        tau = np.sqrt(1. / sigma ** 2)
+        # The following looks a little bit awkward because of the need for
+        # numerical stability:
+        p = np.log(pi)
+        p += np.array([pymc.normal_like(value, mu[i], tau[i])
+                       for i in range(n)])
+        p = math.fsum(np.exp(p))
+        # logp should never be negative, but it can be zero...
+        if p <= 0.:
+            return -np.inf
+        return gamma * math.log(p)
+
+    return locals()
 
 
 def eval_stochastic_variable(var, values):
@@ -77,7 +83,8 @@ if __name__ == '__main__':
     x = np.linspace(-2, 3, 200)
 
     # Plot the original probability density
-    y = eval_stochastic_variable(mixture, x)
+    m = make_model()
+    y = eval_stochastic_variable(m['mixture'], x)
     plt.plot(x, y, linewidth=2)
     plt.xlabel('$x$', fontsize=16)
     plt.ylabel('$p(x)$', fontsize=16)
@@ -87,11 +94,13 @@ if __name__ == '__main__':
     plt.clf()
     gammas = [1., 0.7, 0.5, 0.1, 0.05, 0.01]
     for gamma in gammas:
-        mixture.parents['gamma'] = gamma
-        y = eval_stochastic_variable(mixture, x)
+#        m['mixture'].parents['gamma'] = gamma
+        m['gamma'] = gamma
+        y = eval_stochastic_variable(m['mixture'], x)
         plt.plot(x, y, linewidth=2)
     plt.xlabel('$x$', fontsize=16)
     plt.ylabel('$\pi_\gamma(x)$', fontsize=16)
     legend_labels = ['$\gamma = %1.2f$' % gamma for gamma in gammas]
     plt.legend(legend_labels, loc='upper left')
-    plt.savefig('../doc/source/images/simple_model_pdf_family.png')
+    plt.show()
+#    plt.savefig('../doc/source/images/simple_model_pdf_family.png')

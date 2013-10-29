@@ -124,10 +124,10 @@ class Diffusion(object):
         assert isinstance(L, float) and L > 0.
         self._dx = L / self.num_cells
         self._mesh = Grid2D(dx=self.dx, dy=self.dx, nx=self.num_cells,
-                ny=self.num_cells)
+                            ny=self.num_cells)
         self._phi = CellVariable(name='solution variable', mesh=self.mesh)
         self._source = CellVariable(name='source term', mesh=self.mesh,
-                hasOld=True)
+                                    hasOld=True)
         self._eqX = TransientTerm() == ExplicitDiffusionTerm(coeff=1.) + self.source
         self._eqI = TransientTerm() == DiffusionTerm(coeff=1.) + self.source
         self._eq = self._eqX + self._eqI

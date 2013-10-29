@@ -10,7 +10,7 @@ Date:
 """
 
 
-import simple_model as model
+import simple_model
 import pymc
 import sys
 import os
@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     # Construct the SMC sampler
+    model = simple_model.make_model()
     smc_sampler = pysmc.SMC(model, num_particles=400,
                             num_mcmc=10, verbose=1)
     # Initialize SMC at gamma = 0.01
