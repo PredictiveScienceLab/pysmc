@@ -15,7 +15,7 @@ import mpi4py.MPI as mpi
 
 if __name__ == '__main__':
     model = diffusion_inverse_model.make_model()
-    smc_sampler = pysmc.SMC(model, num_particles=100, num_mcmc=10,
+    smc_sampler = pysmc.SMC(model, num_particles=100, num_mcmc=1,
                             verbose=1, mpi=mpi,
                             gamma_is_an_exponent=True)
     smc_sampler.initialize(0.)

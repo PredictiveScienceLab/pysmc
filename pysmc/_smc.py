@@ -866,13 +866,15 @@ class SMC(DistributedObject):
                         pb.animate((i + 2) * self.size * num_mcmc_per_particle)
                 if self.verbose > 0:
                     print ''
+        pa = self.get_particle_approximation().gather()
         if self.update_db and self.rank == 0:
-            self.db.add(self.gamma, self.get_particle_approximation())
+            self.db.add(self.gamma, pa)
             self.db.commit()
         if self.verbose > 0:
             print '----------------------'
             print 'END SMC Initialization'
             print '----------------------'
+
 
     def move_to(self, gamma):
         """
