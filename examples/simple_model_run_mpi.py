@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Run SMC on the simple model.
 
@@ -21,15 +22,17 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == '__main__':
+    do_init = not os.path.exists('test_db.pickle')
     # Construct the SMC sampler
     model = simple_model.make_model()
     smc_sampler = pysmc.SMC(model, num_particles=1000,
-                            num_mcmc=10, verbose=1,
+                            num_mcmc=10, verbose=5,
                             mpi=mpi, gamma_is_an_exponent=True,
                             db_filename='test_db.pickle',
                             update_db=True)
     # Initialize SMC at gamma = 0.01
-#    smc_sampler.initialize(0.01)
+    if do_init:
+        smc_sampler.initialize(0.01)
     # Move the particles to gamma = 1.0
     smc_sampler.move_to(1.)
     # Get a particle approximation

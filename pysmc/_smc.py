@@ -544,7 +544,7 @@ class SMC(DistributedObject):
         # TODO: Make sure this actually works!
         if self.verbose > 1:
             print '- tuning the MCMC parameters:'
-        for sm in self.mcmc_sampler.step_methods:
+        for sm in self.mcmc_sampler._mcmc_sampler.step_methods:
             if self.verbose > 1:
                 sys.stdout.write('\t- tuning step method: %s' % str(sm))
             if sm.tune(verbose=self.verbose):
@@ -553,6 +553,9 @@ class SMC(DistributedObject):
             else:
                 if self.verbose > 1:
                     sys.stdout.write('\n\t\tFAILURE\n')
+            if self.verbose > 1:
+                sys.stdout.write('\t\t' + str(sm.proposal_sd) + ', '
+                                 + str(sm.adaptive_scale_factor) + '\n')
 
     def _get_logp_of_particle(self, i):
         """
@@ -671,13 +674,24 @@ class SMC(DistributedObject):
                     print '- initializing the object at the last state of db'
                     gamma = self.db.gamma
                     pa = self.db.particle_approximation
+                    ad = self.db.adaptive_scale_factor
                 else:
                     gamma = None
                     pa = None
+                    ad = None
                 if self.use_mpi:
                     gamma = self.comm.bcast(gamma)
                     pa = ParticleApproximation.scatter(pa, mpi=self.mpi,
                                                        comm=self.comm)
+                    ad = self.comm.bcast(ad)
+                    i = 0
+                for sm in self.mcmc_sampler.step_methods:
+                    if self.verbose > 2:
+                        print ad[i]
+                    sm.adaptive_scale_factor = ad[i]
+                    if self.verbose > 2:
+                        print 'after:', sm.adaptive_scale_factor
+                    i += 1
                 self.initialize(gamma, particle_approximation=pa)
             if self.verbose > 0:
                 if update_db:
@@ -868,7 +882,8 @@ class SMC(DistributedObject):
                     print ''
         pa = self.get_particle_approximation().gather()
         if self.update_db and self.rank == 0:
-            self.db.add(self.gamma, pa)
+            self.db.add(self.gamma, pa,
+                        self.adaptive_scale_factors)
             self.db.commit()
         if self.verbose > 0:
             print '----------------------'
@@ -912,8 +927,19 @@ class SMC(DistributedObject):
                                                    self.num_mcmc)
                 print '- performing', self.num_mcmc, 'MCMC steps per particle'
             for i in range(self.my_num_particles):
+#                for sm in self.mcmc_sampler.step_methods:
+#                    sm.adaptive_scale_factor = 2.
+#                for sm in self.mcmc_sampler.step_methods:
+#                    if self.verbose > 1:
+#                        print '0:', sm.adaptive_scale_factor, self.mcmc_sampler._mcmc_sampler._sm_assigned
                 self.mcmc_sampler.set_state(self.particles[i])
+#                for sm in self.mcmc_sampler.step_methods:
+#                    if self.verbose > 1:
+#                        print '1:', sm.adaptive_scale_factor
                 self.mcmc_sampler.sample(self.num_mcmc)
+#                for sm in self.mcmc_sampler.step_methods:
+#                    if self.verbose > 1:
+#                        print '2:', sm.adaptive_scale_factor
                 self.particles[i] = self.mcmc_sampler.get_state()
                 self._total_num_mcmc += self.num_mcmc
                 if self.verbose > 0:
@@ -923,7 +949,8 @@ class SMC(DistributedObject):
             if self.update_db:
                 p = self.get_particle_approximation().gather()
                 if self.rank == 0:
-                    self.db.add(self.gamma, p)
+                    self.db.add(self.gamma, p,
+                                self.adaptive_scale_factors)
                     self.db.commit()
             if self.verbose > 1:
                 print '- acceptance rate for each step method:'
@@ -948,6 +975,16 @@ class SMC(DistributedObject):
         return ParticleApproximation(log_w=self.log_w, particles=self.particles,
                                      mpi=self.mpi, comm=self.comm)
 
+    @property
+    def adaptive_scale_factors(self):
+        """
+        Get the adaptive scale factors.
+        """
+        res = []
+        for sm in self.mcmc_sampler.step_methods:
+            res.append(sm.adaptive_scale_factor)
+        return res
+
     def commit(self):
         """
         Commit the current state to the data base.
@@ -957,5 +994,6 @@ class SMC(DistributedObject):
         '- requested a commit to the db but no db found\n'
         '- ignoring request')
             return
-        self.db.add(self.gamma, self.get_particle_approximation())
+        self.db.add(self.gamma, self.get_particle_approximation(),
+                    self.adaptive_scale_factors)
         self.db.commit()

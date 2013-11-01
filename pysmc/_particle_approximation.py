@@ -21,6 +21,7 @@ from . import DistributedObject
 from . import get_var_from_particle_list
 import numpy as np
 import warnings
+from copy import deepcopy
 
 
 class ParticleApproximation(DistributedObject):
@@ -475,8 +476,8 @@ class ParticleApproximation(DistributedObject):
         """
         new_pa = ParticleApproximation(self.log_w, self.particles,
                                        mpi=self.mpi, comm=self.comm)
-        new_pa.mean = deepcopy(self.mean)
-        new_pa.variance = deepcopy(self.variance)
+        new_pa._mean = deepcopy(self.mean)
+        new_pa._variance = deepcopy(self.variance)
         return new_pa
 
     def allgather(self):

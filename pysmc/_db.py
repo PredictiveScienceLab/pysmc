@@ -40,6 +40,9 @@ class DataBase(object):
     # The particle approximations associated with each gamma (list)
     _particle_approximations = None
 
+    # The adaptive scale factors of each step method
+    _adaptive_scale_factors = None
+
     # The filename you have selected for dumping the data (str)
     _filename = None
 
@@ -81,6 +84,17 @@ class DataBase(object):
         :type:      list
         """
         return self._particle_approximations
+
+    @property
+    def adaptive_scale_factors(self):
+        """
+        The adaptive scale factors of each step method.
+
+        :getter:    Get the adaptive scale factors associated with each
+                    MCMC step method.
+        :type:      list
+        """
+        return self._adaptive_scale_factors
 
     @property
     def num_gammas(self):
@@ -132,6 +146,10 @@ class DataBase(object):
         """
         return self._particle_approximations[-1]
 
+    @property
+    def adaptive_scale_factor(self):
+        return self._adaptive_scale_factors[-1]
+
     def __init__(self, gamma_name=None, filename=None):
         """
         Initialize the object.
@@ -166,9 +184,11 @@ class DataBase(object):
                             protocol=pickle.HIGHEST_PROTOCOL)
         self._gammas = []
         self._particle_approximations = []
+        self._adaptive_scale_factors = []
         self._last_commited = 0
 
-    def add(self, gamma, particle_approximation):
+    def add(self, gamma, particle_approximation,
+            adaptive_scale_factors):
         """
         Add the ``particle_approximation`` corresponding to ``gamma`` to the
         database.
@@ -180,6 +200,7 @@ class DataBase(object):
         """
         self._gammas.append(gamma)
         self._particle_approximations.append(particle_approximation)
+        self._adaptive_scale_factors.append(adaptive_scale_factors)
 
     def _dump_part_of_list(self, idx, values, fd):
         """
@@ -200,6 +221,7 @@ class DataBase(object):
             with open(self.filename, 'ab') as fd:
                 self._dump_part_of_list(idx, self.gammas, fd)
                 self._dump_part_of_list(idx, self.particle_approximations, fd)
+                self._dump_part_of_list(idx, self.adaptive_scale_factors, fd)
             self._last_commited += len(idx)
 
     @staticmethod
@@ -215,10 +237,12 @@ class DataBase(object):
                 raise RuntimeError('File %s: Not a valid database!' % filename)
             gammas = []
             particle_approximations = []
+            adaptive_scale_factors = []
             while True:
                 try:
                     gammas.append(pickle.load(fd))
                     particle_approximations.append(pickle.load(fd))
+                    adaptive_scale_factors.append(pickle.load(fd))
                 except EOFError:
                     break
             last_commited = len(gammas)
@@ -226,6 +250,7 @@ class DataBase(object):
         db._gamma_name = gamma_name
         db._gammas = gammas
         db._particle_approximations = particle_approximations
+        db._adaptive_scale_factors = adaptive_scale_factors
         db._last_commited = last_commited
         db._filename = filename
         return db
