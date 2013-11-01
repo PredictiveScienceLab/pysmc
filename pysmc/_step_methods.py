@@ -19,6 +19,7 @@ __all__ = ['LognormalRandomWalk']
 
 import pymc
 import numpy as np
+from sklearn import mixture
 
 
 class LognormalRandomWalk(pymc.Metropolis):
@@ -71,3 +72,37 @@ class LognormalRandomWalk(pymc.Metropolis):
             return 3
         else:
             return 0
+
+
+class GaussianMixtureStep(pymc.Metropolis):
+    """
+    This is a test.
+    """
+
+    def __init__(self, stochastic, *args, **kwargs):
+        """Initialize the object."""
+        pymc.Metropolis.__init__(self, stochastic, *args, **kwargs)
+        self._gmm = mixture.DPGMM(n_components=5, covariance_type='full')
+        self._data = []
+
+    def propose(self):
+        """
+        Propose a move.
+        """
+        x = self._gmm.sample()
+        self.stochastic.value = x.flatten('F')
+        return self._gmm.score(x)[0]
+
+    def hastings_factor(self):
+        """
+        Compute the hastings factor.
+        """
+        cur_val = np.atleast_2d(self.stochastic.value)
+        last_val = np.atleast_2d(self.stochastic.value)
+
+        lp_for = self._gmm.score(cur_val)[0]
+        lp_bak = self._gmm.score(last_val)[0]
+
+        if self.verbose > 1:
+            print self._id + ': Hastings factor %f' % (lp_bak - lp_for)
+        return lp_bak - lp_for
