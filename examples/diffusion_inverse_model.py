@@ -13,13 +13,14 @@ def make_model():
     def model_output(value=None, loc=location):
         return solver(loc)
     # The hyper-parameters of the noise
-    alpha = pymc.Exponential('alpha', beta=10.)
+    alpha = pymc.Exponential('alpha', beta=1.)
     beta = pymc.Exponential('beta', beta=1.)
+    tau = pymc.Gamma('tau', alpha=alpha, beta=beta)
     # Load the observed data
     data = np.loadtxt('observed_data')
     # The observations at the sensor locations
     @pymc.stochastic(dtype=float, observed=True)
-    def sensors(value=data, mu=model_output, al=alpha, be=beta, gamma=1.):
+    def sensors(value=data, mu=model_output, tau=tau, gamma=1.):
         """The value of the response at the sensors."""
-        return gamma * pymc.t_like((value - mu) / np.sqrt(be / al), 2 * al)
+        return gamma * pymc.normal_like(value, mu=mu, tau=tau)
     return locals()

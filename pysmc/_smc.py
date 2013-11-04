@@ -548,7 +548,7 @@ class SMC(DistributedObject):
             if self.verbose > 1:
                 sys.stdout.write('\t- tuning step method: %s' % str(sm))
             if sm.tune(self.get_acceptance_rate_of_step_method(sm),
-                       self.get_particle_approximation().allgather(),
+                       self.get_particle_approximation(),
                        comm=self.comm,
                        verbose=self.verbose):
                 if self.verbose > 1:
@@ -556,9 +556,6 @@ class SMC(DistributedObject):
             else:
                 if self.verbose > 1:
                     sys.stdout.write('\n\t\tFAILURE\n')
-            if self.verbose > 1:
-                sys.stdout.write('\t\t' + str(sm.proposal_sd) + ', '
-                                 + str(sm.adaptive_scale_factor) + '\n')
 
     def _get_logp_of_particle(self, i):
         """
@@ -976,6 +973,8 @@ class SMC(DistributedObject):
         if self.use_mpi:
             accepted = self.comm.allreduce(accepted)
             rejected = self.comm.allreduce(rejected)
+        if (accepted + rejected) == 0.:
+            return -1
         return accepted / (accepted + rejected)
 
     def get_particle_approximation(self):

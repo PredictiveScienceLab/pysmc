@@ -17,34 +17,131 @@ Here is a list of what we offer:
 __all__ = ['RandomWalk', 'LognormalRandomWalk', 'GaussianMixtureStep']
 
 
-import pymc
+import pymc as pm
 import numpy as np
 from sklearn import mixture
 
 
-class RandomWalk(pymc.Metropolis):
+class RandomWalk(pm.Metropolis):
 
-    def __init__(self, stochastic, *args, **kwargs):
+    _adapt_increase_factor = None
+
+    _adapt_decrease_factor = None
+
+    _adapt_upper_ac_rate = None
+
+    _adapt_lower_ac_rate = None
+
+    _min_adaptive_scale_factor = None
+
+    _max_adaptive_scale_factor = None
+
+    _adaptive_scale_factor = None
+
+    @property
+    def adapt_increase_factor(self):
+        return self._adapt_increase_factor
+
+    @property
+    def adapt_decrease_factor(self):
+        return self._adapt_decrease_factor
+
+    @property
+    def adapt_upper_ac_rate(self):
+        return self._adapt_upper_ac_rate
+
+    @property
+    def adapt_lower_ac_rate(self):
+        return self._adapt_lower_ac_rate
+
+    @property
+    def min_adaptive_scale_factor(self):
+        return self._min_adaptive_scale_factor
+
+    @property
+    def max_adaptive_scale_factor(self):
+        return self._max_adaptive_scale_factor
+
+    def __init__(self, stochastic,
+                 adapt_increase_factor=1.3,
+                 adapt_decrease_factor=0.7,
+                 adapt_upper_ac_rate=0.7,
+                 adapt_lower_ac_rate=0.3,
+                 min_adaptive_scale_factor=1e-32,
+                 max_adaptive_scale_factor=1e99,
+                 *args, **kwargs):
         """Initialize the object."""
-        pymc.Metropolis.__init__(self, stochastic, *args, **kwargs)
+        assert adapt_decrease_factor <= 1.
+        self._adapt_decrease_factor = adapt_decrease_factor
+        assert adapt_increase_factor >= 1.
+        self._adapt_increase_factor = adapt_increase_factor
+        assert adapt_upper_ac_rate <= 1.
+        assert adapt_lower_ac_rate >= 0.
+        assert adapt_lower_ac_rate <= adapt_upper_ac_rate
+        self._adapt_upper_ac_rate = adapt_upper_ac_rate
+        self._adapt_lower_ac_rate = adapt_lower_ac_rate
+        assert min_adaptive_scale_factor > 0.
+        assert min_adaptive_scale_factor <= max_adaptive_scale_factor
+        self._min_adaptive_scale_factor = min_adaptive_scale_factor
+        self._max_adaptive_scale_factor = max_adaptive_scale_factor
+        super(RandomWalk, self).__init__(stochastic, *args, **kwargs)
+        self._adaptive_scale_factor = self.adaptive_scale_factor
 
     def tune(self, ac, pa, comm=None, divergence_threshold=1e10, verbose=0):
-        res = super(RandomWalk, self).tune(divergence_threshold=divergence_threshold,
-                                            verbose=verbose)
+        if ac == -1:
+            return False
+        use_mpi = comm is not None
+        rank = comm.Get_rank() if use_mpi else 0
+        if ac <= self.adapt_lower_ac_rate:
+            self._adaptive_scale_factor = max(self._adaptive_scale_factor *
+                                             self.adapt_decrease_factor,
+                                             self.min_adaptive_scale_factor)
+        elif ac >= self.adapt_upper_ac_rate:
+            self._adaptive_scale_factor = min(self._adaptive_scale_factor *
+                                             self.adapt_increase_factor,
+                                             self.max_adaptive_scale_factor)
+        self.adaptive_scale_factor = self._adaptive_scale_factor
+        if verbose >= 2 and rank == 0:
+            print '\n\t\tadaptive_scale_factor:', self.adaptive_scale_factor
         self.accepted = 0.
         self.rejected = 0.
+        return True
 
-class LognormalRandomWalk(pymc.Metropolis):
+    def competence(s):
+        """
+        Tell PyMC that this step method is good for Lognormal, Exponential
+        and Gamma random variables. In general, it should be good for positive
+        random variables.
+        """
+        return 2
+
+
+class LognormalRandomWalk(RandomWalk):
     """
     This is a step method class that is good for positive random variables.
     It is a essentially a random walk in the logarithmic scale.
 
-    **Base class:** :class:`pymc.Metropolis`
+    **Base class:** :class:`pm.Metropolis`
     """
 
-    def __init__(self, stochastic, *args, **kwargs):
+    def __init__(self, stochastic,
+                 adapt_increase_factor=1.3,
+                 adapt_decrease_factor=0.7,
+                 adapt_upper_ac_rate=0.7,
+                 adapt_lower_ac_rate=0.3,
+                 min_adaptive_scale_factor=1e-32,
+                 max_adaptive_scale_factor=1e99,
+                 *args, **kwargs):
         """Initialize the object."""
-        pymc.Metropolis.__init__(self, stochastic, *args, **kwargs)
+        super(LognormalRandomWalk, self).__init__(
+                            stochastic,
+                            adapt_increase_factor=adapt_increase_factor,
+                            adapt_decrease_factor=adapt_decrease_factor,
+                            adapt_upper_ac_rate=adapt_upper_ac_rate,
+                            adapt_lower_ac_rate=adapt_lower_ac_rate,
+                            min_adaptive_scale_factor=min_adaptive_scale_factor,
+                            max_adaptive_scale_factor=max_adaptive_scale_factor,
+                            *args, **kwargs)
 
     def propose(self):
         """
@@ -52,19 +149,18 @@ class LognormalRandomWalk(pymc.Metropolis):
         """
         tau = 1. / (self.adaptive_scale_factor * self.proposal_sd) ** 2
         self.stochastic.value = \
-                pymc.rlognormal(np.log(self.stochastic.value), tau)
+                pm.rlognormal(np.log(self.stochastic.value), tau)
 
     def hastings_factor(self):
         """
         Compute the hastings factor.
         """
-
         tau = 1. / (self.adaptive_scale_factor * self.proposal_sd) ** 2
         cur_val = self.stochastic.value
         last_val = self.stochastic.last_value
 
-        lp_for = pymc.lognormal_like(cur_val, mu=np.log(last_val), tau=tau)
-        lp_bak = pymc.lognormal_like(last_val, mu=np.log(cur_val), tau=tau)
+        lp_for = pm.lognormal_like(cur_val, mu=np.log(last_val), tau=tau)
+        lp_bak = pm.lognormal_like(last_val, mu=np.log(cur_val), tau=tau)
 
         if self.verbose > 1:
             print self._id + ': Hastings factor %f' % (lp_bak - lp_for)
@@ -77,23 +173,64 @@ class LognormalRandomWalk(pymc.Metropolis):
         and Gamma random variables. In general, it should be good for positive
         random variables.
         """
-        if isinstance(s, pymc.Lognormal):
+        if isinstance(s, pm.Lognormal):
             return 3
-        elif isinstance(s, pymc.Exponential):
+        elif isinstance(s, pm.Exponential):
             return 3
-        elif isinstance(s, pymc.Gamma):
+        elif isinstance(s, pm.Gamma):
             return 3
         else:
             return 0
 
 
-class GaussianMixtureStep(pymc.Metropolis):
+class GaussianMixtureStep(RandomWalk):
     """
     This is a test.
     """
 
     # A gaussian mixtures model
     _gmm = None
+
+    # Covariance type
+    _covariance_type = None
+
+    # The valid covariance types
+    _VALID_COVARIANCE_TYPES = None
+
+    # Maximum number of components for the Gaussian mixture
+    _n_components = None
+
+    # The number of iterations we should do while training the
+    # Gaussian mixture
+    _n_iter = None
+
+    @property
+    def n_iter(self):
+        """
+        Get the number of Gaussian mixture training iterations.
+        """
+        return self._n_iter
+
+    @property
+    def n_components(self):
+        """
+        Get the maximum number of Gaussian mixture components.
+        """
+        return self._n_components
+
+    @property
+    def VALID_COVARIANCE_TYPES(self):
+        """
+        Get the valid covariance types.
+        """
+        return self._VALID_COVARIANCE_TYPES
+
+    @property
+    def covariance_type(self):
+        """
+        Get the covariance type.
+        """
+        return self._covariance_type
 
     @property
     def gmm(self):
@@ -102,9 +239,28 @@ class GaussianMixtureStep(pymc.Metropolis):
         """
         return self._gmm
 
-    def __init__(self, stochastic, *args, **kwargs):
+    def __init__(self, stochastic,
+                 adapt_upper_ac_rate=0.7,
+                 adapt_lower_ac_rate=0.3,
+                 covariance_type='full',
+                 n_components=5,
+                 n_iter=1000,
+                 *args, **kwargs):
         """Initialize the object."""
-        pymc.Metropolis.__init__(self, stochastic, *args, **kwargs)
+        super(GaussianMixtureStep, self).__init__(
+                            stochastic,
+                            adapt_upper_ac_rate=adapt_upper_ac_rate,
+                            adapt_lower_ac_rate=adapt_lower_ac_rate,
+                            *args, **kwargs)
+        self._VALID_COVARIANCE_TYPES = ['diag', 'full', 'spherical', 'tied']
+        assert covariance_type in self.VALID_COVARIANCE_TYPES
+        self._covariance_type = covariance_type
+        n_components = int(n_components)
+        assert n_components >= 1
+        self._n_components = n_components
+        n_iter = int(n_iter)
+        assert n_iter >= 0
+        self._n_iter = n_iter
         self._tuned = False
 
     def propose(self):
@@ -113,7 +269,7 @@ class GaussianMixtureStep(pymc.Metropolis):
         """
         if not self._tuned:
             return super(GaussianMixtureStep, self).propose()
-        x = self.gmm.rvs()
+        x = self.gmm.sample()
         self.stochastic.value = x.flatten('F')
         return self.gmm.score(x)[0]
 
@@ -138,24 +294,40 @@ class GaussianMixtureStep(pymc.Metropolis):
         """
         Tune the step...
         """
-        if self._tuned and (ac >= 0.9):
+        if ac == -1:
             return False
-        pa.resample()
-        data = [pa.particles[i]['stochastics'][self.stochastic.__name__]
-                for i in xrange(pa.num_particles)]
-        data = np.array(data)
-        if data.ndim == 1:
-            data = np.atleast_2d(data).T
-        self._gmm = mixture.DPGMM(n_components=5, cvtype='full')
-        self.gmm.fit(data, n_iter=10000)
-        self.gmm._covars = self.gmm._get_covars()
-        self._tuned = True
-        Y_ = self.gmm.predict(data)
-        for i, (mean, covar) in enumerate(zip(
-                self.gmm._means, self.gmm._get_covars())):
-            if not np.any(Y_ == i):
-                continue
-            print '\n', mean, covar
         self.accepted = 0.
         self.rejected = 0.
+        if self._tuned and (ac >= 0.3 and ac <= 0.7):
+            return False
+        use_mpi = comm is not None
+        if use_mpi:
+            rank = comm.Get_rank()
+            size = comm.Get_size()
+        else:
+            rank = 0
+            size = 1
+        pa = pa.gather()
+        # Only the root should run train the mixture
+        if rank == 0:
+            pa.resample()
+            data = [pa.particles[i]['stochastics'][self.stochastic.__name__]
+                    for i in xrange(pa.num_particles)]
+            data = np.array(data)
+            if data.ndim == 1:
+                data = np.atleast_2d(data).T
+            self._gmm = mixture.DPGMM(n_components=self.n_components,
+                                      covariance_type=self.covariance_type,
+                                      n_iter=self.n_iter)
+            self.gmm.fit(data)
+            if verbose >= 2:
+                Y_ = self.gmm.predict(data)
+                for i, (mean, covar) in enumerate(zip(
+                        self.gmm.means_, self.gmm._get_covars())):
+                    if not np.any(Y_ == i):
+                        continue
+                    print '\n', mean, covar
+        self._gmm = comm.bcast(self._gmm)
+        self.gmm.covars_ = self.gmm._get_covars()
+        self._tuned = True
         return True
