@@ -14,13 +14,25 @@ Here is a list of what we offer:
 """
 
 
-__all__ = ['LognormalRandomWalk']
+__all__ = ['RandomWalk', 'LognormalRandomWalk', 'GaussianMixtureStep']
 
 
 import pymc
 import numpy as np
 from sklearn import mixture
 
+
+class RandomWalk(pymc.Metropolis):
+
+    def __init__(self, stochastic, *args, **kwargs):
+        """Initialize the object."""
+        pymc.Metropolis.__init__(self, stochastic, *args, **kwargs)
+
+    def tune(self, ac, pa, comm=None, divergence_threshold=1e10, verbose=0):
+        res = super(RandomWalk, self).tune(divergence_threshold=divergence_threshold,
+                                            verbose=verbose)
+        self.accepted = 0.
+        self.rejected = 0.
 
 class LognormalRandomWalk(pymc.Metropolis):
     """
@@ -46,6 +58,7 @@ class LognormalRandomWalk(pymc.Metropolis):
         """
         Compute the hastings factor.
         """
+
         tau = 1. / (self.adaptive_scale_factor * self.proposal_sd) ** 2
         cur_val = self.stochastic.value
         last_val = self.stochastic.last_value
@@ -79,19 +92,30 @@ class GaussianMixtureStep(pymc.Metropolis):
     This is a test.
     """
 
+    # A gaussian mixtures model
+    _gmm = None
+
+    @property
+    def gmm(self):
+        """
+        Get the Gaussian process model.
+        """
+        return self._gmm
+
     def __init__(self, stochastic, *args, **kwargs):
         """Initialize the object."""
         pymc.Metropolis.__init__(self, stochastic, *args, **kwargs)
-        self._gmm = mixture.DPGMM(n_components=5, covariance_type='full')
-        self._data = []
+        self._tuned = False
 
     def propose(self):
         """
         Propose a move.
         """
-        x = self._gmm.sample()
+        if not self._tuned:
+            return super(GaussianMixtureStep, self).propose()
+        x = self.gmm.rvs()
         self.stochastic.value = x.flatten('F')
-        return self._gmm.score(x)[0]
+        return self.gmm.score(x)[0]
 
     def hastings_factor(self):
         """
@@ -100,9 +124,38 @@ class GaussianMixtureStep(pymc.Metropolis):
         cur_val = np.atleast_2d(self.stochastic.value)
         last_val = np.atleast_2d(self.stochastic.value)
 
+        if not self._tuned:
+            return super(GaussianMixtureStep, self).hastings_factor()
+
         lp_for = self._gmm.score(cur_val)[0]
         lp_bak = self._gmm.score(last_val)[0]
 
         if self.verbose > 1:
             print self._id + ': Hastings factor %f' % (lp_bak - lp_for)
         return lp_bak - lp_for
+
+    def tune(self, ac, pa, comm=None, divergence_threshold=1e10, verbose=0):
+        """
+        Tune the step...
+        """
+        if self._tuned and (ac >= 0.9):
+            return False
+        pa.resample()
+        data = [pa.particles[i]['stochastics'][self.stochastic.__name__]
+                for i in xrange(pa.num_particles)]
+        data = np.array(data)
+        if data.ndim == 1:
+            data = np.atleast_2d(data).T
+        self._gmm = mixture.DPGMM(n_components=5, cvtype='full')
+        self.gmm.fit(data, n_iter=10000)
+        self.gmm._covars = self.gmm._get_covars()
+        self._tuned = True
+        Y_ = self.gmm.predict(data)
+        for i, (mean, covar) in enumerate(zip(
+                self.gmm._means, self.gmm._get_covars())):
+            if not np.any(Y_ == i):
+                continue
+            print '\n', mean, covar
+        self.accepted = 0.
+        self.rejected = 0.
+        return True

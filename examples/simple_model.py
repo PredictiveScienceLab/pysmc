@@ -19,7 +19,7 @@ def make_model():
     gamma = 1.
 
     @pymc.stochastic(dtype=float)
-    def mixture(value=1., gamma=gamma, pi=[0.2, 0.8], mu=[-1., 2.],
+    def mixture(value=1., gamma=gamma, pi=[0.2, 0.8], mu=[-2., 3.],
                 sigma=[0.01, 0.01]):
         """
         The log probability of a mixture of normal densities.

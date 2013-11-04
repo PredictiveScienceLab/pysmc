@@ -18,13 +18,17 @@ sys.path.insert(0, os.path.abspath('..'))
 import pysmc
 import matplotlib.pyplot as plt
 import cPickle as pickle
+import numpy as np
 
 
 if __name__ == '__main__':
     # Construct the SMC sampler
     model = simple_model.make_model()
-    smc_sampler = pysmc.SMC(model, num_particles=400,
-                            num_mcmc=10, verbose=4)
+    mcmc = pymc.MCMC(model)
+    mcmc.use_step_method(pysmc.GaussianMixtureStep, model['mixture'])
+    #mcmc.use_step_method(pysmc.RandomWalk, model['mixture'])
+    smc_sampler = pysmc.SMC(mcmc, num_particles=400,
+                            num_mcmc=1, verbose=4)
     # Initialize SMC at gamma = 0.01
     smc_sampler.initialize(0.01)
     # Move the particles to gamma = 1.0
@@ -34,5 +38,8 @@ if __name__ == '__main__':
     print p.mean
     print p.variance
     # Plot a histogram
+    data = [p.particles[i]['stochastics']['mixture'] for i in xrange(p.num_particles)]
+    data = np.array(data)
+    plt.plot(data, np.zeros(data.shape), 'ro', markersize=10)
     pysmc.hist(p, 'mixture')
     plt.show()

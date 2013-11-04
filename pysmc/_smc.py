@@ -547,7 +547,10 @@ class SMC(DistributedObject):
         for sm in self.mcmc_sampler._mcmc_sampler.step_methods:
             if self.verbose > 1:
                 sys.stdout.write('\t- tuning step method: %s' % str(sm))
-            if sm.tune(verbose=self.verbose):
+            if sm.tune(self.get_acceptance_rate_of_step_method(sm),
+                       self.get_particle_approximation().allgather(),
+                       comm=self.comm,
+                       verbose=self.verbose):
                 if self.verbose > 1:
                     sys.stdout.write('\n\t\tSUCCESS\n')
             else:
@@ -952,10 +955,10 @@ class SMC(DistributedObject):
                     self.db.add(self.gamma, p,
                                 self.adaptive_scale_factors)
                     self.db.commit()
-            if self.verbose > 1:
-                print '- acceptance rate for each step method:'
-                for sm in self.mcmc_sampler.step_methods:
-                    acc_rate = sm.accepted / (sm.accepted + sm.rejected)
+            for sm in self.mcmc_sampler.step_methods:
+                acc_rate = self.get_acceptance_rate_of_step_method(sm)
+                if self.verbose > 1:
+                    print '- acceptance rate for each step method:'
                     print '\t-', str(sm), ':', acc_rate
         total_num_mcmc = self.total_num_mcmc
         if self.verbose > 0:
@@ -963,6 +966,17 @@ class SMC(DistributedObject):
             print '---------------'
             print 'END SMC MOVE TO'
             print '---------------'
+
+    def get_acceptance_rate_of_step_method(self, sm):
+        """
+        Get the acceptance rate of the step method sm.
+        """
+        accepted = sm.accepted
+        rejected = sm.rejected
+        if self.use_mpi:
+            accepted = self.comm.allreduce(accepted)
+            rejected = self.comm.allreduce(rejected)
+        return accepted / (accepted + rejected)
 
     def get_particle_approximation(self):
         """

@@ -22,6 +22,7 @@ from . import get_var_from_particle_list
 import numpy as np
 import warnings
 from copy import deepcopy
+import math
 
 
 class ParticleApproximation(DistributedObject):

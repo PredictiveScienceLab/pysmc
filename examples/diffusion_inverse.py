@@ -10,13 +10,16 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath('..'))
 import pysmc
-import mpi4py.MPI as mpi
+#import mpi4py.MPI as mpi
+import pymc as pm
 
 
 if __name__ == '__main__':
     model = diffusion_inverse_model.make_model()
+    mcmc = pm.MCMC(model)
+    mcmc.use_step_method(pysmc.GaussianMixtureStep, model['location'])
     smc_sampler = pysmc.SMC(model, num_particles=100, num_mcmc=1,
-                            verbose=1, mpi=mpi,
+                            verbose=1, mpi=None,
                             gamma_is_an_exponent=True)
     smc_sampler.initialize(0.)
     smc_sampler.move_to(1.)
