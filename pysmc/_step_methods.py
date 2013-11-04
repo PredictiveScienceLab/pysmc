@@ -240,7 +240,7 @@ class GaussianMixtureStep(RandomWalk):
         return self._gmm
 
     def __init__(self, stochastic,
-                 adapt_upper_ac_rate=0.7,
+                 adapt_upper_ac_rate=1.,
                  adapt_lower_ac_rate=0.3,
                  covariance_type='full',
                  n_components=5,
@@ -277,11 +277,12 @@ class GaussianMixtureStep(RandomWalk):
         """
         Compute the hastings factor.
         """
-        cur_val = np.atleast_2d(self.stochastic.value)
-        last_val = np.atleast_2d(self.stochastic.value)
 
         if not self._tuned:
             return super(GaussianMixtureStep, self).hastings_factor()
+
+        cur_val = np.atleast_2d(self.stochastic.value)
+        last_val = np.atleast_2d(self.stochastic.value)
 
         lp_for = self._gmm.score(cur_val)[0]
         lp_bak = self._gmm.score(last_val)[0]

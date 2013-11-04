@@ -41,6 +41,9 @@ class MCMCWrapper(object):
     # The underlying pymc.MCMC object.
     _mcmc_sampler = None
 
+    # The step methods
+    _step_methods = None
+
     @property
     def mcmc_sampler(self):
         """
@@ -57,10 +60,9 @@ class MCMCWrapper(object):
     def mcmc_sampler(self, value):
         if not isinstance(value, MCMC):
             raise TypeError('You must provide a pymc.MCMC object!')
-        print value.step_method_dict
         value.assign_step_methods()
-        print value.step_method_dict
         self._mcmc_sampler = value
+
 
     @property
     def nodes(self):
@@ -92,11 +94,30 @@ class MCMCWrapper(object):
     @property
     def step_methods(self):
         """The step methods of the MCMC sampler."""
-        return self.mcmc_sampler.step_methods
+        return self._step_methods
 
-    def __init__(self, mcmc_sampler=None):
+    def __init__(self, mcmc_sampler=None, comm=None):
         """See doc of class."""
         self.mcmc_sampler = mcmc_sampler
+        if comm is None:
+            return
+        rank = comm.Get_rank()
+        if rank == 0:
+            names = [var.__name__ for var in self.stochastics]
+            names.sort()
+        else:
+            names = None
+        names = comm.bcast(names)
+        sms = []
+        for name in names:
+            for var in self.mcmc_sampler.step_method_dict.keys():
+                if var.__name__ == name:
+                    sms.append(self.mcmc_sampler.step_method_dict[var])
+        sms_flat = []
+        for sm in sms:
+            for s in sm:
+                sms_flat.append(s)
+        self._step_methods = sms_flat
 
     def get_state(self):
         """

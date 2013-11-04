@@ -544,7 +544,7 @@ class SMC(DistributedObject):
         # TODO: Make sure this actually works!
         if self.verbose > 1:
             print '- tuning the MCMC parameters:'
-        for sm in self.mcmc_sampler._mcmc_sampler.step_methods:
+        for sm in self.mcmc_sampler.step_methods:
             if self.verbose > 1:
                 sys.stdout.write('\t- tuning step method: %s' % str(sm))
             if sm.tune(self.get_acceptance_rate_of_step_method(sm),
@@ -553,9 +553,9 @@ class SMC(DistributedObject):
                        verbose=self.verbose):
                 if self.verbose > 1:
                     sys.stdout.write('\n\t\tSUCCESS\n')
-            else:
-                if self.verbose > 1:
-                    sys.stdout.write('\n\t\tFAILURE\n')
+                else:
+                    if self.verbose > 1:
+                        sys.stdout.write('\n\t\tFAILURE\n')
 
     def _get_logp_of_particle(self, i):
         """
@@ -732,7 +732,7 @@ class SMC(DistributedObject):
                 raise RuntimeError(
             'The mcmc_sampler object could not be converted to a pymc.MCMC!')
         if not isinstance(mcmc_sampler, MCMCWrapper):
-            mcmc_sampler = MCMCWrapper(mcmc_sampler)
+            mcmc_sampler = MCMCWrapper(mcmc_sampler, comm=self.comm)
         self._mcmc_sampler = mcmc_sampler
         self._update_gamma_rv()
 

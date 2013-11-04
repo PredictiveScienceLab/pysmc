@@ -341,7 +341,9 @@ class ParticleApproximation(DistributedObject):
                                     calculation was already made.
         :type force_calculation:    bool
         """
-        for var_name in self.particles[0][type_of_var].keys():
+        var_names = self.particles[0][type_of_var].keys()
+        var_names.sort()
+        for var_name in var_names:
             self.compute_mean_of_var(var_name, type_of_var,
                                       force_calculation=force_calculation)
 
@@ -353,7 +355,9 @@ class ParticleApproximation(DistributedObject):
                                     calculation was already made.
         :type force_calculation:    bool
         """
-        for type_of_var in self.particles[0].keys():
+        type_of_vars = self.particles[0].keys()
+        type_of_vars.sort()
+        for type_of_var in type_of_vars:
             self.compute_all_means_of_type(type_of_var,
                                             force_calculation=force_calculation)
 
@@ -394,7 +398,9 @@ class ParticleApproximation(DistributedObject):
                                     calculation was already made.
         :type force_calculation:    bool
         """
-        for var_name in self.particles[0][type_of_var].keys():
+        var_names = self.particles[0][type_of_var].keys()
+        var_names.sort()
+        for var_name in var_names:
             self.compute_variance_of_var(var_name, type_of_var,
                                           force_calculation=force_calculation)
 
@@ -406,7 +412,9 @@ class ParticleApproximation(DistributedObject):
                                     calculation was already made.
         :type force_calculation:    bool
         """
-        for type_of_var in self.particles[0].keys():
+        type_of_vars = self.particles[0].keys()
+        type_of_vars.sort()
+        for type_of_var in type_of_vars:
             self.compute_all_variances_of_type(type_of_var,
                                             force_calculation=force_calculation)
 
