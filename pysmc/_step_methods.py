@@ -269,9 +269,8 @@ class GaussianMixtureStep(RandomWalk):
         """
         if not self._tuned:
             return super(GaussianMixtureStep, self).propose()
-        x = self.gmm.sample()
+        x = self.gmm.sample() * self._std + self._mean
         self.stochastic.value = x.flatten('F')
-        return self.gmm.score(x)[0]
 
     def hastings_factor(self):
         """
@@ -281,8 +280,8 @@ class GaussianMixtureStep(RandomWalk):
         if not self._tuned:
             return super(GaussianMixtureStep, self).hastings_factor()
 
-        cur_val = np.atleast_2d(self.stochastic.value)
-        last_val = np.atleast_2d(self.stochastic.value)
+        cur_val = (np.atleast_2d(self.stochastic.value) - self._mean) / self._std
+        last_val = (np.atleast_2d(self.stochastic.value) - self._mean) / self._std
 
         lp_for = self._gmm.score(cur_val)[0]
         lp_bak = self._gmm.score(last_val)[0]
@@ -299,7 +298,9 @@ class GaussianMixtureStep(RandomWalk):
             return False
         self.accepted = 0.
         self.rejected = 0.
-        if self._tuned and (ac >= 0.3 and ac <= 0.7):
+        if (self._tuned and
+            ac >= self.adapt_lower_ac_rate and
+            ac <= self.adapt_upper_ac_rate):
             return False
         use_mpi = comm is not None
         if use_mpi:
@@ -317,18 +318,30 @@ class GaussianMixtureStep(RandomWalk):
             data = np.array(data)
             if data.ndim == 1:
                 data = np.atleast_2d(data).T
+            # Scale the data
+            self._mean = data.mean(axis=0)
+            self._std = data.std(axis=0)
+            data = (data - self._mean) / self._std
             self._gmm = mixture.DPGMM(n_components=self.n_components,
                                       covariance_type=self.covariance_type,
-                                      n_iter=self.n_iter)
+                                      n_iter=self.n_iter,
+                                      min_covar=1e-20)
             self.gmm.fit(data)
             if verbose >= 2:
+                print self._mean
+                print self._std
                 Y_ = self.gmm.predict(data)
                 for i, (mean, covar) in enumerate(zip(
                         self.gmm.means_, self.gmm._get_covars())):
                     if not np.any(Y_ == i):
                         continue
                     print '\n', mean, covar
+        else:
+            self._mean = None
+            self._std = None
         self._gmm = comm.bcast(self._gmm)
+        self._mean = comm.bcast(self._mean)
+        self._std = comm.bcast(self._std)
         self.gmm.covars_ = self.gmm._get_covars()
         self._tuned = True
         return True

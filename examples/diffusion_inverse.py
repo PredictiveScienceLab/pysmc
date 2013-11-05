@@ -29,6 +29,8 @@ if __name__ == '__main__':
     try:
         smc_sampler = ps.SMC(mcmc, num_particles=64, num_mcmc=1,
                              verbose=3, mpi=mpi,
+                             db_filename='diffusion_inverse.pickle',
+                             update_db=True,
                              gamma_is_an_exponent=True)
         smc_sampler.initialize(0.)
         smc_sampler.move_to(1.)
