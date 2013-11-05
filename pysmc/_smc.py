@@ -546,9 +546,8 @@ class SMC(DistributedObject):
             print '- tuning the MCMC parameters:'
         for sm in self.mcmc_sampler.step_methods:
             if self.verbose > 1:
-                sys.stdout.write('\t- tuning step method: %s' % str(sm))
-            if sm.tune(self.get_acceptance_rate_of_step_method(sm),
-                       self.get_particle_approximation(),
+                sys.stdout.write('\t- tuning step method: %s\n' % str(sm))
+            if sm.tune(self.get_particle_approximation(),
                        comm=self.comm,
                        verbose=self.verbose):
                 if self.verbose > 1:
@@ -674,24 +673,24 @@ class SMC(DistributedObject):
                     print '- initializing the object at the last state of db'
                     gamma = self.db.gamma
                     pa = self.db.particle_approximation
-                    ad = self.db.adaptive_scale_factor
+                    sm_param = self.db.step_method_param
+                    accepted_steps = self.db.accepted_steps
+                    rejected_steps = self.db.rejected_steps
                 else:
                     gamma = None
                     pa = None
-                    ad = None
+                    sm_param = None
+                    accepted_steps = None
+                    rejected_steps = None
                 if self.use_mpi:
                     gamma = self.comm.bcast(gamma)
                     pa = ParticleApproximation.scatter(pa, mpi=self.mpi,
                                                        comm=self.comm)
-                    ad = self.comm.bcast(ad)
-                    i = 0
-                for sm in self.mcmc_sampler.step_methods:
-                    if self.verbose > 2:
-                        print ad[i]
-                    sm.adaptive_scale_factor = ad[i]
-                    if self.verbose > 2:
-                        print 'after:', sm.adaptive_scale_factor
-                    i += 1
+                    sm_param = self.comm.bcast(sm_param)
+                    accepted_steps = self.comm.bcast(accepted_steps)
+                    rejected_steps = self.comm.bcast(rejected_steps)
+                self.mcmc_sampler.set_params(sm_param)
+                self._set_accepted_rejected(accepted_steps, rejected_steps)
                 self.initialize(gamma, particle_approximation=pa)
             if self.verbose > 0:
                 if update_db:
@@ -881,9 +880,13 @@ class SMC(DistributedObject):
                 if self.verbose > 0:
                     print ''
         pa = self.get_particle_approximation().gather()
+        accepted_steps = self.get_all_accepted_steps()
+        rejected_steps = self.get_all_rejected_steps()
         if self.update_db and self.rank == 0:
             self.db.add(self.gamma, pa,
-                        self.adaptive_scale_factors)
+                        self.mcmc_sampler.get_params(),
+                        accepted_steps,
+                        rejected_steps)
             self.db.commit()
         if self.verbose > 0:
             print '----------------------'
@@ -927,19 +930,8 @@ class SMC(DistributedObject):
                                                    self.num_mcmc)
                 print '- performing', self.num_mcmc, 'MCMC steps per particle'
             for i in range(self.my_num_particles):
-#                for sm in self.mcmc_sampler.step_methods:
-#                    sm.adaptive_scale_factor = 2.
-#                for sm in self.mcmc_sampler.step_methods:
-#                    if self.verbose > 1:
-#                        print '0:', sm.adaptive_scale_factor, self.mcmc_sampler._mcmc_sampler._sm_assigned
                 self.mcmc_sampler.set_state(self.particles[i])
-#                for sm in self.mcmc_sampler.step_methods:
-#                    if self.verbose > 1:
-#                        print '1:', sm.adaptive_scale_factor
                 self.mcmc_sampler.sample(self.num_mcmc)
-#                for sm in self.mcmc_sampler.step_methods:
-#                    if self.verbose > 1:
-#                        print '2:', sm.adaptive_scale_factor
                 self.particles[i] = self.mcmc_sampler.get_state()
                 self._total_num_mcmc += self.num_mcmc
                 if self.verbose > 0:
@@ -948,12 +940,16 @@ class SMC(DistributedObject):
                 print ''
             if self.update_db:
                 p = self.get_particle_approximation().gather()
+                accepted_steps = self.get_all_accepted_steps()
+                rejected_steps = self.get_all_rejected_steps()
                 if self.rank == 0:
                     self.db.add(self.gamma, p,
-                                self.adaptive_scale_factors)
+                                self.mcmc_sampler.get_params(),
+                                accepted_steps,
+                                rejected_steps)
                     self.db.commit()
             for sm in self.mcmc_sampler.step_methods:
-                acc_rate = self.get_acceptance_rate_of_step_method(sm)
+                acc_rate = sm.get_acceptance_rate(comm=self.comm)
                 if self.verbose > 1:
                     print '- acceptance rate for each step method:'
                     print '\t-', str(sm), ':', acc_rate
@@ -964,18 +960,44 @@ class SMC(DistributedObject):
             print 'END SMC MOVE TO'
             print '---------------'
 
-    def get_acceptance_rate_of_step_method(self, sm):
+    def get_accepted_steps(self, sm):
         """
-        Get the acceptance rate of the step method sm.
+        Get the total number of accepted steps.
         """
-        accepted = sm.accepted
-        rejected = sm.rejected
-        if self.use_mpi:
-            accepted = self.comm.allreduce(accepted)
-            rejected = self.comm.allreduce(rejected)
-        if (accepted + rejected) == 0.:
-            return -1
-        return accepted / (accepted + rejected)
+        return self.comm.allreduce(sm.accepted)
+
+    def get_rejected_steps(self, sm):
+        """
+        Get the total number of rejected steps.
+        """
+        return self.comm.allreduce(sm.rejected)
+
+    def get_all_accepted_steps(self):
+        """
+        Get the accepted steps of all step methods.
+        """
+        res = []
+        for sm in self.mcmc_sampler.step_methods:
+            res.append(self.get_accepted_steps(sm))
+        return res
+
+    def get_all_rejected_steps(self):
+        """
+        Get the rejected steps of all step methods.
+        """
+        res = []
+        for sm in self.mcmc_sampler.step_methods:
+            res.append(self.get_rejected_steps(sm))
+        return res
+
+    def _set_accepted_rejected(self, accepted_steps, rejected_steps):
+        """
+        Set the accepted and rejected steps of all step methods.
+        """
+        for sm, acc, rej in itertools.izip(self.mcmc_sampler.step_methods,
+                                           accepted_steps, rejected_steps):
+            sm._accepted = acc / self.size
+            sm._rejected = rej / self.size
 
     def get_particle_approximation(self):
         """
@@ -987,26 +1009,3 @@ class SMC(DistributedObject):
         """
         return ParticleApproximation(log_w=self.log_w, particles=self.particles,
                                      mpi=self.mpi, comm=self.comm)
-
-    @property
-    def adaptive_scale_factors(self):
-        """
-        Get the adaptive scale factors.
-        """
-        res = []
-        for sm in self.mcmc_sampler.step_methods:
-            res.append(sm.adaptive_scale_factor)
-        return res
-
-    def commit(self):
-        """
-        Commit the current state to the data base.
-        """
-        if not self.update_db:
-            warnings.warn(
-        '- requested a commit to the db but no db found\n'
-        '- ignoring request')
-            return
-        self.db.add(self.gamma, self.get_particle_approximation(),
-                    self.adaptive_scale_factors)
-        self.db.commit()

@@ -38,6 +38,20 @@ class RandomWalk(pm.Metropolis):
 
     _adaptive_scale_factor = None
 
+    _STATE_VARIABLES = None
+
+    _accepted = None
+
+    _rejected = None
+
+    @property
+    def STATE_VARIABLES(self):
+        """
+        Get the names of the variables required to store the state of the
+        object.
+        """
+        return self._STATE_VARIABLES
+
     @property
     def adapt_increase_factor(self):
         return self._adapt_increase_factor
@@ -63,7 +77,7 @@ class RandomWalk(pm.Metropolis):
         return self._max_adaptive_scale_factor
 
     def __init__(self, stochastic,
-                 adapt_increase_factor=1.3,
+                 adapt_increase_factor=1.1,
                  adapt_decrease_factor=0.7,
                  adapt_upper_ac_rate=0.7,
                  adapt_lower_ac_rate=0.3,
@@ -84,12 +98,27 @@ class RandomWalk(pm.Metropolis):
         assert min_adaptive_scale_factor <= max_adaptive_scale_factor
         self._min_adaptive_scale_factor = min_adaptive_scale_factor
         self._max_adaptive_scale_factor = max_adaptive_scale_factor
-        super(RandomWalk, self).__init__(stochastic, *args, **kwargs)
+        pm.Metropolis.__init__(self, stochastic, *args, **kwargs)
+        #super(RandomWalk, self).__init__(stochastic, *args, **kwargs)
         self._adaptive_scale_factor = self.adaptive_scale_factor
+        self._STATE_VARIABLES = ['_adapt_increase_factor',
+                                 '_adapt_decrease_factor',
+                                 '_adapt_upper_ac_rate',
+                                 '_adapt_lower_ac_rate',
+                                 '_min_adaptive_scale_factor',
+                                 '_max_adaptive_scale_factor',
+                                 '_adaptive_scale_factor',
+                                 'adaptive_scale_factor',
+                                 'proposal_sd'
+                                ]
+        self._old_accepted = 0.
+        self._old_rejected = 0.
 
-    def tune(self, ac, pa, comm=None, divergence_threshold=1e10, verbose=0):
+    def tune(self, pa, comm=None, divergence_threshold=1e10, verbose=0):
+        ac = self.get_acceptance_rate(comm=comm)
         if ac == -1:
             return False
+        self.reset_counters()
         use_mpi = comm is not None
         rank = comm.Get_rank() if use_mpi else 0
         if ac <= self.adapt_lower_ac_rate:
@@ -103,8 +132,6 @@ class RandomWalk(pm.Metropolis):
         self.adaptive_scale_factor = self._adaptive_scale_factor
         if verbose >= 2 and rank == 0:
             print '\n\t\tadaptive_scale_factor:', self.adaptive_scale_factor
-        self.accepted = 0.
-        self.rejected = 0.
         return True
 
     def competence(s):
@@ -114,6 +141,45 @@ class RandomWalk(pm.Metropolis):
         random variables.
         """
         return 2
+
+    def get_params(self):
+        """
+        Get the state of the step method.
+        """
+        state = {}
+        for var in self.STATE_VARIABLES:
+            state[var] = getattr(self, var)
+        return state
+
+    def set_params(self, state):
+        """
+        Set the state from a dictionary.
+        """
+        for var in state.keys():
+            setattr(self, var, state[var])
+
+    def reset_counters(self):
+        """
+        Reset the counters that count accepted and rejected steps.
+        """
+        self._old_accepted = self.accepted
+        self._old_rejected = self.rejected
+
+    def get_acceptance_rate(self, comm=None):
+        """
+        Get the acceptance rate of the step method sm.
+        """
+        accepted = self.accepted - self._old_accepted
+        rejected = self.rejected - self._old_rejected
+        rank = comm.Get_rank()
+        if rank == 0:
+            print '***', accepted, rejected
+        if comm is not None:
+            accepted = comm.allreduce(accepted)
+            rejected = comm.allreduce(rejected)
+        if (accepted + rejected) == 0.:
+            return -1
+        return accepted / (accepted + rejected)
 
 
 class LognormalRandomWalk(RandomWalk):
@@ -204,6 +270,12 @@ class GaussianMixtureStep(RandomWalk):
     # Gaussian mixture
     _n_iter = None
 
+    # The mean when we do scale
+    _mean = None
+
+    # The std when we do scale
+    _std = None
+
     @property
     def n_iter(self):
         """
@@ -241,13 +313,13 @@ class GaussianMixtureStep(RandomWalk):
 
     def __init__(self, stochastic,
                  adapt_upper_ac_rate=1.,
-                 adapt_lower_ac_rate=0.3,
+                 adapt_lower_ac_rate=0.5,
                  covariance_type='full',
                  n_components=5,
                  n_iter=1000,
                  *args, **kwargs):
         """Initialize the object."""
-        super(GaussianMixtureStep, self).__init__(
+        RandomWalk.__init__(self,
                             stochastic,
                             adapt_upper_ac_rate=adapt_upper_ac_rate,
                             adapt_lower_ac_rate=adapt_lower_ac_rate,
@@ -262,6 +334,15 @@ class GaussianMixtureStep(RandomWalk):
         assert n_iter >= 0
         self._n_iter = n_iter
         self._tuned = False
+        self._STATE_VARIABLES += ['_covariance_type',
+                                  '_n_components',
+                                  '_n_iter',
+                                  '_tuned',
+                                  '_gmm',
+                                  '_mean',
+                                  '_std']
+        self._accepted = 0.
+        self._rejected = 0.
 
     def propose(self):
         """
@@ -269,7 +350,7 @@ class GaussianMixtureStep(RandomWalk):
         """
         if not self._tuned:
             return super(GaussianMixtureStep, self).propose()
-        x = self.gmm.sample() * self._std + self._mean
+        x = self.gmm.sample()
         self.stochastic.value = x.flatten('F')
 
     def hastings_factor(self):
@@ -280,8 +361,8 @@ class GaussianMixtureStep(RandomWalk):
         if not self._tuned:
             return super(GaussianMixtureStep, self).hastings_factor()
 
-        cur_val = (np.atleast_2d(self.stochastic.value) - self._mean) / self._std
-        last_val = (np.atleast_2d(self.stochastic.value) - self._mean) / self._std
+        cur_val = np.atleast_2d(self.stochastic.value)
+        last_val = np.atleast_2d(self.stochastic.last_value)
 
         lp_for = self._gmm.score(cur_val)[0]
         lp_bak = self._gmm.score(last_val)[0]
@@ -290,14 +371,14 @@ class GaussianMixtureStep(RandomWalk):
             print self._id + ': Hastings factor %f' % (lp_bak - lp_for)
         return lp_bak - lp_for
 
-    def tune(self, ac, pa, comm=None, divergence_threshold=1e10, verbose=0):
+    def tune(self, pa, comm=None, divergence_threshold=1e10, verbose=0):
         """
         Tune the step...
         """
+        ac = self.get_acceptance_rate(comm=comm)
         if ac == -1:
             return False
-        self.accepted = 0.
-        self.rejected = 0.
+        self.reset_counters()
         if (self._tuned and
             ac >= self.adapt_lower_ac_rate and
             ac <= self.adapt_upper_ac_rate):
@@ -315,22 +396,24 @@ class GaussianMixtureStep(RandomWalk):
             pa.resample()
             data = [pa.particles[i]['stochastics'][self.stochastic.__name__]
                     for i in xrange(pa.num_particles)]
-            data = np.array(data)
+            data = np.array(data, dtype='float')
             if data.ndim == 1:
                 data = np.atleast_2d(data).T
-            # Scale the data
-            self._mean = data.mean(axis=0)
-            self._std = data.std(axis=0)
-            data = (data - self._mean) / self._std
             self._gmm = mixture.DPGMM(n_components=self.n_components,
-                                      covariance_type=self.covariance_type,
-                                      n_iter=self.n_iter,
-                                      min_covar=1e-20)
+                                     covariance_type=self.covariance_type,
+                                     n_iter=self.n_iter)
             self.gmm.fit(data)
+            Y_ = self.gmm.predict(data)
+            n_comp = 0
+            for i in range(self.n_components):
+                if np.any(Y_ == i):
+                    n_comp += 1
+            self._gmm = mixture.GMM(n_components=n_comp,
+                                    covariance_type=self.covariance_type,
+                                    n_iter=self.n_iter)
+            self.gmm.fit(data)
+            Y_ = self.gmm.predict(data)
             if verbose >= 2:
-                print self._mean
-                print self._std
-                Y_ = self.gmm.predict(data)
                 for i, (mean, covar) in enumerate(zip(
                         self.gmm.means_, self.gmm._get_covars())):
                     if not np.any(Y_ == i):

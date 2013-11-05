@@ -40,8 +40,14 @@ class DataBase(object):
     # The particle approximations associated with each gamma (list)
     _particle_approximations = None
 
-    # The adaptive scale factors of each step method
-    _adaptive_scale_factors = None
+    # The parameters of each step method
+    _step_method_params = None
+
+    # The number of accepted steps
+    _all_accepted_steps = None
+
+    # The number of rejected steps
+    _all_rejected_steps = None
 
     # The filename you have selected for dumping the data (str)
     _filename = None
@@ -54,6 +60,48 @@ class DataBase(object):
 
     # Last commited particle approximation
     _last_commited = None
+
+    @property
+    def accepted_steps(self):
+        """
+        The number of accepted steps at the current gamma.
+        """
+        return self.all_accepted_steps[-1]
+
+    @property
+    def rejected_steps(self):
+        """
+        The number of rejected steps at the current gamma.
+        """
+        return self.all_rejected_steps[-1]
+
+    @property
+    def all_accepted_steps(self):
+        return self._all_accepted_steps
+
+    @property
+    def all_rejected_steps(self):
+        return self._all_rejected_steps
+
+    @property
+    def acceptance_rate(self):
+        if (self.accepted_steps + self.rejected_steps) == 0.:
+            return -1.
+        else:
+            return (self.accepted_steps /
+                    (self.accepted_steps + self.rejected_steps))
+
+    @property
+    def all_acceptance_rates(self):
+        res = []
+        for i in xrange(self.num_gammas):
+            if (self.all_accepted_steps[i] + self.all_rejected_steps[i]) == 0.:
+                res.append(-1.)
+            else:
+                res.append(self.all_accepted_steps[i] /
+                           (self.all_accepted_steps[i] +
+                               self.all_rejected_steps[i]))
+        return res
 
     @property
     def gammas(self):
@@ -86,7 +134,7 @@ class DataBase(object):
         return self._particle_approximations
 
     @property
-    def adaptive_scale_factors(self):
+    def step_method_params(self):
         """
         The adaptive scale factors of each step method.
 
@@ -94,7 +142,7 @@ class DataBase(object):
                     MCMC step method.
         :type:      list
         """
-        return self._adaptive_scale_factors
+        return self._step_method_params
 
     @property
     def num_gammas(self):
@@ -147,8 +195,8 @@ class DataBase(object):
         return self._particle_approximations[-1]
 
     @property
-    def adaptive_scale_factor(self):
-        return self._adaptive_scale_factors[-1]
+    def step_method_param(self):
+        return self._step_method_params[-1]
 
     def __init__(self, gamma_name=None, filename=None):
         """
@@ -184,11 +232,15 @@ class DataBase(object):
                             protocol=pickle.HIGHEST_PROTOCOL)
         self._gammas = []
         self._particle_approximations = []
-        self._adaptive_scale_factors = []
+        self._step_method_params = []
+        self._all_accepted_steps = []
+        self._all_rejected_steps = []
         self._last_commited = 0
 
     def add(self, gamma, particle_approximation,
-            adaptive_scale_factors):
+            step_method_params,
+            accepted_steps,
+            rejected_steps):
         """
         Add the ``particle_approximation`` corresponding to ``gamma`` to the
         database.
@@ -200,7 +252,9 @@ class DataBase(object):
         """
         self._gammas.append(gamma)
         self._particle_approximations.append(particle_approximation)
-        self._adaptive_scale_factors.append(adaptive_scale_factors)
+        self._step_method_params.append(step_method_params)
+        self._all_accepted_steps.append(accepted_steps)
+        self._all_rejected_steps.append(rejected_steps)
 
     def _dump_part_of_list(self, idx, values, fd):
         """
@@ -221,7 +275,9 @@ class DataBase(object):
             with open(self.filename, 'ab') as fd:
                 self._dump_part_of_list(idx, self.gammas, fd)
                 self._dump_part_of_list(idx, self.particle_approximations, fd)
-                self._dump_part_of_list(idx, self.adaptive_scale_factors, fd)
+                self._dump_part_of_list(idx, self.step_method_params, fd)
+                self._dump_part_of_list(idx, self.all_accepted_steps, fd)
+                self._dump_part_of_list(idx, self.all_rejected_steps, fd)
             self._last_commited += len(idx)
 
     @staticmethod
@@ -237,12 +293,16 @@ class DataBase(object):
                 raise RuntimeError('File %s: Not a valid database!' % filename)
             gammas = []
             particle_approximations = []
-            adaptive_scale_factors = []
+            step_method_params = []
+            all_accepted_steps = []
+            all_rejected_steps = []
             while True:
                 try:
                     gammas.append(pickle.load(fd))
                     particle_approximations.append(pickle.load(fd))
-                    adaptive_scale_factors.append(pickle.load(fd))
+                    step_method_params.append(pickle.load(fd))
+                    all_accepted_steps.append(pickle.load(fd))
+                    all_rejected_steps.append(pickle.load(fd))
                 except EOFError:
                     break
             last_commited = len(gammas)
@@ -250,7 +310,9 @@ class DataBase(object):
         db._gamma_name = gamma_name
         db._gammas = gammas
         db._particle_approximations = particle_approximations
-        db._adaptive_scale_factors = adaptive_scale_factors
+        db._step_method_params = step_method_params
+        db._all_accepted_steps = all_accepted_steps
+        db._all_rejected_steps = all_rejected_steps
         db._last_commited = last_commited
         db._filename = filename
         return db

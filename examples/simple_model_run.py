@@ -27,7 +27,7 @@ if __name__ == '__main__':
     mcmc = pymc.MCMC(model)
     mcmc.use_step_method(pysmc.GaussianMixtureStep, model['mixture'])
     #mcmc.use_step_method(pysmc.RandomWalk, model['mixture'])
-    smc_sampler = pysmc.SMC(mcmc, num_particles=400,
+    smc_sampler = pysmc.SMC(mcmc, num_particles=1000,
                             num_mcmc=1, verbose=4)
     # Initialize SMC at gamma = 0.01
     smc_sampler.initialize(0.01)

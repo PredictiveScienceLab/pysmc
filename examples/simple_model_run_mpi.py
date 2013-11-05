@@ -29,9 +29,10 @@ if __name__ == '__main__':
     model = simple_model.make_model()
     mcmc = pm.MCMC(model)
     mcmc.use_step_method(ps.GaussianMixtureStep, model['mixture'])
-    smc_sampler = ps.SMC(mcmc, num_particles=128,
+    smc_sampler = ps.SMC(mcmc, num_particles=1280,
                          num_mcmc=1, verbose=5,
                          mpi=mpi, gamma_is_an_exponent=True,
+                         ess_reduction=0.9,
                          db_filename='test_db.pickle',
                          update_db=True)
     # Initialize SMC at gamma = 0.01

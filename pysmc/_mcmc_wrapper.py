@@ -24,6 +24,7 @@ __all__ = ['MCMCWrapper']
 
 
 from pymc import MCMC
+import itertools
 import warnings
 
 
@@ -184,6 +185,23 @@ class MCMCWrapper(object):
                 warnings.warn(
         'Failed to restore state of deterministic %s from %s backend' %
                     (dm.__name__, self.db.__name__))
+
+    def get_params(self):
+        """
+        Get a list of dictionaries describing the parameters of each
+        step method.
+        """
+        states = []
+        for sm in self.step_methods:
+            states.append(sm.get_params())
+        return states
+
+    def set_params(self, states):
+        """
+        Set the parameters of each step method.
+        """
+        for sm, state in itertools.izip(self.step_methods, states):
+            sm.set_params(state)
 
     def sample(self, iter, burn=0, thin=None, tune_interval=1,
                tune_throughout=False, save_interval=None,
