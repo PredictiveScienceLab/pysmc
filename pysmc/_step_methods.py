@@ -426,12 +426,8 @@ class GaussianMixtureStep(RandomWalk):
                     if not np.any(Y_ == i):
                         continue
                     print '\n', mean, covar
-        else:
-            self._mean = None
-            self._std = None
-        self._gmm = comm.bcast(self._gmm)
-        self._mean = comm.bcast(self._mean)
-        self._std = comm.bcast(self._std)
+        if use_mpi:
+            self._gmm = comm.bcast(self._gmm)
         self.gmm.covars_ = self.gmm._get_covars()
         self._tuned = True
         return True

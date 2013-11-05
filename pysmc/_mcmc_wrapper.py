@@ -101,6 +101,7 @@ class MCMCWrapper(object):
         """See doc of class."""
         self.mcmc_sampler = mcmc_sampler
         if comm is None:
+            self._step_methods = self.mcmc_sampler.step_methods
             return
         rank = comm.Get_rank()
         if rank == 0:
