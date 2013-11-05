@@ -674,23 +674,16 @@ class SMC(DistributedObject):
                     gamma = self.db.gamma
                     pa = self.db.particle_approximation
                     sm_param = self.db.step_method_param
-                    accepted_steps = self.db.accepted_steps
-                    rejected_steps = self.db.rejected_steps
                 else:
                     gamma = None
                     pa = None
                     sm_param = None
-                    accepted_steps = None
-                    rejected_steps = None
                 if self.use_mpi:
                     gamma = self.comm.bcast(gamma)
                     pa = ParticleApproximation.scatter(pa, mpi=self.mpi,
                                                        comm=self.comm)
                     sm_param = self.comm.bcast(sm_param)
-                    accepted_steps = self.comm.bcast(accepted_steps)
-                    rejected_steps = self.comm.bcast(rejected_steps)
                 self.mcmc_sampler.set_params(sm_param)
-                self._set_accepted_rejected(accepted_steps, rejected_steps)
                 self.initialize(gamma, particle_approximation=pa)
             if self.verbose > 0:
                 if update_db:
@@ -880,13 +873,9 @@ class SMC(DistributedObject):
                 if self.verbose > 0:
                     print ''
         pa = self.get_particle_approximation().gather()
-        accepted_steps = self.get_all_accepted_steps()
-        rejected_steps = self.get_all_rejected_steps()
+        sm_params = self.mcmc_sampler.get_params(comm=self.comm)
         if self.update_db and self.rank == 0:
-            self.db.add(self.gamma, pa,
-                        self.mcmc_sampler.get_params(),
-                        accepted_steps,
-                        rejected_steps)
+            self.db.add(self.gamma, pa, sm_params)
             self.db.commit()
         if self.verbose > 0:
             print '----------------------'
@@ -940,13 +929,9 @@ class SMC(DistributedObject):
                 print ''
             if self.update_db:
                 p = self.get_particle_approximation().gather()
-                accepted_steps = self.get_all_accepted_steps()
-                rejected_steps = self.get_all_rejected_steps()
+                sm_params = self.mcmc_sampler.get_params(comm=self.comm)
                 if self.rank == 0:
-                    self.db.add(self.gamma, p,
-                                self.mcmc_sampler.get_params(),
-                                accepted_steps,
-                                rejected_steps)
+                    self.db.add(self.gamma, p, sm_params)
                     self.db.commit()
             for sm in self.mcmc_sampler.step_methods:
                 acc_rate = sm.get_acceptance_rate(comm=self.comm)
@@ -959,45 +944,6 @@ class SMC(DistributedObject):
             print '---------------'
             print 'END SMC MOVE TO'
             print '---------------'
-
-    def get_accepted_steps(self, sm):
-        """
-        Get the total number of accepted steps.
-        """
-        return self.comm.allreduce(sm.accepted)
-
-    def get_rejected_steps(self, sm):
-        """
-        Get the total number of rejected steps.
-        """
-        return self.comm.allreduce(sm.rejected)
-
-    def get_all_accepted_steps(self):
-        """
-        Get the accepted steps of all step methods.
-        """
-        res = []
-        for sm in self.mcmc_sampler.step_methods:
-            res.append(self.get_accepted_steps(sm))
-        return res
-
-    def get_all_rejected_steps(self):
-        """
-        Get the rejected steps of all step methods.
-        """
-        res = []
-        for sm in self.mcmc_sampler.step_methods:
-            res.append(self.get_rejected_steps(sm))
-        return res
-
-    def _set_accepted_rejected(self, accepted_steps, rejected_steps):
-        """
-        Set the accepted and rejected steps of all step methods.
-        """
-        for sm, acc, rej in itertools.izip(self.mcmc_sampler.step_methods,
-                                           accepted_steps, rejected_steps):
-            sm._accepted = acc / self.size
-            sm._rejected = rej / self.size
 
     def get_particle_approximation(self):
         """

@@ -186,14 +186,14 @@ class MCMCWrapper(object):
         'Failed to restore state of deterministic %s from %s backend' %
                     (dm.__name__, self.db.__name__))
 
-    def get_params(self):
+    def get_params(self, comm=None):
         """
         Get a list of dictionaries describing the parameters of each
         step method.
         """
         states = []
         for sm in self.step_methods:
-            states.append(sm.get_params())
+            states.append(sm.get_params(comm=comm))
         return states
 
     def set_params(self, states):

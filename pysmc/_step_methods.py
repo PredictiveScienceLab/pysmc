@@ -109,7 +109,9 @@ class RandomWalk(pm.Metropolis):
                                  '_max_adaptive_scale_factor',
                                  '_adaptive_scale_factor',
                                  'adaptive_scale_factor',
-                                 'proposal_sd'
+                                 'proposal_sd',
+                                 '_old_accepted',
+                                 '_old_rejected'
                                 ]
         self._old_accepted = 0.
         self._old_rejected = 0.
@@ -142,13 +144,19 @@ class RandomWalk(pm.Metropolis):
         """
         return 2
 
-    def get_params(self):
+    def get_params(self, comm=None):
         """
         Get the state of the step method.
         """
         state = {}
         for var in self.STATE_VARIABLES:
             state[var] = getattr(self, var)
+        if comm is not None:
+            state['_old_accepted'] = comm.allreduce(state['_old_accepted'])
+            state['_old_rejected'] = comm.allreduce(state['_old_rejected'])
+            size = comm.Get_size()
+            state['_old_accepted'] /= size
+            state['_old_rejected'] /= size
         return state
 
     def set_params(self, state):
@@ -157,6 +165,8 @@ class RandomWalk(pm.Metropolis):
         """
         for var in state.keys():
             setattr(self, var, state[var])
+        self._old_accepted *= -1.
+        self._old_rejected *= -1.
 
     def reset_counters(self):
         """
@@ -171,9 +181,6 @@ class RandomWalk(pm.Metropolis):
         """
         accepted = self.accepted - self._old_accepted
         rejected = self.rejected - self._old_rejected
-        rank = comm.Get_rank()
-        if rank == 0:
-            print '***', accepted, rejected
         if comm is not None:
             accepted = comm.allreduce(accepted)
             rejected = comm.allreduce(rejected)
