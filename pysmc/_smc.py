@@ -18,7 +18,7 @@ __all__ = ['SMC']
 from . import MCMCWrapper
 from . import DistributedObject
 from . import ParticleApproximation
-from . import DataBase
+from . import SerialDataBase
 import pymc
 import numpy as np
 from scipy.optimize import brentq
@@ -642,7 +642,7 @@ class SMC(DistributedObject):
                     if self.verbose > 0:
                         print '- db exists'
                         print '- assuming this is a restart run'
-                    self._db = DataBase.load(db_filename)
+                    self._db = SerialDataBase.load(db_filename)
                     # Sanity check
                     if not self.db.gamma_name == self.gamma_name:
                         raise RuntimeError(
@@ -653,8 +653,8 @@ class SMC(DistributedObject):
                     if self.verbose > 0:
                         print '- db does not exist'
                         print '- creating db file'
-                    self._db = DataBase(gamma_name=self.gamma_name,
-                                        filename=db_filename)
+                    self._db = SerialDataBase(gamma_name=self.gamma_name,
+                                              filename=db_filename)
                     db_exists = False
             else:
                 db_exists = None
