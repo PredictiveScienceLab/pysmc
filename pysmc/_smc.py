@@ -18,6 +18,7 @@ __all__ = ['SMC']
 from . import MCMCWrapper
 from . import DistributedObject
 from . import ParticleApproximation
+from . import DataBase
 from . import SerialDataBase
 import pymc
 import numpy as np
@@ -646,14 +647,14 @@ class SMC(DistributedObject):
                     # Sanity check
                     if not self.db.gamma_name == self.gamma_name:
                         raise RuntimeError(
-                        '%s in db does not match %s in SMC' % (seld.db.gamma_name,
+                        '%s in db does not match %s in SMC' % (self.db.gamma_name,
                                                                gamma_name))
                     db_exists = True
                 else:
                     if self.verbose > 0:
                         print '- db does not exist'
                         print '- creating db file'
-                    self._db = SerialDataBase(gamma_name=self.gamma_name,
+                    self._db = DataBase(gamma_name=self.gamma_name,
                                               filename=db_filename)
                     db_exists = False
             else:
@@ -869,7 +870,7 @@ class SMC(DistributedObject):
                     self.particles[i] = self.mcmc_sampler.get_state()
                     self._total_num_mcmc += num_mcmc_per_particle
                     if self.verbose > 0:
-                        pb.animate((i + 2) * self.size * num_mcmc_per_particle)
+                        pb.update((i + 2) * self.size * num_mcmc_per_particle)
                 if self.verbose > 0:
                     print ''
         pa = self.get_particle_approximation().gather()
@@ -923,8 +924,8 @@ class SMC(DistributedObject):
                 self.mcmc_sampler.sample(self.num_mcmc)
                 self.particles[i] = self.mcmc_sampler.get_state()
                 self._total_num_mcmc += self.num_mcmc
-                if self.verbose > 0:
-                    pb.animate(i * self.size * self.num_mcmc)
+#                if self.verbose > 0:
+                    #pb.update(i * self.size * self.num_mcmc)
             if self.verbose > 0:
                 print ''
             if self.update_db:

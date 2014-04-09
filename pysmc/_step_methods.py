@@ -220,7 +220,7 @@ class LognormalRandomWalk(RandomWalk):
         """
         Propose a move.
         """
-        tau = 1. / (self.adaptive_scale_factor * self.proposal_sd) ** 2
+        tau = (self.adaptive_scale_factor * self.proposal_sd) ** 2
         self.stochastic.value = \
                 pm.rlognormal(np.log(self.stochastic.value), tau)
 
@@ -228,7 +228,7 @@ class LognormalRandomWalk(RandomWalk):
         """
         Compute the hastings factor.
         """
-        tau = 1. / (self.adaptive_scale_factor * self.proposal_sd) ** 2
+        tau = (self.adaptive_scale_factor * self.proposal_sd) ** 2
         cur_val = self.stochastic.value
         last_val = self.stochastic.last_value
 

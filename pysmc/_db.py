@@ -411,10 +411,10 @@ class SerialDataBase(object):
         Commit everything we have so far to the database.
         """
         with open(self.filename, 'ab') as fd:
-            pickle.dump(self.gamma, protocol=pickle.HIGHEST_PROTOCOL)
-            pickle.dump(self.particle_approximation,
+            pickle.dump(self.gamma, fd, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.particle_approximation, fd,
                         protocol=pickle.HIGHEST_PROTOCOL)
-            pickle.dump(self.step_method_param,
+            pickle.dump(self.step_method_param, fd,
                         protocol=pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
