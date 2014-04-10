@@ -645,10 +645,10 @@ class SMC(DistributedObject):
                         print '- assuming this is a restart run'
                     self._db = SerialDataBase.load(db_filename)
                     # Sanity check
-                    if not self.db.gamma_name == self.gamma_name:
-                        raise RuntimeError(
-                        '%s in db does not match %s in SMC' % (self.db.gamma_name,
-                                                               gamma_name))
+#                    if not self.db.gamma_name == self.gamma_name:
+#                        raise RuntimeError(
+#                        '%s in db does not match %s in SMC' % (self.db.gamma_name,
+#                                                               gamma_name))
                     db_exists = True
                 else:
                     if self.verbose > 0:
