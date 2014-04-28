@@ -142,7 +142,7 @@ class RandomWalk(pm.Metropolis):
         """
         Tell PyMC that this step method is better than it's random walk.
         """
-        return 2
+        return 3
 
     def get_params(self, comm=None):
         """
