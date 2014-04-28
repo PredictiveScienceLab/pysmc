@@ -115,6 +115,8 @@ class RandomWalk(pm.Metropolis):
                                 ]
         self._old_accepted = 0.
         self._old_rejected = 0.
+        self.proposal_sd = 1e-1
+        self.adaptive_scale_factor = 1.
 
     def tune(self, pa, comm=None, divergence_threshold=1e10, verbose=0):
         ac = self.get_acceptance_rate(comm=comm)
@@ -138,9 +140,7 @@ class RandomWalk(pm.Metropolis):
 
     def competence(s):
         """
-        Tell PyMC that this step method is good for Lognormal, Exponential
-        and Gamma random variables. In general, it should be good for positive
-        random variables.
+        Tell PyMC that this step method is better than it's random walk.
         """
         return 2
 
@@ -239,22 +239,6 @@ class LognormalRandomWalk(RandomWalk):
             print self._id + ': Hastings factor %f' % (lp_bak - lp_for)
         return lp_bak - lp_for
 
-    @staticmethod
-    def competence(s):
-        """
-        Tell PyMC that this step method is good for Lognormal, Exponential
-        and Gamma random variables. In general, it should be good for positive
-        random variables.
-        """
-        if isinstance(s, pm.Lognormal):
-            return 3
-        elif isinstance(s, pm.Exponential):
-            return 3
-        elif isinstance(s, pm.Gamma):
-            return 3
-        else:
-            return 0
-
 
 class GaussianMixtureStep(RandomWalk):
     """
@@ -322,7 +306,7 @@ class GaussianMixtureStep(RandomWalk):
                  adapt_upper_ac_rate=1.,
                  adapt_lower_ac_rate=0.5,
                  covariance_type='full',
-                 n_components=5,
+                 n_components=50,
                  n_iter=1000,
                  *args, **kwargs):
         """Initialize the object."""
