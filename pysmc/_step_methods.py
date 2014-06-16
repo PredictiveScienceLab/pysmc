@@ -142,6 +142,7 @@ class RandomWalk(pm.Metropolis):
         """
         Tell PyMC that this step method is better than it's random walk.
         """
+        print 'I am called!'
         return 3
 
     def get_params(self, comm=None):
@@ -415,3 +416,9 @@ class GaussianMixtureStep(RandomWalk):
         self.gmm.covars_ = self.gmm._get_covars()
         self._tuned = True
         return True
+
+
+# Assign methods to the registry of pymc
+pm.StepMethodRegistry = []
+for method in __all__:
+    pm.StepMethodRegistry.append(eval(method))
