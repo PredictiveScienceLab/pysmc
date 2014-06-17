@@ -917,16 +917,15 @@ class SMC(DistributedObject):
                 self._resample()
             if self.verbose > 0:
                 print '- moving to', self.gamma_name, ':', self.gamma
-                pb = pymc.progressbar.ProgressBar(self.num_particles *
-                                                   self.num_mcmc)
+                pb = pymc.progressbar.progress_bar(self.num_particles * self.num_mcmc)
                 print '- performing', self.num_mcmc, 'MCMC steps per particle'
             for i in range(self.my_num_particles):
                 self.mcmc_sampler.set_state(self.particles[i])
                 self.mcmc_sampler.sample(self.num_mcmc)
                 self.particles[i] = self.mcmc_sampler.get_state()
                 self._total_num_mcmc += self.num_mcmc
-#                if self.verbose > 0:
-                    #pb.update(i * self.size * self.num_mcmc)
+                if self.verbose > 0:
+                    pb.update(i * self.size * self.num_mcmc)
             if self.verbose > 0:
                 print ''
             if self.update_db:
