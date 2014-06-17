@@ -869,8 +869,9 @@ class SMC(DistributedObject):
                     self.mcmc_sampler.sample(num_mcmc_per_particle)
                     self.particles[i] = self.mcmc_sampler.get_state()
                     self._total_num_mcmc += num_mcmc_per_particle
-                    if self.verbose > 0:
-                        pb.update((i + 2) * self.size * num_mcmc_per_particle)
+                    # TODO: Find bug in PyMC bar
+                    #if self.verbose > 0:
+                    #    pb.update((i + 2) * self.size * num_mcmc_per_particle)
                 if self.verbose > 0:
                     print ''
         pa = self.get_particle_approximation().gather()
