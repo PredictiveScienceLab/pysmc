@@ -5,7 +5,7 @@ from numpy.distutils.core import setup
 
 
 setup(name='PySMC',
-      description='Sequential Monte Carlo (SMC) for sampling complicated probability densities.'
+      description='Sequential Monte Carlo (SMC) for sampling complicated probability densities.',
       author='Ilias Bilionis',
       author_email='ibilion@purdue.edu',
       url='https://github.com/ebilionis/pysmc',
