@@ -5,6 +5,12 @@ from numpy.distutils.core import setup
 
 
 setup(name='PySMC',
+      description='Sequential Monte Carlo (SMC) for sampling complicated probability densities.'
       author='Ilias Bilionis',
-      version='0.0',
+      author_email='ibilion@purdue.edu',
+      url='https://github.com/ebilionis/pysmc',
+      download_url='https://github.com/ebilionis/pysmc/tarball/1.0',
+      keywords=['sequential monte carlo', 'markov chain monte carlo', 'metropolis-hastings',
+                'multimodal probability densities', 'particle methods'],
+      version='1.0',
       packages=['pysmc'])
