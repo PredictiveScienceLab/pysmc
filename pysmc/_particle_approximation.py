@@ -53,7 +53,6 @@ class ParticleApproximation(DistributedObject):
         scattered.
 
     """
-
     # The logarithms of the weights
     _log_w = None
 
@@ -68,7 +67,6 @@ class ParticleApproximation(DistributedObject):
 
     # The variance of the approximation
     _variance = None
-
 
     @property
     def log_w(self):
@@ -501,8 +499,6 @@ class ParticleApproximation(DistributedObject):
         """
         if not self.use_mpi:
             return self.copy()
-        #self.comm.Gather([self._log_w, self.mpi.DOUBLE],
-        #                 [log_w, self.mpi.DOUBLE])
         log_w = np.hstack(self.comm.allgather(self._log_w))
         tmp = self.comm.allgather(self.particles)
         particles = [t[i] for t in tmp for i in range(len(t))]

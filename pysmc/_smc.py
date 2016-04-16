@@ -644,11 +644,6 @@ class SMC(DistributedObject):
                         print '- db exists'
                         print '- assuming this is a restart run'
                     self._db = DataBase.load(db_filename)
-                    # Sanity check
-#                    if not self.db.gamma_name == self.gamma_name:
-#                        raise RuntimeError(
-#                        '%s in db does not match %s in SMC' % (self.db.gamma_name,
-#                                                               gamma_name))
                     db_exists = True
                 else:
                     if self.verbose > 0:
@@ -905,11 +900,14 @@ class SMC(DistributedObject):
             print 'initial ', self.gamma_name, ':', self.gamma
             print 'final', self.gamma_name, ':', gamma
             print 'ess reduction: ', self.ess_reduction
+        self.log_Zs = []
         while self.gamma < gamma:
             if self.adapt_proposal_step:
                 self._tune()
             new_gamma = self._find_next_gamma(gamma)
             log_w = self._get_unormalized_weights_at(new_gamma)
+            self.log_Z2_Z1 = self._logsumexp(log_w)
+            self.log_Zs.append(self.log_Z2_Z1)
             self._log_w = self._normalize(log_w)
             self._ess = self._get_ess_at(self.log_w)
             self._set_gamma(new_gamma)
@@ -919,6 +917,7 @@ class SMC(DistributedObject):
                 print '- moving to', self.gamma_name, ':', self.gamma
                 pb = pymc.progressbar.progress_bar(self.num_particles * self.num_mcmc)
                 print '- performing', self.num_mcmc, 'MCMC steps per particle'
+                print '- logZ {0:1.3e}'.format(self.log_Z2_Z1)
             for i in range(self.my_num_particles):
                 self.mcmc_sampler.set_state(self.particles[i])
                 self.mcmc_sampler.sample(self.num_mcmc)

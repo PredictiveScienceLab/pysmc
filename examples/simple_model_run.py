@@ -29,9 +29,10 @@ if __name__ == '__main__':
     smc_sampler = pysmc.SMC(mcmc, num_particles=1000,
                             num_mcmc=1, verbose=4)
     # Initialize SMC at gamma = 0.01
-    smc_sampler.initialize(0.01)
+    smc_sampler.initialize(0.001)
     # Move the particles to gamma = 1.0
     smc_sampler.move_to(1.)
+    print smc_sampler.log_Zs
     # Get a particle approximation
     p = smc_sampler.get_particle_approximation()
     print p.mean
