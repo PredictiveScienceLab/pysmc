@@ -454,13 +454,13 @@ class DiscreteRandomWalk(RandomWalk):
         """
         Propose a move.
         """
-        if prop_dist == 'poisson':
+        if self.prop_dist == 'poisson':
             k = self.stochastic.value.shape
             new_val = self.stochastic.value + rpoisson(
                     self.adaptive_scale_factor * self.proposal_sd) * (
                         -np.ones(k)) ** (np.random.random(k) > 0.5) 
             self.stochastic.value = np.abs(new_val)
-        elif prop_dist == 'prior':
+        elif self.prop_dist == 'prior':
             self.stochastic.random()
 
 
