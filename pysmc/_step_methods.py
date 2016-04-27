@@ -19,6 +19,7 @@ __all__ = ['RandomWalk', 'LognormalRandomWalk', 'GaussianMixtureStep']
 
 import pymc as pm
 import numpy as np
+from numpy.random import poisson as rpoisson
 from sklearn import mixture
 
 
@@ -142,7 +143,6 @@ class RandomWalk(pm.Metropolis):
         """
         Tell PyMC that this step method is better than it's random walk.
         """
-        print 'I am called!'
         return 3
 
     def get_params(self, comm=None):
@@ -416,6 +416,51 @@ class GaussianMixtureStep(RandomWalk):
         self.gmm.covars_ = self.gmm._get_covars()
         self._tuned = True
         return True
+
+
+class DiscreteRandomWalk(RandomWalk):
+    """
+    This is a step method class that is good for discrete random variables.
+
+    Good only for non-negative discrete random variables.
+
+    **Base class:** :class:`pysmc.RandomWalk`
+    """
+
+    def __init__(self, stochastic,
+                 prop_dist='poisson',
+                 adapt_increase_factor=1.3,
+                 adapt_decrease_factor=0.7,
+                 adapt_upper_ac_rate=0.7,
+                 adapt_lower_ac_rate=0.3,
+                 min_adaptive_scale_factor=1e-32,
+                 max_adaptive_scale_factor=1e99,
+                 *args, **kwargs):
+        """Initialize the object."""
+        super(DiscreteRandomWalk, self).__init__(
+                            stochastic,
+                            adapt_increase_factor=adapt_increase_factor,
+                            adapt_decrease_factor=adapt_decrease_factor,
+                            adapt_upper_ac_rate=adapt_upper_ac_rate,
+                            adapt_lower_ac_rate=adapt_lower_ac_rate,
+                            min_adaptive_scale_factor=min_adaptive_scale_factor,
+                            max_adaptive_scale_factor=max_adaptive_scale_factor,
+                            *args, **kwargs)
+        self.prop_dist = prop_dist
+        self._STATE_VARIABLES.append('prop_dist')
+
+    def propose(self):
+        """
+        Propose a move.
+        """
+        if prop_dist == 'poisson':
+            k = self.stochastic.value.shape
+            new_val = self.stochastic.value + rpoisson(
+                    self.adaptive_scale_factor * self.proposal_sd) * (
+                        -np.ones(k)) ** (np.random.random(k) > 0.5) 
+            self.stochastic.value = np.abs(new_val)
+        elif prop_dist == 'prior':
+            self.stochastic.random()
 
 
 # Assign methods to the registry of pymc
