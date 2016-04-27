@@ -618,14 +618,15 @@ class SMC(DistributedObject):
         def f(test_gamma, args):
             ess_test_gamma = args._get_ess_given_gamma(test_gamma)
             return ess_test_gamma - args.ess_reduction * args.ess
-
+        
         if f(gamma, self) > 0:
             if self.verbose > 1:
                 print '- \twe can move directly to the target gamma...'
             return gamma
         else:
             # Solve for the optimal gamma using the bisection algorithm
-            next_gamma = brentq(f, self.gamma, gamma, self)
+            next_gamma, r = brentq(f, self.gamma, gamma, self, disp=False,
+                                full_output=True)
             if self.use_mpi:
                 self.comm.barrier()
             return next_gamma
@@ -834,6 +835,8 @@ class SMC(DistributedObject):
                 if self.verbose > 0:
                     sys.stdout.write(
                             '- initializing by sampling from the prior: ')
+                if not gamma == 0.:
+                    raise AttributeError()
                 for i in range(1, self.my_num_particles):
                     self.mcmc_sampler.draw_from_prior()
                     self.particles[i] = self.mcmc_sampler.get_state()
@@ -915,7 +918,7 @@ class SMC(DistributedObject):
                 self._resample()
             if self.verbose > 0:
                 print '- moving to', self.gamma_name, ':', self.gamma
-                pb = pymc.progressbar.progress_bar(self.num_particles * self.num_mcmc)
+                pb = pymc.progressbar.progress_bar((self.num_particles-1) * self.num_mcmc)
                 print '- performing', self.num_mcmc, 'MCMC steps per particle'
                 print '- logZ {0:1.3e}'.format(self.log_Z2_Z1)
             for i in range(self.my_num_particles):
