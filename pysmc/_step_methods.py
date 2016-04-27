@@ -14,7 +14,8 @@ Here is a list of what we offer:
 """
 
 
-__all__ = ['RandomWalk', 'LognormalRandomWalk', 'GaussianMixtureStep']
+__all__ = ['RandomWalk', 'LognormalRandomWalk', 'DiscreteRandomWalk',
+           'GaussianMixtureStep']
 
 
 import pymc as pm
