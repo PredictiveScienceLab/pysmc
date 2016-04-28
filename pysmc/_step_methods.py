@@ -140,6 +140,7 @@ class RandomWalk(pm.Metropolis):
             print '\n\t\tadaptive_scale_factor:', self.adaptive_scale_factor
         return True
 
+    @staticmethod
     def competence(s):
         """
         Tell PyMC that this step method is better than it's random walk.
