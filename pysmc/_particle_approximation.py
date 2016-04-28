@@ -504,12 +504,13 @@ class ParticleApproximation(DistributedObject):
         particles = [t[i] for t in tmp for i in range(len(t))]
         return ParticleApproximation(log_w=log_w, particles=particles)
 
-    def gather(self):
+    def gather(self, root=0):
         """
-        Get a particle approximation on every process.
+        Get a particle approximation on the root process.
 
         If we are not using MPI, it will simply return a copy of the object.
 
+        :param root:    The id of the root process.
         :returns:       A fully functional particle approximation on a single
                         process.
         :rtype:         :class:`pysmc.ParticleApproximation`

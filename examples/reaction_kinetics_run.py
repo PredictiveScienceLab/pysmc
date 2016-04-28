@@ -20,7 +20,7 @@ if __name__ == '__main__':
                             num_mcmc=1, verbose=1,
                             mpi=mpi, gamma_is_an_exponent=True)
     # Initialize SMC at gamma = 0.01
-    smc_sampler.initialize(0.01)
+    smc_sampler.initialize(0.)
     # Move the particles to gamma = 1.0
     smc_sampler.move_to(1.)
     # Get a particle approximation
