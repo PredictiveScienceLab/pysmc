@@ -915,12 +915,15 @@ class SMC(DistributedObject):
             self._ess = self._get_ess_at(self.log_w)
             self._set_gamma(new_gamma)
             if self.ess < self.ess_threshold * self.num_particles:
+                if self.verbose > 0:
+                    print '- resampling'
                 self._resample()
             if self.verbose > 0:
                 print '- moving to', self.gamma_name, ':', self.gamma
                 pb = pymc.progressbar.progress_bar((self.num_particles-1) * self.num_mcmc)
-                print '- performing', self.num_mcmc, 'MCMC steps per particle'
-                print '- logZ {0:1.3e}'.format(self.log_Z2_Z1)
+                print '- performing', self.num_mcmc, 'MCMC step(s) per particle'
+                print '- ESS  = {0:3.2f} %'.format(self.ess / self.num_particles * 100)
+                print '- logZ = {0:1.3e}'.format(self.log_Z2_Z1)
             for i in range(self.my_num_particles):
                 self.mcmc_sampler.set_state(self.particles[i])
                 self.mcmc_sampler.sample(self.num_mcmc)

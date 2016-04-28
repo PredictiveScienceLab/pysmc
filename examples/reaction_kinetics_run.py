@@ -16,7 +16,7 @@ import cPickle as pickle
 if __name__ == '__main__':
     model = reaction_kinetics_model.make_model()
     # Construct the SMC sampler
-    smc_sampler = pysmc.SMC(model, num_particles=100,
+    smc_sampler = pysmc.SMC(model, num_particles=10,
                             num_mcmc=1, verbose=1,
                             mpi=mpi, gamma_is_an_exponent=True)
     # Initialize SMC at gamma = 0.01
