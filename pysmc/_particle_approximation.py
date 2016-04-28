@@ -552,3 +552,23 @@ class ParticleApproximation(DistributedObject):
         my_particles = comm.scatter(particles)
         return ParticleApproximation(log_w=my_log_w, particles=my_particles,
                                      mpi=mpi, comm=comm)
+
+    def __str__(self):
+        """
+        Return a string representation of the object.
+        """
+        s = '=' * 80 + '\n'
+        s += 'Particle Approximation'.center(80) + '\n'
+        s += '-' * 80 + '\n'
+        s += 'Number of particles  : {0:d}\n'.format(self.num_particles)
+        s += 'Effective sample size: {0:d}\n'.format(
+                int(1. / np.exp(2. * self.log_w).sum()))
+        s += 'Variables:\n'
+        p = self.particles[0]
+        for k1 in p.keys():
+            v = p[k1]
+            s += '\t- {0:s} ({1:d})\n'.format(k1, len(v))
+            for k2 in v.keys():
+                s += '\t\t- {0:s} (shape = {1:s})\n'.format(k2, v[k2].shape)
+        s += '=' * 80 + '\n'
+        return s
