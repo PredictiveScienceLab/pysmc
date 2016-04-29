@@ -79,7 +79,6 @@ class HDF5DataBase(DataBaseInterface):
     def add(self, gamma, pa, smp):
         self.fd.root.gammas.append([gamma])
         i = self.fd.root.gammas.shape[0] - 1
-        print 'current step:', i
         sg = self.fd.create_group('/steps', 's' + str(i))
         pag = self.fd.create_group(sg, 'pa')
         self.fd.create_carray(pag, 'log_w', obj=pa.log_w)
@@ -89,7 +88,7 @@ class HDF5DataBase(DataBaseInterface):
             v = pa0[k1]
             for k2 in v.keys():
                 self.fd.create_carray(kpag, k2, obj=getattr(pa, k2))
-        print smp
+        self.fd.set_node_attr(sg, 'step_func_params', smp)
 
 
 class DataBase(object):

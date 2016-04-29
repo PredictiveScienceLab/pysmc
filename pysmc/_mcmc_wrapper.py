@@ -213,6 +213,15 @@ class MCMCWrapper(object):
             s[k.__name__] = self.mcmc_sampler.step_method_dict[k][0].__class__
         return s
 
+    def get_step_method_params(self, comm=None):
+        """
+        Get the parameters of the step methods used for each variable.
+        """
+        s = {}
+        for k in self.mcmc_sampler.step_method_dict.keys():
+            s[k.__name__] = self.mcmc_sampler.step_method_dict[k][0].get_params(comm=comm)
+        return s
+
     def set_step_method_types(self, s):
         """
         Set the types of the step methods from a dictionary.

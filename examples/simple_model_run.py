@@ -32,19 +32,16 @@ if __name__ == '__main__':
     db.initialize('foo.h5', smc_sampler)
     # Initialize SMC at gamma = 0.01
     smc_sampler.initialize(0.001)
-    db.add(smc_sampler.gamma, smc_sampler.get_particle_approximation(),
-           smc_sampler.mcmc_sampler.get_params())
-    quit()
     # Move the particles to gamma = 1.0
     smc_sampler.move_to(1.)
-    print smc_sampler.log_Zs
+    #print smc_sampler.log_Zs
     # Get a particle approximation
     p = smc_sampler.get_particle_approximation()
-    print p.mean
-    print p.variance
+    #print p.mean
+    #print p.variance
     # Plot a histogram
-    data = [p.particles[i]['stochastics']['mixture'] for i in xrange(p.num_particles)]
-    data = np.array(data)
-    plt.plot(data, np.zeros(data.shape), 'ro', markersize=10)
-    pysmc.hist(p, 'mixture')
-    plt.show()
+    #data = [p.particles[i]['stochastics']['mixture'] for i in xrange(p.num_particles)]
+    #data = np.array(data)
+    #plt.plot(data, np.zeros(data.shape), 'ro', markersize=10)
+    #pysmc.hist(p, 'mixture')
+    #plt.show()

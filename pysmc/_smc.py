@@ -898,7 +898,7 @@ class SMC(DistributedObject):
                 if self.verbose > 0:
                     print ''
         pa = self.get_particle_approximation().gather()
-        sm_params = self.mcmc_sampler.get_params(comm=self.comm)
+        sm_params = self.mcmc_sampler.get_step_method_params(comm=self.comm)
         if self.update_db and self.rank == 0:
             self.db.add(self.gamma, pa, sm_params)
             self.db.commit()
