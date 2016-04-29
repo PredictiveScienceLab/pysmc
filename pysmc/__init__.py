@@ -25,7 +25,11 @@ Here is complete reference of all the classes included in :mod:`pysmc`.
     :members:
 
 .. automodule:: pysmc._db
-.. autoclass:: pysmc.DataBase
+.. autoclass:: pysmc.DataBaseInterface
+    :members:
+
+.. automodule:: pysmc._db_hdf5
+.. autoclass:: pysmc.HDF5DataBase
     :members:
 
 .. automodule:: pysmc._step_methods
@@ -54,17 +58,12 @@ Methods
 __docformat__ = 'reStructuredText'
 
 
-__all__ = ['MCMCWrapper', 'SMC', 'ParticleApproximation', 'try_to_array',
-           'get_var_from_particle_list', 'DataBase', 'DistributedObject',
-           'hist', 'make_movie_from_db', 'multinomial_resample', 'kde',
-           'LognormalRandomWalk']
-
-
 from ._misc import *
 from ._mpi import *
 from ._mcmc_wrapper import *
 from ._step_methods import *
 from ._particle_approximation import *
 from ._db import *
+from ._db_hdf5 import *
 from ._smc import *
 from ._plot import *
