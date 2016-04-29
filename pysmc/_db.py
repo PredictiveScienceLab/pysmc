@@ -11,13 +11,19 @@ SMC steps.
 """
 
 
-__all__ = ['DataBaseInterface', 'DataBase', 'SerialDataBase']
+__all__ = ['DataBaseInterface', 'DB_CLASS_DICT',
+           'DataBase', 'SerialDataBase']
 
 
 import cPickle as pickle
 import os
 import warnings
 import tables as tb
+
+
+# A dictionary that associates file extensions to database classes
+# that can handle them.
+DB_CLASS_DICT = {}
 
 
 class DataBaseInterface(object):
@@ -58,6 +64,61 @@ class DataBaseInterface(object):
         Commit everything we have so far to the database.
         """
         pass
+
+    @staticmethod
+    def load(filename):
+        """
+        This is a static method. It loads a database from ``filename``.
+        """
+        raise NotImplementedError('Implement me.')
+
+    @property
+    def gamma_name(self):
+        """
+        Return the name of the gamma parameter.
+        """
+        raise NotImplementedError('Implement me.')
+
+    @property
+    def gammas(self):
+        """
+        The list of gammas we have visited.
+
+        :getter:    Get the list of gammas we have visited.
+        :type:      list
+        """
+        raise NotImplementedError('Implement me.')
+
+    @property
+    def num_gammas(self):
+        """
+        The number of gammas added to the database.
+
+        :getter:    Get the number of gammas added to the data base.
+        :type:      int
+        """
+        return len(self.gammas)
+
+    @property
+    def particle_approximation(self):
+        """
+        The current particle approximation of the database.
+
+        :getter:    Get the current particle approximation of the database.
+        :type:      unknown
+        """
+        return self._particle_approximations[-1]
+
+    def __str__(self):
+        """
+        A string representation of the object.
+        """
+        s = '-' * 80 + '\n'
+        s += 'Database'.center(80) + '\n'
+        s += 'gamma name: {0:s}\n'.format(self.gamma_name)
+        s += 'number of steps so far: {0:d}\n'.format(self.num_gammas)
+        s += '-' * 80
+        return s
 
 
 class DataBase(object):

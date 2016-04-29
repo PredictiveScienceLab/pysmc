@@ -20,6 +20,7 @@ from . import DistributedObject
 from . import ParticleApproximation
 from . import DataBase
 from . import SerialDataBase
+from . import HDF5DataBase
 import pymc
 import numpy as np
 from scipy.optimize import brentq
@@ -631,7 +632,7 @@ class SMC(DistributedObject):
                 self.comm.barrier()
             return next_gamma
 
-    def _initialize_db(self, db_filename, update_db):
+    def _initialize_db(self, db_class, db_filename, update_db):
         """
         Initialize the database.
         """
@@ -644,14 +645,14 @@ class SMC(DistributedObject):
                     if self.verbose > 0:
                         print '- db exists'
                         print '- assuming this is a restart run'
-                    self._db = DataBase.load(db_filename)
+                    self._db = db_class.load(db_filename)
                     db_exists = True
                 else:
                     if self.verbose > 0:
                         print '- db does not exist'
                         print '- creating db file'
-                    self._db = DataBase(gamma_name=self.gamma_name,
-                                              filename=db_filename)
+                    self._db = db_class(gamma_name=self.gamma_name,
+                                        filename=db_filename)
                     db_exists = False
             else:
                 db_exists = None
@@ -779,6 +780,7 @@ class SMC(DistributedObject):
                  comm=None,
                  gamma_name='gamma',
                  db_filename=None,
+                 db_class=HDF5DataBase,
                  update_db=False,
                  gamma_is_an_exponent=False):
         """
@@ -796,7 +798,7 @@ class SMC(DistributedObject):
         self.verbose = verbose
         self.adapt_proposal_step = adapt_proposal_step
         self.gamma_is_an_exponent = gamma_is_an_exponent
-        self._initialize_db(db_filename, update_db)
+        self._initialize_db(db_class, db_filename, update_db)
 
     def initialize(self, gamma, particle_approximation=None,
                    num_mcmc_per_particle=10):

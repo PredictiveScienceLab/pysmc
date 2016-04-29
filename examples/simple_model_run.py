@@ -28,8 +28,12 @@ if __name__ == '__main__':
     mcmc.use_step_method(pysmc.RandomWalk, model['mixture'])
     smc_sampler = pysmc.SMC(mcmc, num_particles=1000,
                             num_mcmc=1, verbose=4)
-    db = pysmc.HDF5DataBase()
-    db.initialize('foo.h5', smc_sampler)
+    #db = pysmc.HDF5DataBase()
+    #db.initialize('foo.h5', smc_sampler)
+    db = pysmc.HDF5DataBase.load('foo.h5')
+    print str(db)
+    pa = db.particle_approximation
+    quit()
     # Initialize SMC at gamma = 0.01
     smc_sampler.initialize(0.001)
     # Move the particles to gamma = 1.0
