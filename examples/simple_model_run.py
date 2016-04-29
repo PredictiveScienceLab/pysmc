@@ -31,11 +31,14 @@ if __name__ == '__main__':
     #db = pysmc.HDF5DataBase()
     #db.initialize('foo.h5', smc_sampler)
     db = pysmc.HDF5DataBase.load('foo.h5')
-    print str(db)
+    #print str(db)
     pa = db.particle_approximation
-    quit()
+    #quit()
     # Initialize SMC at gamma = 0.01
     smc_sampler.initialize(0.001)
+    pa = smc_sampler.get_particle_approximation()
+    print pa.particles[0]
+    quit()
     # Move the particles to gamma = 1.0
     smc_sampler.move_to(1.)
     #print smc_sampler.log_Zs
