@@ -28,8 +28,13 @@ if __name__ == '__main__':
     mcmc.use_step_method(pysmc.RandomWalk, model['mixture'])
     smc_sampler = pysmc.SMC(mcmc, num_particles=1000,
                             num_mcmc=1, verbose=4)
+    db = pysmc.HDF5DataBase()
+    db.initialize('foo.h5', smc_sampler)
     # Initialize SMC at gamma = 0.01
     smc_sampler.initialize(0.001)
+    db.add(smc_sampler.gamma, smc_sampler.get_particle_approximation(),
+           smc_sampler.mcmc_sampler.get_params())
+    quit()
     # Move the particles to gamma = 1.0
     smc_sampler.move_to(1.)
     print smc_sampler.log_Zs

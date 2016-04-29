@@ -204,6 +204,22 @@ class MCMCWrapper(object):
         for sm, state in itertools.izip(self.step_methods, states):
             sm.set_params(state)
 
+    def get_step_method_types(self):
+        """
+        Get the types of the step methods used for each variable.
+        """
+        s = {}
+        for k in self.mcmc_sampler.step_method_dict.keys():
+            s[k.__name__] = self.mcmc_sampler.step_method_dict[k][0].__class__
+        return s
+
+    def set_step_method_types(self, s):
+        """
+        Set the types of the step methods from a dictionary.
+        """
+        for k in s.keys():
+            self.mcmc_sampler.use_step_method(s[k], getattr(self.mcmc_sampler, k))
+
     def sample(self, iter, burn=0, thin=None, tune_interval=1,
                tune_throughout=False, save_interval=None,
                burn_till_tuned=False, stop_tuning_after=0,

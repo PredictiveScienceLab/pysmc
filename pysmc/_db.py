@@ -11,12 +11,85 @@ SMC steps.
 """
 
 
-__all__ = ['DataBase', 'SerialDataBase']
+__all__ = ['DataBaseInterface', 'HDF5DataBase', 'DataBase', 'SerialDataBase']
 
 
 import cPickle as pickle
 import os
 import warnings
+import tables as tb
+
+
+class DataBaseInterface(object):
+    
+    """
+    This class defines the interface of a valid database object
+    for pysmc.
+
+    The purpose of a database is to store and retrieve a sequence
+    of particle approximations resulting by running the class
+    :class:`pysmc.SMC` along with all the metadata required for
+    restarting the algorithm.
+
+    """
+    
+    def __init__(self):
+        # Does nothing.
+        pass
+
+    def initialize(self, filename, gamma_name):
+        raise NotImplementedError('Implement me.')
+
+    def add(self, gamma, particle_approximation,
+            step_method_params):
+        """
+        Add the ``particle_approximation`` corresponding to ``gamma`` to the
+        database.
+
+        :param gamma:                   The gamma parameter.
+        :type gamma:                    any
+        :param particle_approximation:  particle_approximation
+        :type particle_approximation:   any
+        """
+        raise NotImplementedError('Implement me.')
+
+    def commit(self):
+        """
+        Commit everything we have so far to the database.
+        """
+        pass
+
+
+class HDF5DataBase(DataBaseInterface):
+
+    """
+    A database using HDF5.
+    """
+
+    def __init__(self):
+        super(HDF5DataBase, self).__init__()
+
+    def initialize(self, filename, smc):
+        self.fd = tb.open_file(filename, mode='w')
+        self.fd.set_node_attr('/', 'smc_state',
+                                   smc.__getstate__())
+        self.fd.create_earray('/', 'gammas', atom=tb.Float64Atom(), shape=(0,))
+        self.fd.create_group('/', 'steps')
+
+    def add(self, gamma, pa, smp):
+        self.fd.root.gammas.append([gamma])
+        i = self.fd.root.gammas.shape[0] - 1
+        print 'current step:', i
+        sg = self.fd.create_group('/steps', 's' + str(i))
+        pag = self.fd.create_group(sg, 'pa')
+        self.fd.create_carray(pag, 'log_w', obj=pa.log_w)
+        pa0 = pa.particles[0] 
+        for k1 in pa0.keys():
+            kpag = self.fd.create_group(pag, k1)
+            v = pa0[k1]
+            for k2 in v.keys():
+                self.fd.create_carray(kpag, k2, obj=getattr(pa, k2))
+        print smp
 
 
 class DataBase(object):

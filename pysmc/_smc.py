@@ -744,6 +744,31 @@ class SMC(DistributedObject):
         self._log_w = (np.ones(my_num_particles)
                        * (-math.log(num_particles)))
 
+    def __getstate__(self):
+        state = {}
+        state['step_method_types'] = self.mcmc_sampler.get_step_method_types()
+        state['num_particles'] = self.num_particles
+        state['num_mcmc'] = self.num_mcmc
+        state['ess_threshold'] = self.ess_threshold
+        state['ess_reduction'] = self.ess_reduction
+        state['adapt_proposal_step'] = self.adapt_proposal_step
+        state['verbose'] = self.verbose
+        state['mpi'] = self.use_mpi
+        state['gamma_name'] = self.gamma_name
+        state['gamma_is_an_exponent'] = self.gamma_is_an_exponent
+        return state
+
+    def __setstate__(self, state):
+        self._set_gamma_name(state['gamma_name'])
+        self.mcmc_sampler.set_step_method_types(state['step_method_types'])
+        self._set_initial_particles(state['num_particles'])
+        self.num_mcmc = state['num_mcmc']
+        self.ess_threshold = state['ess_threshold']
+        self.ess_reduction = state['ess_reduction']
+        self.verbose = state['verbose']
+        self.adapt_proposal_step = state['adapt_proposal_step']
+        self.gamma_is_an_exponent = state['gamma_is_an_exponent']
+
     def __init__(self, mcmc_sampler=None,
                  num_particles=10, num_mcmc=10,
                  ess_threshold=0.67,
