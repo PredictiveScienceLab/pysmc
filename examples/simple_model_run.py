@@ -32,8 +32,8 @@ if __name__ == '__main__':
     smc_sampler = pysmc.SMC(mcmc, num_particles=100,
                             num_mcmc=1, verbose=4,
                             db_filename=db_filename)
-    # Initialize SMC at gamma = 0.01
-    smc_sampler.initialize(0.0001)
+    # Initialize SMC at gamma = 1e-4
+    smc_sampler.initialize(1e-4)
     # Move the particles to gamma = 1.0
     smc_sampler.move_to(1.)
     # Get a particle approximation
