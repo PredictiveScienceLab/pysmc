@@ -23,17 +23,20 @@ import numpy as np
 
 if __name__ == '__main__':
     # Construct the SMC sampler
-    model = simple_model.make_model()
-    mcmc = pymc.MCMC(model)
-    mcmc.use_step_method(pysmc.RandomWalk, model['mixture'])
-    smc_sampler = pysmc.SMC(mcmc, num_particles=1000,
-                            num_mcmc=1, verbose=4)
+    #model = simple_model.make_model()
+    #mcmc = pymc.MCMC(model)
+    #mcmc.use_step_method(pysmc.RandomWalk, model['mixture'])
+    #smc_sampler = pysmc.SMC(mcmc, num_particles=1000,
+    #                        num_mcmc=1, verbose=4)
     #db = pysmc.HDF5DataBase()
     #db.initialize('foo.h5', smc_sampler)
     db = pysmc.HDF5DataBase.load('foo.h5')
     #print str(db)
     pa = db.particle_approximation
-    #quit()
+    print pa
+    smp = db.step_method_param
+    print smp
+    quit()
     # Initialize SMC at gamma = 0.01
     smc_sampler.initialize(0.001)
     pa = smc_sampler.get_particle_approximation()

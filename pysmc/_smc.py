@@ -18,8 +18,6 @@ __all__ = ['SMC']
 from . import MCMCWrapper
 from . import DistributedObject
 from . import ParticleApproximation
-from . import DataBase
-from . import SerialDataBase
 from . import HDF5DataBase
 import pymc
 import numpy as np

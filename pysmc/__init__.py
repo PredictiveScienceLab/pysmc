@@ -24,8 +24,8 @@ Here is complete reference of all the classes included in :mod:`pysmc`.
 .. autoclass:: pysmc.SMC
     :members:
 
-.. automodule:: pysmc._db
-.. autoclass:: pysmc.DataBaseInterface
+.. automodule:: pysmc._db_concept
+.. autoclass:: pysmc.DataBaseConcept
     :members:
 
 .. automodule:: pysmc._db_hdf5
@@ -63,7 +63,7 @@ from ._mpi import *
 from ._mcmc_wrapper import *
 from ._step_methods import *
 from ._particle_approximation import *
-from ._db import *
+from ._db_concept import *
 from ._db_hdf5 import *
 from ._smc import *
 from ._plot import *

@@ -14,14 +14,15 @@ dumping SMC steps to HDF5 files. It uses `pytables <http://www.pytables.org>`_.
 __all__ = ['HDF5DataBase']
 
 
-from . import DataBaseInterface
-from . import DB_CLASS_DICT
+from . import DataBaseConcept
+from . import ParticleApproximation
+
 
 import tables as tb
 import numpy as np
 
 
-class HDF5DataBase(DataBaseInterface):
+class HDF5DataBase(DataBaseConcept):
 
     """
     A database using HDF5.
@@ -46,10 +47,14 @@ class HDF5DataBase(DataBaseInterface):
     def num_gammas(self):
         return self.fd.root.gammas.shape[0]
 
-    @property
-    def particle_approximation(self):
-        i = self.num_gammas - 1
-        pag = self.fd.get_node('/steps/s' + str(i) + '/pa')
+    def _get_group_of_step(self, i):
+        """
+        Return the group of step ``i``.
+        """
+        return self.fd.get_node('/steps/s' + str(i))
+
+    def get_particle_approximation(self, i):
+        pag = self._get_group_of_step(i).pa
         log_w = pag.log_w[:]
         num_particles = log_w.shape[0]
         particles = []
@@ -63,7 +68,13 @@ class HDF5DataBase(DataBaseInterface):
             p = {'stochastics': s,
                  'deterministics': d}
             particles.append(p)
-        print particles
+        pa = ParticleApproximation(log_w=log_w, particles=particles)
+        return pa
+
+    def get_step_method_param(self, i):
+        pag = self._get_group_of_step(i)
+        smp = self.fd.get_node_attr(pag, 'step_func_params')
+        return smp
 
     @staticmethod
     def load(filename):
@@ -91,6 +102,3 @@ class HDF5DataBase(DataBaseInterface):
             for k2 in v.keys():
                 self.fd.create_carray(kpag, k2, obj=getattr(pa, k2))
         self.fd.set_node_attr(sg, 'step_func_params', smp)
-
-
-DB_CLASS_DICT['h5'] = HDF5DataBase
