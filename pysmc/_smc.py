@@ -743,8 +743,8 @@ class SMC(DistributedObject):
         self.gamma_is_an_exponent = state['gamma_is_an_exponent']
 
     def __init__(self, mcmc_sampler=None,
-                 num_particles=10, num_mcmc=10,
-                 ess_threshold=0.67,
+                 num_particles=10, num_mcmc=1,
+                 ess_threshold=0.5,
                  ess_reduction=0.90,
                  adapt_proposal_step=True,
                  verbose=0,
