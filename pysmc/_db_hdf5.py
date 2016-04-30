@@ -87,10 +87,12 @@ class HDF5DataBase(DataBaseConcept):
         self.fd.set_node_attr('/', 'smc_state',
                                    smc.__getstate__())
         self.fd.create_earray('/', 'gammas', atom=tb.Float64Atom(), shape=(0,))
+        self.fd.create_earray('/', 'log_Zs', atom=tb.Float64Atom(), shape=(0,))
         self.fd.create_group('/', 'steps')
 
-    def add(self, gamma, pa, smp):
+    def add(self, gamma, pa, smp, log_Z):
         self.fd.root.gammas.append([gamma])
+        self.fd.root.log_Zs.append([log_Z])
         i = self.fd.root.gammas.shape[0] - 1
         sg = self.fd.create_group('/steps', 's' + str(i))
         pag = self.fd.create_group(sg, 'pa')

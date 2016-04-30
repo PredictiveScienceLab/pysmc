@@ -38,7 +38,7 @@ class DataBaseConcept(object):
         raise NotImplementedError('Implement me.')
 
     def add(self, gamma, particle_approximation,
-            step_method_params):
+            step_method_params, log_Z):
         """
         Add the ``particle_approximation`` corresponding to ``gamma`` to the
         database.
@@ -47,6 +47,8 @@ class DataBaseConcept(object):
         :type gamma:                    any
         :param particle_approximation:  particle_approximation
         :type particle_approximation:   any
+        :param log_Z:                   The log of the ratio of the normalization
+                                        constants (current step over previous step).
         """
         raise NotImplementedError('Implement me.')
 
@@ -79,6 +81,13 @@ class DataBaseConcept(object):
         :type:      list
         """
         raise NotImplementedError('Implement me.')
+
+    @property
+    def gamma(self):
+        """
+        The current gamma.
+        """
+        return self.gammas[-1]
 
     @property
     def num_gammas(self):
@@ -121,6 +130,13 @@ class DataBaseConcept(object):
         :type:      unknown
         """
         return self.get_step_method_param(self.num_gammas - 1)
+
+    @property
+    def smc_state(self):
+        """
+        Get the state of the SMC.
+        """
+        return self.fd.get_node_attr('/', 'smc_state')
 
     def __str__(self):
         """

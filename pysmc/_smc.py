@@ -75,11 +75,7 @@ class SMC(DistributedObject):
     :param db_filename:         The filename of a database for the object. If
                                 the database exists and is a valid one, then
                                 the object will be initialized at each last
-                                state. If the parameter ``update_db`` is also
-                                set, then the algorithm will dump the state of
-                                each ``gamma`` it visits and commit it to the
-                                data base. Otherwise, commits can be forced by
-                                calling :meth:`pysmc.SMC.commit()`.
+                                state.
     :type db_filename:          str
     :param mpi:                 The MPI class (see :mod:`mpi4py` and
                                 :ref:`mpi_example`). If ``None``, then no
@@ -126,9 +122,6 @@ class SMC(DistributedObject):
 
     # A database containing all the particles at all gammas
     _db = None
-
-    # Update the database or not
-    _update_db = False
 
     # Count the total number of MCMC samples taken so far
     _total_num_mcmc = None
@@ -327,25 +320,6 @@ class SMC(DistributedObject):
         :type:      dict
         """
         return self._db
-
-    @property
-    def update_db(self):
-        """
-        Update the database or not.
-
-        :getter:    Get the ``update_db`` flag.
-        :setter:    Set the ``update_db`` flag.
-        :type:      bool
-        """
-        return self._update_db
-
-    @update_db.setter
-    def update_db(self, value):
-        """
-        Set the ``update_db`` flag.
-        """
-        value = bool(value)
-        self._update_db = value
 
     def _update_gamma_rv(self):
         """Update the variable that points to the observed rv."""
@@ -630,34 +604,38 @@ class SMC(DistributedObject):
                 self.comm.barrier()
             return next_gamma
 
-    def _initialize_db(self, db_class, db_filename, update_db):
+    def _initialize_db(self, db_class, db_filename):
         """
         Initialize the database.
         """
-        if db_filename is not None:
-            if self.rank == 0:
-                db_filename = os.path.abspath(db_filename)
+        assert db_filename is not None, 'You have to use a database file'
+        if self.rank == 0:
+            db_filename = os.path.abspath(db_filename)
+            if self.verbose > 0:
+                print '- db: ' + db_filename
+            if os.path.exists(db_filename):
                 if self.verbose > 0:
-                    print '- db: ' + db_filename
-                if os.path.exists(db_filename):
-                    if self.verbose > 0:
-                        print '- db exists'
-                        print '- assuming this is a restart run'
-                    self._db = db_class.load(db_filename)
-                    db_exists = True
-                else:
-                    if self.verbose > 0:
-                        print '- db does not exist'
-                        print '- creating db file'
-                    self._db = db_class(gamma_name=self.gamma_name,
-                                        filename=db_filename)
-                    db_exists = False
+                    print '- db exists'
+                    print '- assuming this is a restart run'
+                self._db = db_class.load(db_filename)
+                if self.verbose > 0:
+                    print '- overwritting the state of the SMC'
+                self.__setstate__(self._db.smc_state)
+                db_exists = True
             else:
-                db_exists = None
-            if self.use_mpi:
-                db_exists = self.comm.bcast(db_exists)
-            if db_exists:
-                if self.rank == 0:
+                if self.verbose > 0:
+                    print '- db does not exist'
+                    print '- creating db file'
+                self._db = db_class()
+                self._db.initialize(db_filename, self)
+                db_exists = False
+        else:
+            db_exists = None
+        if self.use_mpi:
+            db_exists = self.comm.bcast(db_exists)
+        if db_exists:
+            if self.rank == 0:
+                try:
                     if self.verbose > 0:
                         print '- db:'
                         print '\t- num. of %s: %d' % (self.gamma_name,
@@ -670,29 +648,25 @@ class SMC(DistributedObject):
                     gamma = self.db.gamma
                     pa = self.db.particle_approximation
                     sm_param = self.db.step_method_param
-                else:
-                    gamma = None
-                    pa = None
-                    sm_param = None
-                if self.use_mpi:
-                    gamma = self.comm.bcast(gamma)
-                    pa = ParticleApproximation.scatter(pa, mpi=self.mpi,
-                                                       comm=self.comm)
-                    sm_param = self.comm.bcast(sm_param)
-                self.mcmc_sampler.set_params(sm_param)
-                self.initialize(gamma, particle_approximation=pa)
-            if self.verbose > 0:
-                if update_db:
-                    print '- commiting to the database at every step'
-                else:
-                    print '- manually commiting to the database'
-        elif update_db:
-            if self.verbose > 0:
-                warnings.warn(
-                '- update_db flag is on but no db_filename was specified\n'
-              + '- setting the update_db flag to off')
-            update_db = False
-        self._update_db = update_db
+                except IndexError as e:
+                    sys.stderr.write('*** the database is corrupted. Delete it and retry. ***\n')
+                    if self.use_mpi:
+                        self.comm.Abort(1)
+                    else:
+                        raise e
+            else:
+                gamma = None
+                pa = None
+                sm_param = None
+            if self.use_mpi:
+                gamma = self.comm.bcast(gamma)
+                pa = ParticleApproximation.scatter(pa, mpi=self.mpi,
+                                                   comm=self.comm)
+                sm_param = self.comm.bcast(sm_param)
+            self.mcmc_sampler.set_params(sm_param)
+            self.initialize(gamma, particle_approximation=pa)
+        if self.verbose > 0:
+            print '- commiting to the database at every step'
 
     def _set_gamma_name(self, gamma_name):
         """
@@ -777,9 +751,8 @@ class SMC(DistributedObject):
                  mpi=None,
                  comm=None,
                  gamma_name='gamma',
-                 db_filename=None,
+                 db_filename='smc.h5',
                  db_class=HDF5DataBase,
-                 update_db=False,
                  gamma_is_an_exponent=False):
         """
         Initialize the object.
@@ -796,7 +769,7 @@ class SMC(DistributedObject):
         self.verbose = verbose
         self.adapt_proposal_step = adapt_proposal_step
         self.gamma_is_an_exponent = gamma_is_an_exponent
-        self._initialize_db(db_class, db_filename, update_db)
+        self._initialize_db(db_class, db_filename)
 
     def initialize(self, gamma, particle_approximation=None,
                    num_mcmc_per_particle=10):
@@ -892,16 +865,12 @@ class SMC(DistributedObject):
                     self.mcmc_sampler.sample(num_mcmc_per_particle)
                     self.particles[i] = self.mcmc_sampler.get_state()
                     self._total_num_mcmc += num_mcmc_per_particle
-                    # TODO: Find bug in PyMC bar
-                    #if self.verbose > 0:
-                    #    pb.update((i + 2) * self.size * num_mcmc_per_particle)
                 if self.verbose > 0:
                     print ''
         pa = self.get_particle_approximation().gather()
         sm_params = self.mcmc_sampler.get_step_method_params(comm=self.comm)
-        if self.update_db and self.rank == 0:
-            self.db.add(self.gamma, pa, sm_params)
-            self.db.commit()
+        if self.rank == 0:
+            self.db.add(self.gamma, pa, sm_params, 0.)
         if self.verbose > 0:
             print '----------------------'
             print 'END SMC Initialization'
@@ -928,14 +897,12 @@ class SMC(DistributedObject):
             print 'initial ', self.gamma_name, ':', self.gamma
             print 'final', self.gamma_name, ':', gamma
             print 'ess reduction: ', self.ess_reduction
-        self.log_Zs = []
         while self.gamma < gamma:
             if self.adapt_proposal_step:
                 self._tune()
             new_gamma = self._find_next_gamma(gamma)
             log_w = self._get_unormalized_weights_at(new_gamma)
             self.log_Z2_Z1 = self._logsumexp(log_w)
-            self.log_Zs.append(self.log_Z2_Z1)
             self._log_w = self._normalize(log_w)
             self._ess = self._get_ess_at(self.log_w)
             self._set_gamma(new_gamma)
@@ -958,12 +925,10 @@ class SMC(DistributedObject):
                     pb.update(i * self.size * self.num_mcmc)
             if self.verbose > 0:
                 print ''
-            if self.update_db:
-                p = self.get_particle_approximation().gather()
-                sm_params = self.mcmc_sampler.get_params(comm=self.comm)
-                if self.rank == 0:
-                    self.db.add(self.gamma, p, sm_params)
-                    self.db.commit()
+            p = self.get_particle_approximation().gather()
+            sm_params = self.mcmc_sampler.get_params(comm=self.comm)
+            if self.rank == 0:
+                self.db.add(self.gamma, p, sm_params, self.log_Z2_Z1)
             for sm in self.mcmc_sampler.step_methods:
                 acc_rate = sm.get_acceptance_rate(comm=self.comm)
                 if self.verbose > 1:
