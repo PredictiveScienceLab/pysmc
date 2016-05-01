@@ -89,6 +89,7 @@ class HDF5DataBase(DataBaseConcept):
         self.fd.create_earray('/', 'gammas', atom=tb.Float64Atom(), shape=(0,))
         self.fd.create_earray('/', 'log_Zs', atom=tb.Float64Atom(), shape=(0,))
         self.fd.create_group('/', 'steps')
+        self.fd.flush()
 
     def add(self, gamma, pa, smp, log_Z):
         self.fd.root.gammas.append([gamma])
@@ -104,3 +105,4 @@ class HDF5DataBase(DataBaseConcept):
             for k2 in v.keys():
                 self.fd.create_carray(kpag, k2, obj=getattr(pa, k2))
         self.fd.set_node_attr(sg, 'step_func_params', smp)
+        self.fd.flush()
