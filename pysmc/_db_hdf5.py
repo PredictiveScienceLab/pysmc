@@ -104,5 +104,9 @@ class HDF5DataBase(DataBaseConcept):
             v = pa0[k1]
             for k2 in v.keys():
                 self.fd.create_carray(kpag, k2, obj=getattr(pa, k2))
-        self.fd.set_node_attr(sg, 'step_func_params', smp)
+        try:
+            self.fd.set_node_attr(sg, 'step_func_params', smp)
+        except:
+            # Failed to save parameters
+            pass
         self.fd.flush()
