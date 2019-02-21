@@ -6,11 +6,11 @@ Solve the reaction kinetics inverse problem.
 import reaction_kinetics_model
 import sys
 import os
-import pysmc
 import pymc
 sys.path.insert(0, os.path.abspath('..'))
+import pysmc
 import matplotlib.pyplot as plt
-import cPickle as pickle
+import pickle
 
 
 if __name__ == '__main__':
@@ -29,15 +29,15 @@ if __name__ == '__main__':
     smc_sampler.move_to(1.)
     # Get a particle approximation
     p = smc_sampler.get_particle_approximation()
-    print p.mean
-    print p.variance
+    print(p.mean)
+    print(p.variance)
 
-    data = [p.particles[i]['stochastics']['k1'] for i in xrange(p.num_particles)]
+    data = [p.particles[i]['stochastics']['k1'] for i in range(p.num_particles)]
     data = np.array(data)
     plt.plot(data, np.zeros(data.shape), 'ro', markersize=10)
     pysmc.hist(p, 'mixture')
 
-    data = [p.particles[i]['stochastics']['k2'] for i in xrange(p.num_particles)]
+    data = [p.particles[i]['stochastics']['k2'] for i in range(p.num_particles)]
     data = np.array(data)
     plt.plot(data, np.zeros(data.shape), 'bo', markersize=10)
     pysmc.hist(p, 'mixture')    

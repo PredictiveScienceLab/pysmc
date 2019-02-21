@@ -120,7 +120,7 @@ class RandomWalk(pm.Metropolis):
         self.proposal_sd = 1e-1
         self.adaptive_scale_factor = 1.
 
-    def tune(self, pa, comm=None, divergence_threshold=1e10, verbose=0):
+    def tune(self, pa=None, comm=None, divergence_threshold=1e10, verbose=0):
         ac = self.get_acceptance_rate(comm=comm)
         if ac == -1:
             return False
@@ -137,13 +137,13 @@ class RandomWalk(pm.Metropolis):
                                              self.max_adaptive_scale_factor)
         self.adaptive_scale_factor = self._adaptive_scale_factor
         if verbose >= 2 and rank == 0:
-            print '\n\t\tadaptive_scale_factor:', self.adaptive_scale_factor
+            print(('\n\t\tadaptive_scale_factor:', self.adaptive_scale_factor))
         return True
 
     @staticmethod
     def competence(s):
         """
-        Tell PyMC that this step method is better than it's random walk.
+        Tell PyMC that this step method is better than its random walk.
         """
         return 3
 
@@ -166,7 +166,7 @@ class RandomWalk(pm.Metropolis):
         """
         Set the state from a dictionary.
         """
-        for var in state.keys():
+        for var in list(state.keys()):
             setattr(self, var, state[var])
         self._old_accepted *= -1.
         self._old_rejected *= -1.
@@ -218,6 +218,14 @@ class LognormalRandomWalk(RandomWalk):
                             min_adaptive_scale_factor=min_adaptive_scale_factor,
                             max_adaptive_scale_factor=max_adaptive_scale_factor,
                             *args, **kwargs)
+    @staticmethod
+    def competence(s):
+        """
+        Tell PyMC that this step method is better than its random walk.
+        """
+        if isinstance(s, pm.Lognormal) or \
+                isinstance(s, pm.Exponential):
+            return 5
 
     def propose(self):
         """
@@ -239,7 +247,7 @@ class LognormalRandomWalk(RandomWalk):
         lp_bak = pm.lognormal_like(last_val, mu=np.log(cur_val), tau=tau)
 
         if self.verbose > 1:
-            print self._id + ': Hastings factor %f' % (lp_bak - lp_for)
+            print((self._id + ': Hastings factor %f' % (lp_bak - lp_for)))
         return lp_bak - lp_for
 
 
@@ -362,13 +370,15 @@ class GaussianMixtureStep(RandomWalk):
         lp_bak = self._gmm.score(last_val)[0]
 
         if self.verbose > 1:
-            print self._id + ': Hastings factor %f' % (lp_bak - lp_for)
+            print((self._id + ': Hastings factor %f' % (lp_bak - lp_for)))
         return lp_bak - lp_for
 
-    def tune(self, pa, comm=None, divergence_threshold=1e10, verbose=0):
+    def tune(self, pa=None, comm=None, divergence_threshold=1e10, verbose=0):
         """
         Tune the step...
         """
+        if pa is None:
+            raise RuntimeError('This step method works only in pysmc.')
         ac = self.get_acceptance_rate(comm=comm)
         if ac == -1:
             return False
@@ -389,7 +399,7 @@ class GaussianMixtureStep(RandomWalk):
         if rank == 0:
             pa.resample()
             data = [pa.particles[i]['stochastics'][self.stochastic.__name__]
-                    for i in xrange(pa.num_particles)]
+                    for i in range(pa.num_particles)]
             data = np.array(data, dtype='float')
             if data.ndim == 1:
                 data = np.atleast_2d(data).T
@@ -412,7 +422,7 @@ class GaussianMixtureStep(RandomWalk):
                         self.gmm.means_, self.gmm._get_covars())):
                     if not np.any(Y_ == i):
                         continue
-                    print '\n', mean, covar
+                    print(('\n', mean, covar))
         if use_mpi:
             self._gmm = comm.bcast(self._gmm)
         self.gmm.covars_ = self.gmm._get_covars()

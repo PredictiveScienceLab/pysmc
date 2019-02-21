@@ -35,11 +35,11 @@ if __name__ == '__main__':
         smc_sampler.initialize(0.)
         smc_sampler.move_to(1.)
     except Exception as e:
-        print str(e)
+        print(str(e))
         mpi.COMM_WORLD.Abort(1)
     p = smc_sampler.get_particle_approximation()
     m = p.mean
     v = p.variance
     if mpi.COMM_WORLD.Get_rank() == 0:
-        print m
-        print v
+        print(m)
+        print(v)

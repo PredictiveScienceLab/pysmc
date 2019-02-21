@@ -177,7 +177,7 @@ class ParticleApproximation(DistributedObject):
         setattr(self, type_of_var, dict())
         self._mean[type_of_var] = {}
         self._variance[type_of_var] = {}
-        for var_name in self.particles[0][type_of_var].keys():
+        for var_name in list(self.particles[0][type_of_var].keys()):
             self._fix_particles_of_type_and_name(type_of_var, var_name)
 
     def _fix_particles(self):
@@ -186,7 +186,7 @@ class ParticleApproximation(DistributedObject):
         """
         self._mean = dict()
         self._variance = dict()
-        for type_of_var in self.particles[0].keys():
+        for type_of_var in list(self.particles[0].keys()):
             self._fix_particles_of_type(type_of_var)
 
     def __init__(self, log_w=None, particles=None, mpi=None, comm=None):
@@ -225,7 +225,7 @@ class ParticleApproximation(DistributedObject):
         """
         Check if ``type_of_var`` is a valid type of variable.
         """
-        if not self.particles[0].has_key(type_of_var):
+        if type_of_var not in self.particles[0]:
             raise RuntimeError(
         'The particles do not have a \'%s\' type of variables!' % type_of_var)
 
@@ -234,7 +234,7 @@ class ParticleApproximation(DistributedObject):
         Check if ``var_name`` of type ``type_of_var`` exists.
         """
         self._check_if_valid_type_of_var(type_of_var)
-        if not self.particles[0][type_of_var].has_key(var_name):
+        if var_name not in self.particles[0][type_of_var]:
             raise RuntimeError(
         'The particles do not have a \'%s\' variable of type \'%s\'!'
         % (var_name, type_of_var))
@@ -272,8 +272,8 @@ class ParticleApproximation(DistributedObject):
         self._check_if_valid_var(var_name, type_of_var)
         func_var_name = func_name + '_' + var_name
         weights = self.weights
-        particles = [dict() for i in xrange(self.my_num_particles)]
-        for i in xrange(self.my_num_particles):
+        particles = [dict() for i in range(self.my_num_particles)]
+        for i in range(self.my_num_particles):
             particles[i][type_of_var] = dict()
             func_part_i = func(self.particles[i][type_of_var][var_name])
             particles[i][type_of_var][func_var_name] = func_part_i
@@ -301,7 +301,7 @@ class ParticleApproximation(DistributedObject):
         """
         self._check_if_valid_var(var_name, type_of_var)
         res = 0.
-        for i in xrange(self.my_num_particles):
+        for i in range(self.my_num_particles):
             res += (self.weights[i] *
                     func(self.particles[i][type_of_var][var_name]))
         if self.use_mpi:
@@ -339,7 +339,7 @@ class ParticleApproximation(DistributedObject):
                                     calculation was already made.
         :type force_calculation:    bool
         """
-        var_names = self.particles[0][type_of_var].keys()
+        var_names = list(self.particles[0][type_of_var].keys())
         var_names.sort()
         for var_name in var_names:
             self.compute_mean_of_var(var_name, type_of_var,
@@ -353,7 +353,7 @@ class ParticleApproximation(DistributedObject):
                                     calculation was already made.
         :type force_calculation:    bool
         """
-        type_of_vars = self.particles[0].keys()
+        type_of_vars = list(self.particles[0].keys())
         type_of_vars.sort()
         for type_of_var in type_of_vars:
             self.compute_all_means_of_type(type_of_var,
@@ -396,7 +396,7 @@ class ParticleApproximation(DistributedObject):
                                     calculation was already made.
         :type force_calculation:    bool
         """
-        var_names = self.particles[0][type_of_var].keys()
+        var_names = list(self.particles[0][type_of_var].keys())
         var_names.sort()
         for var_name in var_names:
             self.compute_variance_of_var(var_name, type_of_var,
@@ -410,7 +410,7 @@ class ParticleApproximation(DistributedObject):
                                     calculation was already made.
         :type force_calculation:    bool
         """
-        type_of_vars = self.particles[0].keys()
+        type_of_vars = list(self.particles[0].keys())
         type_of_vars.sort()
         for type_of_var in type_of_vars:
             self.compute_all_variances_of_type(type_of_var,
@@ -442,7 +442,7 @@ class ParticleApproximation(DistributedObject):
         if self.rank == 0:
             births = np.random.multinomial(self.num_particles,
                                            np.exp(log_w_all))
-            for i in xrange(self.num_particles):
+            for i in range(self.num_particles):
                 idx_list += [i] * births[i]
         if self.rank == 0:
             idx = np.array(idx_list, 'i')
@@ -455,9 +455,9 @@ class ParticleApproximation(DistributedObject):
             my_num_particles = self.my_num_particles
             old_particles = self._particles
             self._particles = []
-            for i in xrange(num_particles):
-                to_whom = i / my_num_particles
-                from_whom = idx[i] / my_num_particles
+            for i in range(num_particles):
+                to_whom = i // my_num_particles
+                from_whom = idx[i] // my_num_particles
                 if from_whom == to_whom and to_whom == self.rank:
                     my_idx = idx[i] % my_num_particles
                     self._particles.append(old_particles[my_idx].copy())
@@ -542,9 +542,9 @@ class ParticleApproximation(DistributedObject):
         if rank == 0:
             chunk = pa.num_particles / size
             log_w = [pa.log_w[i * chunk:(i + 1) * chunk]
-                     for i in xrange(size)]
+                     for i in range(size)]
             particles = [pa.particles[i * chunk:(i + 1) * chunk]
-                         for i in xrange(size)]
+                         for i in range(size)]
         else:
             log_w = None
             particles = None

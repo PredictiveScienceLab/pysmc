@@ -36,10 +36,10 @@ def hist(particle_approximation, var_name, normed=True):
     """
     x = getattr(particle_approximation, var_name)
     w = particle_approximation.weights
-    bins = w.shape[0] / 10
+    bins = w.shape[0] // 10
     plt.xlabel(var_name, fontsize=16)
     plt.ylabel('p(%s)' % var_name, fontsize=16)
-    return plt.hist(x, weights=w, bins=bins, normed=normed)
+    return plt.hist(x, weights=w, bins=bins, density=normed)
 
 
 def make_movie_from_db(db, var_name):

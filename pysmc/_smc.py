@@ -352,7 +352,7 @@ class SMC(DistributedObject):
         """Update the variable that points to the observed rv."""
         self._gamma_rv = []
         for rv in self.mcmc_sampler.nodes:
-            if rv.parents.has_key(self.gamma_name):
+            if self.gamma_name in rv.parents:
                 self._gamma_rv.append(rv)
 
     @property
@@ -507,7 +507,7 @@ class SMC(DistributedObject):
         if self.rank == 0:
             births = np.random.multinomial(self.num_particles,
                                            np.exp(log_w_all))
-            for i in xrange(self.num_particles):
+            for i in range(self.num_particles):
                 idx_list += [i] * births[i]
         if self.rank == 0:
             idx = np.array(idx_list, 'i')
@@ -520,9 +520,9 @@ class SMC(DistributedObject):
             my_num_particles = self.my_num_particles
             old_particles = self._particles
             self._particles = []
-            for i in xrange(num_particles):
-                to_whom = i / my_num_particles
-                from_whom = idx[i] / my_num_particles
+            for i in range(num_particles):
+                to_whom = i // my_num_particles
+                from_whom = idx[i] // my_num_particles
                 if from_whom == to_whom and to_whom == self.rank:
                     my_idx = idx[i] % my_num_particles
                     self._particles.append(old_particles[my_idx].copy())
@@ -544,7 +544,7 @@ class SMC(DistributedObject):
         """Tune the parameters of the proposals.."""
         # TODO: Make sure this actually works!
         if self.verbose > 1:
-            print '- tuning the MCMC parameters:'
+            print('- tuning the MCMC parameters:')
         for sm in self.mcmc_sampler.step_methods:
             if self.verbose > 1:
                 sys.stdout.write('\t- tuning step method: %s\n' % str(sm))
@@ -569,7 +569,7 @@ class SMC(DistributedObject):
         Get the logp of all particles.
         """
         return np.array([self._get_logp_of_particle(i)
-                         for i in xrange(self.my_num_particles)])
+                         for i in range(self.my_num_particles)])
 
     def _get_logp_at_gamma(self, gamma):
         """
@@ -607,7 +607,7 @@ class SMC(DistributedObject):
 
         """
         if self.verbose > 1:
-            print '- finding next gamma.'
+            print('- finding next gamma.')
 
         if self.gamma_is_an_exponent:
             self._loglike = self._get_loglike(self.gamma, gamma)
@@ -621,7 +621,7 @@ class SMC(DistributedObject):
         
         if f(gamma, self) > 0:
             if self.verbose > 1:
-                print '- \twe can move directly to the target gamma...'
+                print('- \twe can move directly to the target gamma...')
             return gamma
         else:
             # Solve for the optimal gamma using the bisection algorithm
@@ -639,17 +639,17 @@ class SMC(DistributedObject):
             if self.rank == 0:
                 db_filename = os.path.abspath(db_filename)
                 if self.verbose > 0:
-                    print '- db: ' + db_filename
+                    print('- db: ' + db_filename)
                 if os.path.exists(db_filename):
                     if self.verbose > 0:
-                        print '- db exists'
-                        print '- assuming this is a restart run'
+                        print('- db exists')
+                        print('- assuming this is a restart run')
                     self._db = DataBase.load(db_filename)
                     db_exists = True
                 else:
                     if self.verbose > 0:
-                        print '- db does not exist'
-                        print '- creating db file'
+                        print('- db does not exist')
+                        print('- creating db file')
                     self._db = DataBase(gamma_name=self.gamma_name,
                                               filename=db_filename)
                     db_exists = False
@@ -660,14 +660,14 @@ class SMC(DistributedObject):
             if db_exists:
                 if self.rank == 0:
                     if self.verbose > 0:
-                        print '- db:'
-                        print '\t- num. of %s: %d' % (self.gamma_name,
-                                                      self.db.num_gammas)
-                        print '\t- first %s: %1.4f' % (self.gamma_name,
-                                                       self.db.gammas[0])
-                        print '\t- last %s: %1.4f' % (self.gamma_name,
-                                                      self.db.gammas[-1])
-                    print '- initializing the object at the last state of db'
+                        print('- db:')
+                        print('\t- num. of %s: %d' % (self.gamma_name,
+                                                      self.db.num_gammas))
+                        print('\t- first %s: %1.4f' % (self.gamma_name,
+                                                       self.db.gammas[0]))
+                        print('\t- last %s: %1.4f' % (self.gamma_name,
+                                                      self.db.gammas[-1]))
+                    print('- initializing the object at the last state of db')
                     gamma = self.db.gamma
                     pa = self.db.particle_approximation
                     sm_param = self.db.step_method_param
@@ -684,9 +684,9 @@ class SMC(DistributedObject):
                 self.initialize(gamma, particle_approximation=pa)
             if self.verbose > 0:
                 if update_db:
-                    print '- commiting to the database at every step'
+                    print('- commiting to the database at every step')
                 else:
-                    print '- manually commiting to the database'
+                    print('- manually commiting to the database')
         elif update_db:
             if self.verbose > 0:
                 warnings.warn(
@@ -732,7 +732,7 @@ class SMC(DistributedObject):
         num_particles = int(num_particles)
         if num_particles <= 0:
             raise ValueError('num_particles <= 0!')
-        my_num_particles = num_particles / self.size
+        my_num_particles = int(num_particles / self.size)
         if my_num_particles * self.size < num_particles:
             warnings.warn(
             '- number of particles (%d) not supported on %d mpi processes' %
@@ -740,7 +740,7 @@ class SMC(DistributedObject):
             num_particles = my_num_particles * self.size
             warnings.warn(
              '- changing the number of particles to %d' % num_particles)
-        self._particles = [None for i in xrange(my_num_particles)]
+        self._particles = [None for i in range(my_num_particles)]
         self._log_w = (np.ones(my_num_particles)
                        * (-math.log(num_particles)))
 
@@ -811,10 +811,10 @@ class SMC(DistributedObject):
                                         a SMC particle.
         """
         if self.verbose > 0:
-            print '------------------------'
-            print 'START SMC Initialization'
-            print '------------------------'
-            print '- initializing at', self.gamma_name, ':', gamma
+            print('------------------------')
+            print('START SMC Initialization')
+            print('------------------------')
+            print('- initializing at', self.gamma_name, ':', gamma)
         # Zero out the MCMC step counter
         self._total_num_mcmc = 0
         # Set gamma
@@ -824,7 +824,7 @@ class SMC(DistributedObject):
         self._ess = float(self.num_particles)
         if particle_approximation is not None:
             if self.verbose > 0:
-                print '- initializing with a particle approximation.'
+                print('- initializing with a particle approximation.')
             self._particles = particle_approximation.particles
             self._log_w = particle_approximation.log_w
             self._ess = self._get_ess_at(self.log_w)
@@ -845,16 +845,16 @@ class SMC(DistributedObject):
             except AttributeError:
                 if self.verbose > 0:
                     sys.stdout.write('FAILURE\n')
-                    print '- initializing via MCMC'
+                    print('- initializing via MCMC')
                     if self.use_mpi:
                         total_samples = (self.my_num_particles
                                          * num_mcmc_per_particle)
-                        print '- taking a total of', total_samples, 'samples per process'
+                        print('- taking a total of', total_samples, 'samples per process')
                     else:
                         total_samples = (self.num_particles
                                          * num_mcmc_per_particle)
-                        print '- taking a total of', total_samples, 'samples'
-                    print '- creating a particle every', num_mcmc_per_particle
+                        print('- taking a total of', total_samples, 'samples')
+                    print('- creating a particle every', num_mcmc_per_particle)
                 if self.verbose > 0:
                     pb = pymc.progressbar.ProgressBar(self.num_particles *
                                                       num_mcmc_per_particle)
@@ -871,16 +871,16 @@ class SMC(DistributedObject):
                     #if self.verbose > 0:
                     #    pb.update((i + 2) * self.size * num_mcmc_per_particle)
                 if self.verbose > 0:
-                    print ''
+                    print('')
         pa = self.get_particle_approximation().gather()
         sm_params = self.mcmc_sampler.get_params(comm=self.comm)
         if self.update_db and self.rank == 0:
             self.db.add(self.gamma, pa, sm_params)
             self.db.commit()
         if self.verbose > 0:
-            print '----------------------'
-            print 'END SMC Initialization'
-            print '----------------------'
+            print('----------------------')
+            print('END SMC Initialization')
+            print('----------------------')
 
 
     def move_to(self, gamma):
@@ -897,12 +897,12 @@ class SMC(DistributedObject):
 
         """
         if self.verbose > 0:
-            print '-----------------'
-            print 'START SMC MOVE TO'
-            print '-----------------'
-            print 'initial ', self.gamma_name, ':', self.gamma
-            print 'final', self.gamma_name, ':', gamma
-            print 'ess reduction: ', self.ess_reduction
+            print('-----------------')
+            print('START SMC MOVE TO')
+            print('-----------------')
+            print('initial ', self.gamma_name, ':', self.gamma)
+            print('final', self.gamma_name, ':', gamma)
+            print('ess reduction: ', self.ess_reduction)
         self.log_Zs = []
         while self.gamma < gamma:
             if self.adapt_proposal_step:
@@ -916,14 +916,14 @@ class SMC(DistributedObject):
             self._set_gamma(new_gamma)
             if self.ess < self.ess_threshold * self.num_particles:
                 if self.verbose > 0:
-                    print '- resampling'
+                    print('- resampling')
                 self._resample()
             if self.verbose > 0:
-                print '- moving to', self.gamma_name, ':', self.gamma
+                print('- moving to', self.gamma_name, ':', self.gamma)
                 pb = pymc.progressbar.progress_bar((self.num_particles-1) * self.num_mcmc)
-                print '- performing', self.num_mcmc, 'MCMC step(s) per particle'
-                print '- ESS  = {0:3.2f} %'.format(self.ess / self.num_particles * 100)
-                print '- logZ = {0:1.3e}'.format(self.log_Z2_Z1)
+                print('- performing', self.num_mcmc, 'MCMC step(s) per particle')
+                print('- ESS  = {0:3.2f} %'.format(self.ess / self.num_particles * 100))
+                print('- logZ = {0:1.3e}'.format(self.log_Z2_Z1))
             for i in range(self.my_num_particles):
                 self.mcmc_sampler.set_state(self.particles[i])
                 self.mcmc_sampler.sample(self.num_mcmc)
@@ -932,7 +932,7 @@ class SMC(DistributedObject):
                 if self.verbose > 0:
                     pb.update(i * self.size * self.num_mcmc)
             if self.verbose > 0:
-                print ''
+                print('')
             if self.update_db:
                 p = self.get_particle_approximation().gather()
                 sm_params = self.mcmc_sampler.get_params(comm=self.comm)
@@ -942,14 +942,14 @@ class SMC(DistributedObject):
             for sm in self.mcmc_sampler.step_methods:
                 acc_rate = sm.get_acceptance_rate(comm=self.comm)
                 if self.verbose > 1:
-                    print '- acceptance rate for each step method:'
-                    print '\t-', str(sm), ':', acc_rate
+                    print('- acceptance rate for each step method:')
+                    print('\t-', str(sm), ':', acc_rate)
         total_num_mcmc = self.total_num_mcmc
         if self.verbose > 0:
-            print '- total number of MCMC steps:', total_num_mcmc
-            print '---------------'
-            print 'END SMC MOVE TO'
-            print '---------------'
+            print('- total number of MCMC steps:', total_num_mcmc)
+            print('---------------')
+            print('END SMC MOVE TO')
+            print('---------------')
 
     def get_particle_approximation(self):
         """

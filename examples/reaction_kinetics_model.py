@@ -4,13 +4,15 @@ The definition of the posterior of the reaction kinetics problem.
 
 
 import pymc
+import warnings
+warnings.simplefilter('ignore')
 from reaction_kinetics_solver import *
 
 
 def make_model():
-    import cPickle as pickle
+    import pickle
     with open('reaction_kinetics_data.pickle', 'rb') as fd:
-        data = pickle.load(fd)
+        data = pickle.load(fd, encoding='latin1')
     y_obs = data['y_obs']
     # The priors for the reaction rates:
     k1 = pymc.Lognormal('k1', mu=2, tau=1./(10. ** 2), value=5.)
@@ -32,7 +34,7 @@ def make_model():
 
 if __name__ == '__main__':
     # Generate the observations
-    import cPickle as pickle
+    import pickle
     re_solver = ReactionKineticsSolver()
     k1 = 2 
     k2 = 4

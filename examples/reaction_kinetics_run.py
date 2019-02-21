@@ -10,13 +10,13 @@ sys.path.insert(0, os.path.abspath('..'))
 import pysmc
 import mpi4py.MPI as mpi
 import matplotlib.pyplot as plt
-import cPickle as pickle
+import pickle
 
 
 if __name__ == '__main__':
     model = reaction_kinetics_model.make_model()
     # Construct the SMC sampler
-    smc_sampler = pysmc.SMC(model, num_particles=10,
+    smc_sampler = pysmc.SMC(model, num_particles=100,
                             num_mcmc=1, verbose=1,
                             mpi=mpi, gamma_is_an_exponent=True)
     # Initialize SMC at gamma = 0.01

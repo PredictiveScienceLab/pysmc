@@ -14,7 +14,7 @@ SMC steps.
 __all__ = ['DataBase', 'SerialDataBase']
 
 
-import cPickle as pickle
+import pickle
 import os
 import warnings
 
@@ -215,7 +215,7 @@ class DataBase(object):
         Commit everything we have so far to the database.
         """
         if self.write_to_disk:
-            idx = range(self._last_commited, self.num_gammas)
+            idx = list(range(self._last_commited, self.num_gammas))
             if len(idx) == 0:
                 return
             with open(self.filename, 'ab') as fd:
@@ -438,7 +438,7 @@ class SerialDataBase(object):
         return db
 
 
-    def next(self):
+    def __next__(self):
         """
         Read the next state from the file opened file.
         """
@@ -466,5 +466,5 @@ class SerialDataBase(object):
         """
         Go through all the values of the database until you reach the last one.
         """
-        while self.next():
+        while next(self):
             pass

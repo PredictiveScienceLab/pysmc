@@ -69,7 +69,7 @@ def multinomial_resample(p):
     assert (p >= 0.).all()
     births = np.random.multinomial(p.shape[0], p)
     idx_list = []
-    for i in xrange(p.shape[0]):
+    for i in range(p.shape[0]):
         idx_list += [i] * births[i]
     return np.array(idx_list, dtype='i')
 

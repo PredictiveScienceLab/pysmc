@@ -20,7 +20,7 @@ def make_model():
     x = pymc.Lognormal('x', mu=np.array([math.log(1.), math.log(2.)]),
                        tau=np.array([1., 3.]))
     @pymc.stochastic(observed=True)
-    def y(value=0.01, x=x):
+    def y(value=0.001, x=x):
         return pymc.lognormal_like(value, mu=x[0], tau=1.)
     return locals()
 
@@ -29,9 +29,9 @@ if __name__ == '__main__':
     m = make_model()
     mcmc = pymc.MCMC(m)
     mcmc.assign_step_methods()
-    print mcmc.step_method_dict
-    mcmc.sample(20000, thin=100, burn=1000)
+    print(mcmc.step_method_dict)
+    mcmc.sample(100000, thin=100, burn=10000)
     s = mcmc.step_method_dict[m['x']][0]
-    print '\n', s.accepted / (s.accepted + s.rejected)
+    print('\n', s.accepted / (s.accepted + s.rejected))
     pymc.Matplot.plot(mcmc)
     plt.show()
