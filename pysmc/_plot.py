@@ -16,8 +16,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from . import multinomial_resample
-from . import kde
+from pysmc._misc import multinomial_resample
+from pysmc._misc import kde
 
 
 def hist(particle_approximation, var_name, normed=True):

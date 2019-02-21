@@ -15,11 +15,11 @@ Here is a complete reference of the public members:
 __all__ = ['SMC']
 
 
-from . import MCMCWrapper
-from . import DistributedObject
-from . import ParticleApproximation
-from . import DataBase
-from . import SerialDataBase
+from pysmc._mcmc_wrapper import MCMCWrapper
+from pysmc._mpi import DistributedObject
+from pysmc._particle_approximation import ParticleApproximation
+from pysmc._db import DataBase
+from pysmc._db import SerialDataBase
 import pymc
 import numpy as np
 from scipy.optimize import brentq

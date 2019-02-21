@@ -17,8 +17,8 @@ Here is the complete reference of the public members:
 __all__ = ['ParticleApproximation']
 
 
-from . import DistributedObject
-from . import get_var_from_particle_list
+from pysmc._mpi import DistributedObject
+from pysmc._misc import get_var_from_particle_list
 import numpy as np
 import warnings
 from copy import deepcopy

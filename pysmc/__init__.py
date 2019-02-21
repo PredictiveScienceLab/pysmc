@@ -60,11 +60,11 @@ __all__ = ['MCMCWrapper', 'SMC', 'ParticleApproximation', 'try_to_array',
            'LognormalRandomWalk']
 
 
-from ._misc import *
-from ._mpi import *
-from ._mcmc_wrapper import *
-from ._step_methods import *
-from ._particle_approximation import *
-from ._db import *
-from ._smc import *
-from ._plot import *
+from pysmc._misc import *
+from pysmc._mpi import *
+from pysmc._mcmc_wrapper import *
+from pysmc._step_methods import *
+from pysmc._particle_approximation import *
+from pysmc._db import *
+from pysmc._smc import *
+from pysmc._plot import *

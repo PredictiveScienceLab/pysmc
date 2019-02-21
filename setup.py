@@ -12,5 +12,5 @@ setup(name='PySMC',
       download_url='https://github.com/ebilionis/pysmc/tarball/1.0',
       keywords=['sequential monte carlo', 'markov chain monte carlo', 'metropolis-hastings',
                 'multimodal probability densities', 'particle methods'],
-      version='1.0',
+      version='2.1',
       packages=['pysmc'])
